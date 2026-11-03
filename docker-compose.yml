@@ -1,0 +1,65 @@
+version: '3.8'
+
+networks:
+  styleradar-net:
+    driver: bridge
+
+services:
+  ms-segunda-vida-donaciones:
+    build: .
+    container_name: sr-ms-segunda-vida-donaciones
+    restart: always
+    ports:
+      - "8093:8093"
+    environment:
+      - SERVER_PORT=8093
+      - SPRING_PROFILES_ACTIVE=dev
+      - DB_HOST=postgres-donaciones
+      - DB_PORT=5432
+      - DB_NAME=styleradar_donations
+      - DB_USER=styleradar_user
+      - DB_PASSWORD=styleradar_secret
+      - RABBITMQ_HOST=rabbitmq-donaciones
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+    depends_on:
+      postgres-donaciones:
+        condition: service_healthy
+      rabbitmq-donaciones:
+        condition: service_healthy
+    networks:
+      - styleradar-net
+
+  postgres-donaciones:
+    image: postgres:16-alpine
+    container_name: sr-postgres-donaciones
+    restart: always
+    environment:
+      POSTGRES_DB: styleradar_donations
+      POSTGRES_USER: styleradar_user
+      POSTGRES_PASSWORD: styleradar_secret
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U styleradar_user -d styleradar_donations"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - styleradar-net
+
+  rabbitmq-donaciones:
+    image: rabbitmq:3.12-management-alpine
+    container_name: sr-rabbitmq-donaciones
+    restart: always
+    ports:
+      - "5674:5672"
+      - "15674:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - styleradar-net
