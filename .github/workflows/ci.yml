@@ -1,0 +1,44 @@
+name: CI/CD Pipeline - ms-segunda-vida-donaciones
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+      - main
+  pull_request:
+    branches:
+      - develop
+      - master
+      - main
+
+jobs:
+  build-and-test:
+    name: Build, Test, Coverage & Docker Packaging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Eclipse Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: 1. Clean & Compile
+        run: mvn -B clean compile
+
+      - name: 2. Unit & Integration Tests with JaCoCo Report
+        run: mvn -B test jacoco:report
+
+      - name: 3. Verify Quality Gate & JaCoCo Coverage (Threshold >= 85%)
+        run: mvn -B verify
+
+      - name: 4. Package Application JAR
+        run: mvn -B package -DskipTests
+
+      - name: 5. Build Docker Image
+        run: docker build -t sr-ms-segunda-vida-donaciones:latest .
