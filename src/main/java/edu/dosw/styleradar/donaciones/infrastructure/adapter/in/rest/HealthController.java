@@ -13,12 +13,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/health")
-@Tag(name = "Health Check", description = "Endpoints de verificación y diagnóstico del servicio")
+@Tag(name = "Health Check", description = "Monitoreo del estado operativo del microservicio")
 public class HealthController {
 
     @GetMapping
-    @Operation(summary = "Verificar estado operativo", description = "Comprueba que el microservicio esté en ejecución y respondiendo en el puerto asignado.")
-    @ApiResponse(responseCode = "200", description = "Servicio UP y saludable")
+    @Operation(summary = "Diagnóstico y salud del servicio", description = "Verifica que el microservicio esté en ejecución y respondiendo peticiones.")
+    @ApiResponse(responseCode = "200", description = "Servicio activo y saludable")
     public ResponseEntity<Map<String, Object>> checkHealth() {
         return ResponseEntity.ok(Map.of(
                 "status", "UP",
