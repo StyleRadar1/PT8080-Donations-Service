@@ -10,9 +10,9 @@ services:
     container_name: sr-ms-segunda-vida-donaciones
     restart: always
     ports:
-      - "8093:8093"
+      - "8520:8520"
     environment:
-      - SERVER_PORT=8093
+      - SERVER_PORT=8520
       - SPRING_PROFILES_ACTIVE=dev
       - DB_HOST=postgres-donaciones
       - DB_PORT=5432
