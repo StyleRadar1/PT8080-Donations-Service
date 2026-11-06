@@ -1,7 +1,7 @@
 package edu.dosw.styleradar.donaciones.domain.exception;
 
 /**
- * Excepción base para todas las violaciones de invariantes y reglas de negocio del dominio puro.
+ * Excepción base para el dominio puro. Representa cualquier violación de reglas de negocio e invariantes.
  */
 public class DomainException extends RuntimeException {
 
