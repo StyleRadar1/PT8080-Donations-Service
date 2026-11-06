@@ -14,7 +14,7 @@
 
   <p align="center">
     <img src="https://img.shields.io/badge/BOUNDED_CONTEXT-Segunda_Vida_y_Donaciones-12063A?style=for-the-badge" alt="Context" />
-    <img src="https://img.shields.io/badge/PUERTO_OFICIAL-8093-5600EF?style=for-the-badge" alt="Port" />
+    <img src="https://img.shields.io/badge/PUERTO_OFICIAL-8520-5600EF?style=for-the-badge" alt="Port" />
     <img src="https://img.shields.io/badge/ARQUITECTURA-HEXAGONAL-16A34A?style=for-the-badge" alt="Hexagonal" />
   </p>
 
@@ -70,7 +70,7 @@
 
 * **Identificador de Servicio:** `ms-segunda-vida-donaciones`
 * **Paquete Arquitectónico:** `Paquete 5: Probador virtual + Donaciones + API Gateway`
-* **Puerto de Escucha Oficial:** `8093` (context-path: `/api/v1`)
+* **Puerto de Escucha Oficial:** `8520` (context-path: `/api/v1`)
 * **Base de Datos Asignada:** `PostgreSQL 16` (`styleradar_donations`), aislada bajo el patrón *Database-per-Service*.
 * **Bounded Context:** `Segunda Vida y Donaciones` (Economía Circular)
 
@@ -133,7 +133,7 @@ El microservicio implementa **Arquitectura Hexagonal (Puertos y Adaptadores - Al
 El siguiente diagrama detalla la separación canónica en dos hemisferios (*Primary Adapters* y *Secondary Adapters*) junto con las tres capas concéntricas del microservicio `ms-segunda-vida-donaciones`:
 
 <div align="center">
-  <img src="docs/diagramas/diagrama-hexagonal.png" width="92%" alt="Diagrama de Arquitectura Hexagonal ms-segunda-vida-donaciones" />
+  <img src="docs/diagramas/diagrama_arquitectura_hexagonal.png" width="92%" alt="Diagrama de Arquitectura Hexagonal ms-segunda-vida-donaciones" />
   <br>
   <sub>Figura 3.1: Arquitectura Hexagonal concéntrica con división en adaptadores primarios (Driving / Entrada) y adaptadores secundarios (Driven / Salida).</sub>
 </div>
@@ -144,7 +144,7 @@ El siguiente diagrama detalla la separación canónica en dos hemisferios (*Prim
 
 1. **Hemisferio Izquierdo · Adaptadores Primarios (*Primary / Driving Adapters*):**
    * **`Controllers (Donación y Segunda Mano)`:** Controladores REST (`HealthController`, `ArticuloRestController`, `DonacionRestController`, `RecogidaRestController`) que reciben y validan peticiones HTTP provenientes del frontend web de StyleRadar (Angular) y clientes autorizados.
-   * **`API endpoints (Swagger / OpenAPI 8093)`:** Documentación interactiva del contrato OpenAPI 3.0 expuesta en el puerto oficial `8093` a través de `/swagger-ui.html` y `/api-docs`.
+   * **`API endpoints (Swagger / OpenAPI 8520)`:** Documentación interactiva del contrato OpenAPI 3.0 expuesta en el puerto oficial `8520` a través de `/swagger-ui.html` y `/api-docs`.
    * **`EventConsumer (RabbitMQ Listener / Console)`:** Adaptadores de infraestructura que consumen eventos asíncronos distribuidos en el broker RabbitMQ (ej: eventos de cuentas de usuario o tiendas).
 
 2. **Capa Intermedia · Casos de Uso (*Application Layer*):**
@@ -168,7 +168,7 @@ El siguiente diagrama detalla la separación canónica en dos hemisferios (*Prim
 El modelo de clases del microservicio refleja la separación estricta entre el Dominio puro, los Puertos de abstracción y los Adaptadores de infraestructura:
 
 <div align="center">
-  <img src="docs/diagramas/clasesSR.png" width="95%" alt="Diagrama de Clases ms-segunda-vida-donaciones" />
+  <img src="docs/diagramas/clasesSR_donations.png" width="95%" alt="Diagrama de Clases ms-segunda-vida-donaciones" />
   <br>
   <sub>Figura 3.2: Diagrama de Clases de ms-segunda-vida-donaciones detallando entidades, value objects, casos de uso y puertos SPI.</sub>
 </div>
@@ -200,7 +200,7 @@ El modelo de clases del microservicio refleja la separación estricta entre el D
 El microservicio utiliza **PostgreSQL 16** bajo el patrón arquitectónico *Database-per-Service*. La persistencia relacional se estructura formalmente mediante el siguiente **Diagrama Entidad-Relación (E-R)** compuesto por tres tablas:
 
 <div align="center">
-  <img src="docs/diagramas/DiagramaBD.png" width="95%" alt="Diagrama Entidad-Relación (E-R) PostgreSQL 16 ms-segunda-vida-donaciones" />
+  <img src="docs/diagramas/DiagramaBD_donations.png" width="95%" alt="Diagrama Entidad-Relación (E-R) PostgreSQL 16 ms-segunda-vida-donaciones" />
   <br>
   <sub>Figura 3.3: Diagrama Entidad-Relación (E-R) del modelo de datos de ms-segunda-vida-donaciones en PostgreSQL 16.</sub>
 </div>
@@ -305,14 +305,14 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 | :--- | :---: | :--- | :--- | :--- | :--- |
 | **Producción (PROD)** | Próximo Sprint | Despliegue cloud en Azure App Service programado para el próximo Sprint | *(En planificación para Sprint 2)* | *(Próximo Sprint)* | *(Próximo Sprint)* |
 | **Calidad / Pruebas (QA)** | Próximo Sprint | Entorno de staging cloud en Azure programado para el próximo Sprint | *(En planificación para Sprint 2)* | *(Próximo Sprint)* | *(Próximo Sprint)* |
-| **Desarrollo Local (DEV)** | Active (Sprint 1) | Entorno operativo actual en máquina local y contenedor OCI | `http://localhost:8093` | [Swagger UI Local](http://localhost:8093/api/v1/swagger-ui.html) | [`/api/v1/health`](http://localhost:8093/api/v1/health) |
+| **Desarrollo Local (DEV)** | Active (Sprint 1) | Entorno operativo actual en máquina local y contenedor OCI | `http://localhost:8520` | [Swagger UI Local](http://localhost:8520/api/v1/swagger-ui.html) | [`/api/v1/health`](http://localhost:8520/api/v1/health) |
 
-* **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8093/api/v1/v3/api-docs`
+* **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8520/api/v1/v3/api-docs`
 
 <div align="center">
   <img src="docs/evidencias/swagger-ui.png" width="90%" alt="Evidencia Swagger OpenAPI UI" />
   <br>
-  <sub>Documentación interactiva Swagger OpenAPI UI activa en http://localhost:8093/api/v1/swagger-ui.html exponiendo los endpoints del servicio.</sub>
+  <sub>Documentación interactiva Swagger OpenAPI UI activa en http://localhost:8520/api/v1/swagger-ui.html exponiendo los endpoints del servicio.</sub>
 </div>
 
 <br>
@@ -348,7 +348,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 #### Ejemplo Request Health Check (`GET /api/v1/health`)
 
 ```bash
-curl -X GET "http://localhost:8093/api/v1/health" -H "Accept: application/json"
+curl -X GET "http://localhost:8520/api/v1/health" -H "Accept: application/json"
 ```
 
 #### Ejemplo Response Exitoso Health Check (`200 OK`)
@@ -357,7 +357,7 @@ curl -X GET "http://localhost:8093/api/v1/health" -H "Accept: application/json"
 {
   "service": "ms-segunda-vida-donaciones",
   "status": "UP",
-  "port": 8093,
+  "port": 8520,
   "timestamp": "2026-11-01T19:34:09.816875100"
 }
 ```
@@ -365,7 +365,7 @@ curl -X GET "http://localhost:8093/api/v1/health" -H "Accept: application/json"
 #### Ejemplo Request Publicar Prenda Segunda Mano (`POST /api/v1/segunda-mano`)
 
 ```bash
-curl -X POST "http://localhost:8093/api/v1/segunda-mano" \
+curl -X POST "http://localhost:8520/api/v1/segunda-mano" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{
@@ -431,7 +431,7 @@ La orquestación asíncrona de eventos se gestiona a través de **RabbitMQ 3.12*
   "eventType": "SolicitudDonacionCreadaEvent",
   "timestamp": "2026-11-01T15:30:00Z",
   "producer": "ms-segunda-vida-donaciones",
-  "correlationId": "corr-uuid-8093-0001",
+  "correlationId": "corr-uuid-8520-0001",
   "data": {
     "solicitudId": "018e3a2b-4444-7000-8000-000000000021",
     "donanteId": "018e3a2b-1111-7000-8000-000000000005",
@@ -511,7 +511,7 @@ docker build -t styleradar/ms-segunda-vida-donaciones:latest .
 docker run -d \
   --name ms-segunda-vida-donaciones \
   --network styleradar-net \
-  -p 8093:8093 \
+  -p 8520:8520 \
   styleradar/ms-segunda-vida-donaciones:latest
 ```
 
@@ -530,9 +530,9 @@ services:
     container_name: sr-ms-segunda-vida-donaciones
     restart: always
     ports:
-      - "8093:8093"
+      - "8520:8520"
     environment:
-      - SERVER_PORT=8093
+      - SERVER_PORT=8520
       - SPRING_PROFILES_ACTIVE=dev
       - DB_HOST=postgres-donaciones
       - DB_PORT=5432
@@ -590,8 +590,8 @@ services:
 ### Comprobación de Salud (Health Check)
 
 ```bash
-curl -s http://localhost:8093/api/v1/health | jq .
-# Esperado: {"service":"ms-segunda-vida-donaciones","status":"UP","port":8093,"timestamp":"..."}
+curl -s http://localhost:8520/api/v1/health | jq .
+# Esperado: {"service":"ms-segunda-vida-donaciones","status":"UP","port":8520,"timestamp":"..."}
 ```
 
 <div align="center">
@@ -618,7 +618,7 @@ Todas las configuraciones se externalizan mediante variables de entorno conforme
 
 | Variable | Descripción | Valor por Defecto (`dev`) | Requerido en Prod |
 | :--- | :--- | :--- | :---: |
-| `SERVER_PORT` | Puerto de escucha HTTP del microservicio | `8093` | Sí |
+| `SERVER_PORT` | Puerto de escucha HTTP del microservicio | `8520` | Sí |
 | `SPRING_PROFILES_ACTIVE` | Perfil de configuración activo | `dev` | Sí |
 | `DB_HOST` | Hostname del servidor PostgreSQL (`localhost` local / `postgres-donaciones` en docker) | `localhost` | Sí |
 | `DB_PORT` | Puerto de conexión a PostgreSQL (`5434` host local / `5432` en contenedor) | `5434` | Sí |
@@ -638,7 +638,7 @@ Todas las configuraciones se externalizan mediante variables de entorno conforme
 
 ```dotenv
 # Configuración del Microservicio
-SERVER_PORT=8093
+SERVER_PORT=8520
 SPRING_PROFILES_ACTIVE=dev
 
 # Persistencia PostgreSQL
