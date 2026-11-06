@@ -31,7 +31,7 @@ COPY --from=builder --chown=appuser:appgroup /build/target/*.jar app.jar
 USER appuser:appgroup
 
 # Official microservice assigned port
-EXPOSE 8093
+EXPOSE 8520
 
 # Microservice entrypoint
 ENTRYPOINT ["java", "-jar", "app.jar"]

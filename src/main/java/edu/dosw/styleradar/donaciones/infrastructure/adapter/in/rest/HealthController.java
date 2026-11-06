@@ -23,7 +23,7 @@ public class HealthController {
         return ResponseEntity.ok(Map.of(
                 "status", "UP",
                 "service", "ms-segunda-vida-donaciones",
-                "port", 8093,
+                "port", 8520,
                 "timestamp", LocalDateTime.now().toString()
         ));
     }
