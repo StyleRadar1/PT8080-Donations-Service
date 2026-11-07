@@ -1,72 +1,67 @@
 -- =============================================================================
 -- V1__init_schema.sql
 -- StyleRadar - Paquete 5: ms-segunda-vida-donaciones
--- Inicialización del esquema base para PostgreSQL 16
--- Bounded Context: Economía Circular, Donaciones Benéficas y Citas Logísticas
+-- Esquema relacional oficial para PostgreSQL 16
+-- Tablas: publicaciones_segunda_mano, fotos_publicacion, solicitudes_donacion
 -- =============================================================================
 
--- Extensiones necesarias
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
 -- -----------------------------------------------------------------------------
--- 1. Tabla: articulos_segunda_mano (Ciclo C2C / Resale)
+-- 1. Tabla: publicaciones_segunda_mano (Catálogo de Reventa C2C)
 -- -----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS articulos_segunda_mano (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    vendedor_id UUID NOT NULL,
-    titulo VARCHAR(255) NOT NULL,
-    descripcion TEXT,
-    talla VARCHAR(50) NOT NULL,
-    estado_conservacion VARCHAR(50) NOT NULL,
+CREATE TABLE IF NOT EXISTS publicaciones_segunda_mano (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    usuario_id BIGINT NOT NULL,
+    nombre_prenda VARCHAR(120) NOT NULL,
+    descripcion VARCHAR(1000),
+    tipo_prenda VARCHAR(30) NOT NULL,
+    marca VARCHAR(80) NOT NULL,
+    color VARCHAR(50) NOT NULL,
+    estilo VARCHAR(30) NOT NULL,
+    talla VARCHAR(20) NOT NULL,
+    estado_conservacion VARCHAR(30) NOT NULL,
     precio NUMERIC(12, 2) NOT NULL CHECK (precio >= 0),
-    estado_publicacion VARCHAR(50) NOT NULL DEFAULT 'BORRADOR',
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    estado VARCHAR(30) NOT NULL DEFAULT 'AVAILABLE',
+    fecha_publicacion TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP WITH TIME ZONE
 );
 
--- Índices para articulos_segunda_mano
-CREATE INDEX IF NOT EXISTS idx_articulos_vendedor ON articulos_segunda_mano (vendedor_id);
-CREATE INDEX IF NOT EXISTS idx_articulos_estado_publicacion ON articulos_segunda_mano (estado_publicacion);
-CREATE INDEX IF NOT EXISTS idx_articulos_created_at ON articulos_segunda_mano (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pub_usuario ON publicaciones_segunda_mano (usuario_id);
+CREATE INDEX IF NOT EXISTS idx_pub_estado ON publicaciones_segunda_mano (estado);
+CREATE INDEX IF NOT EXISTS idx_pub_tipo ON publicaciones_segunda_mano (tipo_prenda);
+CREATE INDEX IF NOT EXISTS idx_pub_fecha ON publicaciones_segunda_mano (fecha_publicacion DESC);
 
 -- -----------------------------------------------------------------------------
--- 2. Tabla: solicitudes_donacion (Canal Benéfico a Fundaciones Aliadas)
+-- 2. Tabla: fotos_publicacion (Fotografías asociadas, máximo 4 por publicación)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS fotos_publicacion (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    publicacion_id BIGINT NOT NULL REFERENCES publicaciones_segunda_mano(id) ON DELETE CASCADE,
+    url_foto VARCHAR(512) NOT NULL,
+    orden SMALLINT NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_fotos_publicacion ON fotos_publicacion (publicacion_id);
+
+-- -----------------------------------------------------------------------------
+-- 3. Tabla: solicitudes_donacion (Postulación benéfica y logística a fundaciones)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS solicitudes_donacion (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    donante_id UUID NOT NULL,
-    fundacion_id UUID NOT NULL,
-    estado VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
-    modalidad_entrega VARCHAR(50) NOT NULL,
-    fecha_propuesta DATE NOT NULL,
-    franja_horaria VARCHAR(50) NOT NULL,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    publicacion_id BIGINT NOT NULL REFERENCES publicaciones_segunda_mano(id),
+    donante_id BIGINT NOT NULL,
+    fundacion_id BIGINT NOT NULL,
+    mensaje VARCHAR(500),
+    estado VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    motivo_rechazo VARCHAR(500),
     punto_entrega VARCHAR(255),
-    motivo_rechazo TEXT,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    franja_inicio TIMESTAMP WITH TIME ZONE,
+    franja_fin TIMESTAMP WITH TIME ZONE,
+    fecha_solicitud TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_decision TIMESTAMP WITH TIME ZONE,
+    fecha_recepcion TIMESTAMP WITH TIME ZONE
 );
 
--- Índices para solicitudes_donacion
-CREATE INDEX IF NOT EXISTS idx_solicitudes_donante ON solicitudes_donacion (donante_id);
-CREATE INDEX IF NOT EXISTS idx_solicitudes_fundacion ON solicitudes_donacion (fundacion_id);
-CREATE INDEX IF NOT EXISTS idx_solicitudes_estado ON solicitudes_donacion (estado);
-CREATE INDEX IF NOT EXISTS idx_solicitudes_fecha_propuesta ON solicitudes_donacion (fecha_propuesta);
-
--- -----------------------------------------------------------------------------
--- 3. Tabla: citas_recogida (Logística Domiciliaria / Acopio)
--- -----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS citas_recogida (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    solicitud_id UUID NOT NULL REFERENCES solicitudes_donacion(id) ON DELETE CASCADE,
-    direccion VARCHAR(255) NOT NULL,
-    fecha_programada DATE NOT NULL,
-    franja_horaria VARCHAR(50) NOT NULL,
-    estado_logistico VARCHAR(50) NOT NULL DEFAULT 'PROGRAMADA',
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices para citas_recogida
-CREATE INDEX IF NOT EXISTS idx_citas_solicitud ON citas_recogida (solicitud_id);
-CREATE INDEX IF NOT EXISTS idx_citas_fecha_programada ON citas_recogida (fecha_programada);
-CREATE INDEX IF NOT EXISTS idx_citas_estado_logistico ON citas_recogida (estado_logistico);
+CREATE INDEX IF NOT EXISTS idx_sol_publicacion ON solicitudes_donacion (publicacion_id);
+CREATE INDEX IF NOT EXISTS idx_sol_donante ON solicitudes_donacion (donante_id);
+CREATE INDEX IF NOT EXISTS idx_sol_fundacion ON solicitudes_donacion (fundacion_id);
+CREATE INDEX IF NOT EXISTS idx_sol_estado ON solicitudes_donacion (estado);
