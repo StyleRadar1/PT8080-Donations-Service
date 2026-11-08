@@ -30,6 +30,7 @@
         <springdoc-openapi.version>2.5.0</springdoc-openapi.version>
         <jacoco.version>0.8.12</jacoco.version>
         <jacoco.min.line.coverage>0.85</jacoco.min.line.coverage>
+        <byte-buddy.version>1.15.11</byte-buddy.version>
     </properties>
 
     <dependencies>
@@ -141,6 +142,16 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+
+            
+            <!-- Maven Surefire Plugin with Java 24 ByteBuddy support -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
 

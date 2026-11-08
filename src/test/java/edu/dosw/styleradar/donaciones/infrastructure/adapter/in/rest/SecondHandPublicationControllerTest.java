@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -63,7 +62,7 @@ class SecondHandPublicationControllerTest {
     @MockBean
     private ManagePublicationUseCase managePublicationUseCase;
 
-    @SpyBean
+    @Autowired
     private PublicationRestMapper publicationRestMapper;
 
     private SecondHandPublication buildSamplePublication(Long id, Long userId) {

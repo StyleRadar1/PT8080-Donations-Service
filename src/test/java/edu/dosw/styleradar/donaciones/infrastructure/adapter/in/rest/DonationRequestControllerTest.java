@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -62,7 +61,7 @@ class DonationRequestControllerTest {
     @MockBean
     private ConfirmDonationReceiptUseCase confirmDonationReceiptUseCase;
 
-    @SpyBean
+    @Autowired
     private DonationRequestRestMapper donationRequestRestMapper;
 
     private DonationRequest buildSampleRequest(Long id, DonationRequestStatus status) {
