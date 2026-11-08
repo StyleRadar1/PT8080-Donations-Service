@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,6 +64,7 @@ public class SecondHandPublicationController {
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o reglas de negocio infringidas")
     })
     @PostMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> createPublication(
             @Valid @RequestBody CreatePublicationRequestDTO request) {
         CreatePublicationCommand command = publicationRestMapper.toCommand(request);
@@ -91,6 +93,7 @@ public class SecondHandPublicationController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = PublicationResponseDTO.class))))
     })
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<PublicationResponseDTO>> getPublicationsByUserId(
             @Parameter(description = "ID del usuario propietario", example = "101")
             @PathVariable Long userId) {
@@ -142,6 +145,7 @@ public class SecondHandPublicationController {
             @ApiResponse(responseCode = "409", description = "La publicación no puede ser modificada en su estado actual o el usuario no es el propietario")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> editPublication(
             @Parameter(description = "ID de la publicación a editar", example = "1")
             @PathVariable Long id,
@@ -159,6 +163,7 @@ public class SecondHandPublicationController {
             @ApiResponse(responseCode = "409", description = "La publicación no está disponible o el usuario no es el propietario")
     })
     @PatchMapping("/{id}/sell")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> markAsSold(
             @Parameter(description = "ID de la publicación vendida", example = "1")
             @PathVariable Long id,
@@ -175,6 +180,7 @@ public class SecondHandPublicationController {
             @ApiResponse(responseCode = "409", description = "La publicación no puede ser retirada")
     })
     @PatchMapping("/{id}/retire")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> retirePublication(
             @Parameter(description = "ID de la publicación a retirar", example = "1")
             @PathVariable Long id,
@@ -192,6 +198,7 @@ public class SecondHandPublicationController {
             @ApiResponse(responseCode = "409", description = "La publicación no puede ser destinada a donación en su estado actual")
     })
     @PatchMapping("/{id}/donate")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> donatePublication(
             @Parameter(description = "ID de la publicación a destinar a donación", example = "1")
             @PathVariable Long id,

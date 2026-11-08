@@ -30,6 +30,11 @@ import edu.dosw.styleradar.donaciones.domain.port.in.CreatePublicationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.GetPublicationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ManagePublicationUseCase;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.PublicationRestMapper;
+import edu.dosw.styleradar.donaciones.infrastructure.security.JwtAuthenticationFilter;
+import edu.dosw.styleradar.donaciones.infrastructure.security.JwtTokenProvider;
+import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityConfig;
+import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityErrorHandler;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -44,7 +49,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SecondHandPublicationController.class)
-@Import({PublicationRestMapper.class, GlobalExceptionHandler.class})
+@Import({
+        PublicationRestMapper.class,
+        GlobalExceptionHandler.class,
+        SecurityConfig.class,
+        JwtAuthenticationFilter.class,
+        JwtTokenProvider.class,
+        SecurityErrorHandler.class
+})
+@WithMockUser(roles = "USER")
 class SecondHandPublicationControllerTest {
 
     @Autowired

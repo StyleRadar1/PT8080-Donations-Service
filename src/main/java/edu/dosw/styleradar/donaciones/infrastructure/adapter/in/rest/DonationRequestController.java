@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,6 +63,7 @@ public class DonationRequestController {
             @ApiResponse(responseCode = "409", description = "La publicación no está destinada a donación o ya tiene una solicitud activa")
     })
     @PostMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> createDonationRequest(
             @Valid @RequestBody CreateDonationRequestDTO request) {
         CreateDonationRequestCommand command = donationRequestRestMapper.toCommand(request);
@@ -77,6 +79,7 @@ public class DonationRequestController {
             @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> getDonationRequestById(
             @Parameter(description = "ID de la solicitud de donación", example = "1")
             @PathVariable Long id) {
@@ -90,6 +93,7 @@ public class DonationRequestController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class))))
     })
     @GetMapping("/donor/{donorId}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<DonationRequestResponseDTO>> getRequestsByDonor(
             @Parameter(description = "ID del usuario donante", example = "101")
             @PathVariable Long donorId) {
@@ -103,6 +107,7 @@ public class DonationRequestController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class))))
     })
     @GetMapping("/foundation/{foundationId}")
+    @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
     public ResponseEntity<List<DonationRequestResponseDTO>> getRequestsByFoundation(
             @Parameter(description = "ID de la fundación destinataria", example = "501")
             @PathVariable Long foundationId,
@@ -121,6 +126,7 @@ public class DonationRequestController {
             @ApiResponse(responseCode = "409", description = "Conflicto con la fundación o la solicitud no está pendiente")
     })
     @PatchMapping("/{id}/decide")
+    @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> decideDonationRequest(
             @Parameter(description = "ID de la solicitud a decidir", example = "1")
             @PathVariable Long id,
@@ -143,6 +149,7 @@ public class DonationRequestController {
             @ApiResponse(responseCode = "409", description = "Conflicto con el usuario o la solicitud no se encuentra en estado aprobada")
     })
     @PatchMapping("/{id}/pickup")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> schedulePickup(
             @Parameter(description = "ID de la solicitud de donación aprobada", example = "1")
             @PathVariable Long id,
@@ -161,6 +168,7 @@ public class DonationRequestController {
             @ApiResponse(responseCode = "409", description = "Conflicto con la fundación o la solicitud no está en estado de recogida")
     })
     @PatchMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> confirmReceipt(
             @Parameter(description = "ID de la solicitud de donación", example = "1")
             @PathVariable Long id,

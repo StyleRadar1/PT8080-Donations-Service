@@ -27,6 +27,11 @@ import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCas
 import edu.dosw.styleradar.donaciones.domain.port.in.DecideDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCase;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.DonationRequestRestMapper;
+import edu.dosw.styleradar.donaciones.infrastructure.security.JwtAuthenticationFilter;
+import edu.dosw.styleradar.donaciones.infrastructure.security.JwtTokenProvider;
+import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityConfig;
+import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityErrorHandler;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -40,7 +45,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DonationRequestController.class)
-@Import({DonationRequestRestMapper.class, GlobalExceptionHandler.class})
+@Import({
+        DonationRequestRestMapper.class,
+        GlobalExceptionHandler.class,
+        SecurityConfig.class,
+        JwtAuthenticationFilter.class,
+        JwtTokenProvider.class,
+        SecurityErrorHandler.class
+})
+@WithMockUser(roles = {"USER", "FOUNDATION"})
 class DonationRequestControllerTest {
 
     @Autowired

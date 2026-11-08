@@ -19,6 +19,7 @@ import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestExc
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidStateTransitionException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -40,7 +41,12 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler({InvalidPublicationException.class, InvalidDonationRequestException.class, IllegalArgumentException.class})
+    @ExceptionHandler({
+            InvalidPublicationException.class,
+            InvalidDonationRequestException.class,
+            IllegalArgumentException.class,
+            BadCredentialsException.class
+    })
     public ProblemDetail handleBadRequest(RuntimeException ex, HttpServletRequest request) {
         log.warn("Solicitud inválida de dominio: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
