@@ -2,7 +2,6 @@ package edu.dosw.styleradar.donaciones.infrastructure.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Message;

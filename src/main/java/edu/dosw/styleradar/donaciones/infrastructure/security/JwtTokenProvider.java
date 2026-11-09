@@ -17,7 +17,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -104,18 +103,16 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(Long userId, String email, Role role, String name) {
-        Instant nowInstant = Instant.now();
-        Instant expiryInstant = nowInstant.plus(duration);
-        Date now = Date.from(nowInstant);
-        Date expiryDate = Date.from(expiryInstant);
+        Instant now = Instant.now();
+        Instant expiry = now.plus(duration);
 
         return Jwts.builder()
                 .subject(email)
                 .claim("userId", userId)
                 .claim("role", role.name())
                 .claim("name", name)
-                .issuedAt(now)
-                .expiration(expiryDate)
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", expiry.getEpochSecond())
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
@@ -123,7 +120,7 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Claims claims = parser.parseSignedClaims(token).getPayload();
-            return claims.getExpiration() != null && claims.getExpiration().toInstant().isAfter(Instant.now());
+            return claims != null;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
