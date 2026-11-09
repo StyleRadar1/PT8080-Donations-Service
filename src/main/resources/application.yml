@@ -26,6 +26,30 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+  # Conexión al broker RabbitMQ (puerto estándar 5672)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    listener:
+      simple:
+        auto-startup: ${RABBITMQ_LISTENER_AUTO_STARTUP:true}
+
+# Configuración de mensajería asíncrona RabbitMQ (Fase 3 - El Plus)
+app:
+  rabbitmq:
+    exchange:
+      donations: ${RABBITMQ_DONATIONS_EXCHANGE:donaciones.exchange}
+    routing-keys:
+      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONATION_REQUEST_CREATED:donacion.solicitud.creada}
+      donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONATION_STATUS_UPDATED:donacion.estado.actualizado}
+    queues:
+      notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
+    simulator:
+      enabled: ${RABBITMQ_SIMULATOR_ENABLED:false}
+
 # Configuración explícita de Springdoc OpenAPI
 springdoc:
   api-docs:
