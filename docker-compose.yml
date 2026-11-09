@@ -23,6 +23,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_SIMULATOR_ENABLED=false
     depends_on:
       postgres-donaciones:
         condition: service_healthy
@@ -54,8 +55,9 @@ services:
     container_name: sr-rabbitmq-donaciones
     restart: always
     ports:
+      - "5672:5672"
       - "5674:5672"
-      - "15674:15672"
+      - "15672:15672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
       interval: 10s

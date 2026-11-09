@@ -405,7 +405,8 @@ curl -X POST "http://localhost:8520/api/v1/segunda-mano" \
 
 La orquestación asíncrona de eventos se gestiona a través de **RabbitMQ 3.12** con Topic Exchanges durables.
 
-* **Exchange de Donaciones:** `styleradar.donations.exchange` (`topic`, durable)
+* **Exchange de Donaciones:** `donaciones.exchange` (`topic`, durable; configurable con `app.rabbitmq.exchange.donations`)
+* **Exchange Alternativo / Alias:** `styleradar.donations.exchange`
 * **Exchange de Segunda Mano:** `styleradar.resale.exchange` (`topic`, durable)
 * **Exchange General de Estilo:** `styleradar.events` (`topic`, durable)
 * **Dead Letter Exchange (DLX):** `styleradar.dlx`

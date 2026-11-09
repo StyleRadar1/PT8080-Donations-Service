@@ -25,6 +25,11 @@ spring:
   flyway:
     enabled: false
 
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
 springdoc:
   api-docs:
     path: /v3/api-docs

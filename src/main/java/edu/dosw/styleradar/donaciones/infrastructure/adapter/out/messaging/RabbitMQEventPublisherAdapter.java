@@ -1,21 +1,20 @@
 package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
- * Adaptador de salida para la publicación de eventos de dominio hacia el broker de mensajería (RabbitMQ).
+ * Adaptador de compatibilidad retroactiva.
+ * @deprecated Utilizar {@link DonationEventPublisherAdapter} o {@link DonacionEventPublisherAdapter}.
  */
-@Component
-public class RabbitMQEventPublisherAdapter implements DonationEventPublisherPort {
+@Deprecated
+public class RabbitMQEventPublisherAdapter extends DonationEventPublisherAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(RabbitMQEventPublisherAdapter.class);
-
-    @Override
-    public void publishEvent(Object event) {
-        log.info("Publicando evento de dominio: {}", event);
+    public RabbitMQEventPublisherAdapter(
+            RabbitTemplate rabbitTemplate,
+            @Value("${app.rabbitmq.exchange.donations:donaciones.exchange}") String exchangeName,
+            @Value("${app.rabbitmq.routing-keys.donation-request-created:donacion.solicitud.creada}") String donationRequestCreatedRoutingKey,
+            @Value("${app.rabbitmq.routing-keys.donation-status-updated:donacion.estado.actualizado}") String donationStatusUpdatedRoutingKey) {
+        super(rabbitTemplate, exchangeName, donationRequestCreatedRoutingKey, donationStatusUpdatedRoutingKey);
     }
 }
