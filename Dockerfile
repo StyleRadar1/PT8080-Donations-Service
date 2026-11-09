@@ -30,8 +30,12 @@ COPY --from=builder --chown=appuser:appgroup /build/target/*.jar app.jar
 # Switch to non-privileged user
 USER appuser:appgroup
 
+# Environment variables with sensible cloud defaults
+ENV PORT=8520 \
+    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+
 # Official microservice assigned port
 EXPOSE 8520
 
 # Microservice entrypoint
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

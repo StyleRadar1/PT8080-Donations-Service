@@ -1,5 +1,5 @@
 server:
-  port: 8520
+  port: ${PORT:8520}
   servlet:
     context-path: /api/v1
 
@@ -8,7 +8,7 @@ spring:
     name: ms-segunda-vida-donaciones
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:styleradar_donations}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:styleradar_donations}${DB_SSLMODE:}}
     username: ${DB_USER:styleradar_user}
     password: ${DB_PASSWORD:styleradar_secret}
     driver-class-name: org.postgresql.Driver
@@ -26,13 +26,15 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
-  # Conexión al broker RabbitMQ (puerto estándar 5672) con confirmaciones y reintentos
+  # Conexión al broker RabbitMQ (puerto estándar 5672 o TLS 5671) con confirmaciones y reintentos
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
     virtual-host: ${RABBITMQ_VHOST:/}
+    ssl:
+      enabled: ${RABBITMQ_SSL_ENABLED:false}
     publisher-confirm-type: correlated
     publisher-returns: true
     template:

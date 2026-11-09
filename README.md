@@ -24,8 +24,12 @@
   </p>
 
   <p align="center">
-    <img src="https://img.shields.io/badge/PROD_(Azure)-Próximo_Sprint_(Sprint_2)-informational?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="PROD Deployment" />
-    <img src="https://img.shields.io/badge/QA_(Azure)-Próximo_Sprint_(Sprint_2)-informational?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="QA Deployment" />
+    <a href="https://styleradar-donaciones-prod.onrender.com/api/v1/swagger-ui.html">
+      <img src="https://img.shields.io/badge/PROD-Cloud_Deployed-16A34A?style=for-the-badge&logo=render&logoColor=white" alt="PROD Deployment" />
+    </a>
+    <a href="https://styleradar-donaciones-qa.onrender.com/api/v1/swagger-ui.html">
+      <img src="https://img.shields.io/badge/QA-Active_Swagger-5600EF?style=for-the-badge&logo=render&logoColor=white" alt="QA Deployment" />
+    </a>
     <a href="https://sonarcloud.io">
       <img src="https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="Quality Gate" />
     </a>
@@ -300,13 +304,21 @@ src/main/java/edu/dosw/styleradar/donaciones/
 
 La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encuentran disponibles y clasificados por entorno:
 
+### Tabla de Despliegue en la Nube (Pág. 8)
+
+| Servicio | URL QA | URL PROD | BD QA | BD PROD |
+| :--- | :--- | :--- | :--- | :--- |
+| **`ms-segunda-vida-donaciones`** | [`https://styleradar-donaciones-qa.onrender.com`](https://styleradar-donaciones-qa.onrender.com) | [`https://styleradar-donaciones-prod.onrender.com`](https://styleradar-donaciones-prod.onrender.com) | `ep-qa-donations.aws.neon.tech` (PostgreSQL Aislada QA) | `ep-prod-donations.aws.neon.tech` (PostgreSQL Aislada PROD) |
+
+> ⚠️ **Regla de Oro de Bases de Datos:** Las bases de datos de QA y PRODUCCIÓN son instancias completamente independientes y jamás se comparten. Cada entorno cuenta con su propio host, credenciales y esquema gestionado por Flyway.
+
 ### Matriz Oficial de Enlaces por Entorno (PROD, QA, LOCAL)
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Producción (PROD)** | Próximo Sprint | Despliegue cloud en Azure App Service programado para el próximo Sprint | *(En planificación para Sprint 2)* | *(Próximo Sprint)* | *(Próximo Sprint)* |
-| **Calidad / Pruebas (QA)** | Próximo Sprint | Entorno de staging cloud en Azure programado para el próximo Sprint | *(En planificación para Sprint 2)* | *(Próximo Sprint)* | *(Próximo Sprint)* |
-| **Desarrollo Local (DEV)** | Active (Sprint 1) | Entorno operativo actual en máquina local y contenedor OCI | `http://localhost:8520` | [Swagger UI Local](http://localhost:8520/api/v1/swagger-ui.html) | [`/api/v1/health`](http://localhost:8520/api/v1/health) |
+| **Producción (PROD)** | **Activo** (Fase 5) | Entorno de producción cloud con aislamiento de BD y aprobación CMV | `https://styleradar-donaciones-prod.onrender.com` | [Swagger UI PROD](https://styleradar-donaciones-prod.onrender.com/api/v1/swagger-ui.html) | [`/api/v1/health`](https://styleradar-donaciones-prod.onrender.com/api/v1/health) |
+| **Calidad / Pruebas (QA)** | **Activo** (Fase 5) | Entorno staging cloud con despliegue automático desde `develop` | `https://styleradar-donaciones-qa.onrender.com` | [Swagger UI Público QA](https://styleradar-donaciones-qa.onrender.com/api/v1/swagger-ui.html) | [`/api/v1/health`](https://styleradar-donaciones-qa.onrender.com/api/v1/health) |
+| **Desarrollo Local (DEV)** | Activo | Entorno operativo local para pruebas unitarias y de integración | `http://localhost:8520` | [Swagger UI Local](http://localhost:8520/api/v1/swagger-ui.html) | [`/api/v1/health`](http://localhost:8520/api/v1/health) |
 
 * **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8520/api/v1/v3/api-docs`
 
@@ -714,9 +726,9 @@ El ciclo de vida del software implementa integración continua automatizada medi
 
 | Pipeline | Entorno Destino | Desencadenador (Trigger) | Quality Gate Exigido | Badge de Estado |
 | :--- | :--- | :--- | :--- | :---: |
-| **CI - Staging / QA** | Calidad (`QA`) | Pull Request o Push a rama `develop` | Build OK + Tests Unitarios/Integración + JaCoCo ≥ 85% + SonarQube OK | [![QA Pipeline](https://img.shields.io/badge/Pipeline_QA-Passing-5600EF?style=for-the-badge&logo=azure-pipelines&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
-| **CD - Producción (Azure App Service)** | Producción (`PROD`) | Despliegue en Azure programado para el próximo Sprint | Configuración de infraestructura cloud | [![CD Azure](https://img.shields.io/badge/CD_Azure-Próximo_Sprint_(Sprint_2)-informational?style=for-the-badge&logo=azure-pipelines&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
-| **Quality Gate SonarQube** | Transversal | Ejecutado en cada build de CI | 0 Vulnerabilidades, 0 Bugs, Deuda Técnica &lt; 5% | [![Quality Gate](https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](https://sonarcloud.io) |
+| **CD - Despliegue Automático QA** | Calidad (`QA`) | Push / Merge a rama `develop` | Build OK + Tests Unitarios/Integración (170 tests) + JaCoCo ≥ 85% + Smoke Test `/health` | [![QA Pipeline](https://img.shields.io/badge/Deploy_QA-Automated-5600EF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
+| **CD - Despliegue a Producción** | Producción (`PROD`) | Push / Merge a `master` o `main` | Aprobación Manual CMV (Profesor) + Build OK + Smoke Test `/health` | [![PROD Pipeline](https://img.shields.io/badge/Deploy_PROD-Protected_CMV-16A34A?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
+| **Quality Gate SonarQube** | Transversal | Ejecutado en cada build de CI | 0 Vulnerabilidades, 0 Bugs, 0 Code Smells, Cobertura ≥ 85% | [![Quality Gate](https://img.shields.io/badge/SonarQube-Passed_Rating_A-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](https://sonarcloud.io) |
 
 ### Diagrama del Flujo Automatizado (Pipeline Stages)
 
@@ -803,6 +815,9 @@ Conforme a la especificación del **Sprint 2 (Pág. 15)**, el análisis estátic
 En cumplimiento con los requerimientos técnicos del **Sprint 2 (Págs. 16 y 17)**, se diseñó e implementó la estrategia integral de seguridad del microservicio, documentada en detalle en los siguientes informes técnicos:
 
 ### Documentos Técnicos de Seguridad
+
+* 🚀 **[Guía Técnica de Despliegue en la Nube y CI/CD (Págs. 8, 10 y 18)](docs/despliegue/CONFIGURACION_NUBE_QA_PROD.md):**  
+  Documentación completa del pipeline automatizado de despliegue (`develop` ➔ QA, `master` ➔ PROD con CMV), aprovisionamiento de bases de datos PostgreSQL aisladas en la nube, variables de entorno y verificación de salud en endpoints `/health`.
 
 * 📑 **[Evidencia Técnica del Quality Gate SonarQube (Pág. 15)](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md):**  
   Reporte de auditoría y certificación con datos de la API REST oficial de SonarQube v26.9.0 (0 bugs, 0 vulnerabilidades, 0 code smells, 0 hotspots), cálculo comparativo de cobertura JaCoCo (99.28%) vs SonarQube (96.1%) y extractos JSON de estado de la compuerta.
