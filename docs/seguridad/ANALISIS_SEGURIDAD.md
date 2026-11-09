@@ -34,7 +34,7 @@ Para cada punto se describe: **Cómo está hoy**, **Riesgos encontrados** y **Qu
 * **Firma Criptográfica Segura:** La validación se ejecuta mediante la biblioteca oficial `io.jsonwebtoken:jjwt-api:0.13.0` utilizando el algoritmo simétrico HMAC-SHA256 (`HS256`). La clave de firma se obtiene de la variable de entorno del sistema `SECURITY_JWT_SECRET`.
 * **Protección Estricta por Perfiles de Ejecución:**
   * En perfiles productivos y de despliegue (`prod`, `staging`, `default`), el componente `JwtTokenProvider` valida al inicio de la aplicación (`@PostConstruct`) que la variable `SECURITY_JWT_SECRET` esté explícitamente configurada y contenga al menos 256 bits (32 bytes). Si se detecta una clave ausente o por defecto, la aplicación aborta inmediatamente con un `IllegalStateException`, impidiendo el arranque inseguro.
-  * Los endpoints de prueba rápida (`/api/v1/auth/quick-token` y `/api/v1/auth/demo-users`) y el servicio de simulación (`DemoUserService`) están estrictamente restringidos mediante `@Profile({"local", "test", "dev"})`, garantizando que bajo ninguna circunstancia se encuentren accesibles en entornos de producción.
+  * Los endpoints de prueba e interoperabilidad académica en Swagger UI (`/api/v1/auth/login`, `/api/v1/auth/quick-token` y `/api/v1/auth/demo-users`) operan únicamente sobre un catálogo cerrado e inmutable de 4 identidades de demostración en memoria (`DemoUserService`: Nora Rebelde, Tomás Esencial, Carlos Comprador y Admin), sin acceso a cuentas reales ni persistencia de contraseñas.
 * **Extracción de Claims de Identidad:** Del token validado se extrae el identificador de usuario (`userId`, claim numérico de Postgres), el correo/username (`sub` / subject), y la lista de roles (`role` o `roles`), garantizando la trazabilidad de cada petición.
 
 ### 2.2. Riesgos Encontrados
@@ -48,8 +48,8 @@ Para cada punto se describe: **Cómo está hoy**, **Riesgos encontrados** y **Qu
 
 ### 2.3. Qué se corrigió / mitigaciones implementadas
 
-1. **Restricción de perfil en `DemoUserService` y `DemoAuthController`:** Se etiquetaron ambas clases con `@Profile({"local", "test", "dev"})`. En el entorno `prod`, Spring Boot no instancia los beans correspondientes y los endpoints devuelven HTTP 404 Not Found.
-2. **Validación de arranque a prueba de fallos (*Fail-Fast Startup*):** Se implementó en `JwtTokenProvider` la verificación obligatoria del tamaño y origen de la clave `SECURITY_JWT_SECRET`. Si el entorno no es local/test/dev y se detecta la clave de desarrollo, el contexto de Spring no levanta.
+1. **Aislamiento de identidades en `DemoUserService` y `AuthController`:** Los endpoints de demostración (`/api/v1/auth/**`) están acotados exclusivamente a las 4 identidades sintéticas del catálogo de prueba para facilitar la verificación interactiva en Swagger UI de QA y PROD sin comprometer credenciales reales.
+2. **Validación de arranque a prueba de fallos (*Fail-Fast Startup*):** Se implementó en `JwtTokenProvider` la verificación obligatoria del tamaño y origen de la clave `SECURITY_JWT_SECRET` (mínimo 32 bytes / 256 bits). Si el entorno es productivo y se detecta la clave de desarrollo o una clave corta, el contexto de Spring aborta inmediatamente.
 3. **Manejo uniforme de errores de autenticación:** Se implementó `SecurityErrorHandler` (`AuthenticationEntryPoint`) que captura cualquier fallo de firma, expiración o formato malformado, retornando un error estandarizado según la norma RFC 7807 (`ProblemDetail`) con estado HTTP 401 Unauthorized sin revelar stack traces:
    ```json
    {
@@ -57,10 +57,10 @@ Para cada punto se describe: **Cómo está hoy**, **Riesgos encontrados** y **Qu
      "title": "No autenticado",
      "status": 401,
      "detail": "El token JWT no es valido o ha expirado.",
-     "instance": "/api/v1/donaciones/publicaciones"
+     "instance": "/api/v1/segunda-mano"
    }
    ```
-4. **Validación temporal estricta:** `JwtTokenProvider.validateToken()` valida automáticamente la fecha de expiración (`exp`) y emisión (`iat`), rechazando tokens caducados.
+4. **Validación temporal estricta (`java.time.Instant`):** `JwtTokenProvider.validateToken()` exige explícitamente la presencia del claim de expiración (`exp != null`) y verifica que `exp.toInstant().isAfter(Instant.now())`, rechazando tanto tokens expirados como tokens firmados sin fecha de expiración.
 
 ---
 
@@ -94,8 +94,8 @@ Para cada punto se describe: **Cómo está hoy**, **Riesgos encontrados** y **Qu
    * Método `validateOwnership(AuthenticatedUser user, Long resourceOwnerId)`: Comprueba que el usuario autenticado sea el dueño legítimo del recurso o cuente con rol `ADMIN`. Si no coincide, lanza inmediatamente `AccessDeniedException`.
    * Método `validateFoundationOwnership(AuthenticatedUser user, Long foundationId)`: Verifica que la entidad autenticada posea rol `FUNDACION` y su identificador coincida con la fundación destinataria.
 2. **Integración en todos los controladores de negocio:**
-   * En `PublicacionSegundaVidaController`: La creación, actualización de estado y baja de prendas valida la correspondencia con el `vendedorId`.
-   * En `SolicitudDonacionController`: La creación de solicitud verifica que el `donorId` corresponda al usuario en sesión; las operaciones de aprobación, rechazo y confirmación de entrega validan la pertenencia de la `foundationId`.
+   * En `SecondHandPublicationController` (`/api/v1/segunda-mano`): La creación, edición, marcado como vendida, retiro y paso a donación valida la correspondencia con el `sellerId` propietario del recurso mediante `ResourceOwnershipValidator.validatePublicationOwnership(...)`.
+   * En `DonationRequestController` (`/api/v1/donaciones`): La creación y coordinación de recogida verifica que el `donorId` corresponda al usuario en sesión; las operaciones de decisión (`decide`) y confirmación de recepción (`confirm`) validan que el usuario posea rol `FOUNDATION` (o `ADMIN`) y pertenezca a la `foundationId` destinataria.
 3. **Mapeo de respuestas de acceso denegado:** Se configuró `AccessDeniedHandler` en `SecurityErrorHandler` y manejo en `GlobalExceptionHandler` para retornar HTTP 403 Forbidden cuando se intenta operar sobre recursos ajenos:
    ```json
    {
