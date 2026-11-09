@@ -104,7 +104,7 @@ mvn clean verify sonar:sonar "-Dsonar.login=<TU_TOKEN_SQU>"
 ```
 
 > [!IMPORTANT]
-> Es fundamental ejecutar `clean verify` junto con `sonar:sonar`. Esto garantiza que los 167 tests se ejecuten y JaCoCo genere el reporte `target/site/jacoco/jacoco.xml` antes de que SonarQube escanee el proyecto, permitiéndole cargar los porcentajes de cobertura de líneas y ramas.
+> Es fundamental ejecutar `clean verify` junto con `sonar:sonar`. Esto garantiza que los 170 tests se ejecuten y JaCoCo genere el reporte `target/site/jacoco/jacoco.xml` antes de que SonarQube escanee el proyecto, permitiéndole cargar los porcentajes de cobertura de líneas y ramas.
 > En PowerShell, asegurarse de encerrar el argumento completo entre comillas: `"-Dsonar.login=squ_..."`.
 
 ---
@@ -120,6 +120,11 @@ Al finalizar el escaneo, ingresar al dashboard:
 | **Confiabilidad (Reliability)** | **A (0 Bugs)** | 0 Bugs | ✅ MÁXIMA CALIFICACIÓN |
 | **Seguridad (Security)** | **A (0 Vulnerabilidades)** | 0 Vulnerabilidades | ✅ MÁXIMA CALIFICACIÓN |
 | **Revisión de Seguridad (Security Review)** | **A (0 Hotspots)** | 0 Hotspots pendientes | ✅ MÁXIMA CALIFICACIÓN |
-| **Mantenibilidad (Maintainability)** | **A (Deuda: 0.3%)** | Deuda < 5% | ✅ MÁXIMA CALIFICACIÓN |
+| **Mantenibilidad (Maintainability)** | **A (0 Code Smells / 0 Deuda)** | Deuda < 5% | ✅ MÁXIMA CALIFICACIÓN |
 | **Duplicación de Código** | **0.0%** | < 3.0% | ✅ MÁXIMA CALIFICACIÓN |
-| **Cobertura de Pruebas (JaCoCo XML)** | **96.3%** | ≥ 85.0% | ✅ SUPERA META (167 Tests) |
+| **Cobertura de Líneas (JaCoCo Line Coverage)** | **99.3% (99.28%)** | ≥ 85.0% | ✅ SUPERA META (1.100 / 1.108 líneas) |
+| **Cobertura Compuesta (SonarQube Composite)** | **96.1%** | ≥ 80.0% / 85.0% | ✅ SUPERA META (Líneas + Condiciones) |
+| **Total de Pruebas Ejecutadas** | **170 Tests** | 100% pasando | ✅ 0 Fallos / 0 Errores |
+
+> [!TIP]
+> Para consultar la evidencia técnica con capturas de la API REST oficial de SonarQube y la justificación matemática de las métricas de cobertura, consulta [Evidencia Técnica del Quality Gate](EVIDENCIA_SONARQUBE_QUALITY_GATE.md).

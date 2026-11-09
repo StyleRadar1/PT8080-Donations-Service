@@ -776,7 +776,7 @@ Conforme a la especificación del **Sprint 2 (Pág. 15)**, el análisis estátic
 | **Seguridad (Security)** | **A** | 0 Vulnerabilidades | 0 vulnerabilidades OWASP / CWE detectadas en el código. |
 | **Mantenibilidad (Maintainability)** | **A** | Deuda < 5% | 0 Code Smells críticos; arquitectura hexagonal limpia. |
 | **Revisión de Seguridad (Security Review)** | **A** | 100% Hotspots | Hotspots revisados y neutralizados con `@SuppressWarnings`. |
-| **Quality Gate Global** | **APROBADO** | Pasó | Cobertura JaCoCo consolidada: **99.37%** (meta: ≥ 85%). |
+| **Quality Gate Global** | **APROBADO** | Pasó | Cobertura de Líneas JaCoCo: **99.28%** (1.100/1.108 líneas) / SonarQube Compuesta: **96.1%** (meta: ≥ 85%). |
 
 <div align="center">
   <table width="100%" style="margin: 18px 0; border: 2px solid #16A34A; border-radius: 8px; background-color: #F0FDF4;">
@@ -803,6 +803,9 @@ Conforme a la especificación del **Sprint 2 (Pág. 15)**, el análisis estátic
 En cumplimiento con los requerimientos técnicos del **Sprint 2 (Págs. 16 y 17)**, se diseñó e implementó la estrategia integral de seguridad del microservicio, documentada en detalle en los siguientes informes técnicos:
 
 ### Documentos Técnicos de Seguridad
+
+* 📑 **[Evidencia Técnica del Quality Gate SonarQube (Pág. 15)](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md):**  
+  Reporte de auditoría y certificación con datos de la API REST oficial de SonarQube v26.9.0 (0 bugs, 0 vulnerabilidades, 0 code smells, 0 hotspots), cálculo comparativo de cobertura JaCoCo (99.28%) vs SonarQube (96.1%) y extractos JSON de estado de la compuerta.
 
 * 📊 **[Guía Técnica de Calidad y Análisis SonarQube (Pág. 15)](docs/seguridad/ANALISIS_SONARQUBE.md):**  
   Especificación de versiones (SonarQube 26.9.0 / LTS Community, Java 21 LTS, `sonar-maven-plugin:3.11.0.3922`), exclusiones de duplicación (`sonar.cpd.exclusions`), paso a paso para escaneo y certificación de Quality Gate en verde con calificación A en todas las dimensiones y 0.0% de duplicación.

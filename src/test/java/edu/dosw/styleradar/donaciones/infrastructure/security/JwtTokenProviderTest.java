@@ -5,7 +5,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 
+import io.jsonwebtoken.Jwts;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,6 +52,51 @@ class JwtTokenProviderTest {
         assertThat(jwtTokenProvider.validateToken("token.invalido.malformado")).isFalse();
         assertThat(jwtTokenProvider.validateToken(null)).isFalse();
         assertThat(jwtTokenProvider.validateToken("")).isFalse();
+    }
+
+    @Test
+    @DisplayName("Debe validar exitosamente un token vigente con fecha de expiración futura")
+    void shouldValidateValidTokenWithFutureExpiration() {
+        String token = jwtTokenProvider.generateToken(201L, "valid@styleradar.com", Role.USER, "Valid User");
+
+        assertThat(jwtTokenProvider.validateToken(token)).isTrue();
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un token expirado cuya fecha de expiración esté en el pasado")
+    void shouldRejectExpiredToken() {
+        String testSecret = "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+        SecretKey key = new SecretKeySpec(Base64.getDecoder().decode(testSecret), "HmacSHA256");
+        Instant now = Instant.now();
+        String expiredToken = Jwts.builder()
+                .subject("expired@styleradar.com")
+                .claim("userId", 301L)
+                .claim("role", Role.USER.name())
+                .claim("name", "Expired User")
+                .claim("iat", now.minusSeconds(120).getEpochSecond())
+                .claim("exp", now.minusSeconds(60).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+
+        assertThat(jwtTokenProvider.validateToken(expiredToken)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un token que no contenga el claim de expiración 'exp'")
+    void shouldRejectTokenWithoutExpClaim() {
+        String testSecret = "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+        SecretKey key = new SecretKeySpec(Base64.getDecoder().decode(testSecret), "HmacSHA256");
+        Instant now = Instant.now();
+        String tokenWithoutExp = Jwts.builder()
+                .subject("noexp@styleradar.com")
+                .claim("userId", 401L)
+                .claim("role", Role.USER.name())
+                .claim("name", "No Exp User")
+                .claim("iat", now.getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+
+        assertThat(jwtTokenProvider.validateToken(tokenWithoutExp)).isFalse();
     }
 
     @Test

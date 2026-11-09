@@ -120,7 +120,12 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Claims claims = parser.parseSignedClaims(token).getPayload();
-            return claims != null;
+            Object exp = claims.get("exp");
+            if (exp == null) {
+                return false;
+            }
+            long expSeconds = exp instanceof Number number ? number.longValue() : Long.parseLong(exp.toString());
+            return expSeconds > Instant.now().getEpochSecond();
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
