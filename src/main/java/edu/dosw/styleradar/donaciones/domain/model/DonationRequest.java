@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.donaciones.domain.model;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidStateTransitionException;
@@ -53,7 +54,7 @@ public class DonationRequest {
     public void initiate() {
         validateInitialInvariants();
         this.status = DonationRequestStatus.PENDING;
-        this.requestedAt = LocalDateTime.now();
+        this.requestedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     /**
@@ -72,7 +73,7 @@ public class DonationRequest {
                     "No se puede aprobar una solicitud que no esté en estado PENDIENTE. Estado actual: " + status);
         }
         this.status = DonationRequestStatus.APPROVED;
-        this.decidedAt = LocalDateTime.now();
+        this.decidedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     /**
@@ -95,7 +96,7 @@ public class DonationRequest {
         }
         this.status = DonationRequestStatus.REJECTED;
         this.rejectionReason = reason.trim();
-        this.decidedAt = LocalDateTime.now();
+        this.decidedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     /**
@@ -131,6 +132,6 @@ public class DonationRequest {
                     "Solo se puede confirmar la entrega de una solicitud en proceso de recogida. Estado actual: " + status);
         }
         this.status = DonationRequestStatus.DELIVERED;
-        this.receivedAt = LocalDateTime.now();
+        this.receivedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 }

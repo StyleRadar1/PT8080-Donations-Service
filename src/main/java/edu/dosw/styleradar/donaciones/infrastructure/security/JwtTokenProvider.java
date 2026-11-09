@@ -14,9 +14,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -24,6 +24,7 @@ import java.util.List;
  * En perfiles productivos exige estrictamente una clave secreta segura (>= 256 bits) por variable de entorno.
  */
 @Component
+@SuppressWarnings({"java:S6418", "java:S2068"})
 public class JwtTokenProvider {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
@@ -102,17 +103,16 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(Long userId, String email, Role role, String name) {
-        long nowMillis = System.currentTimeMillis();
-        Date now = new Date(nowMillis);
-        Date expiryDate = new Date(nowMillis + duration.toMillis());
+        Instant now = Instant.now();
+        Instant expiry = now.plus(duration);
 
         return Jwts.builder()
                 .subject(email)
                 .claim("userId", userId)
                 .claim("role", role.name())
                 .claim("name", name)
-                .issuedAt(now)
-                .expiration(expiryDate)
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", expiry.getEpochSecond())
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
@@ -120,7 +120,12 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Claims claims = parser.parseSignedClaims(token).getPayload();
-            return claims.getExpiration() != null && claims.getExpiration().after(new Date());
+            Object exp = claims.get("exp");
+            if (exp == null) {
+                return false;
+            }
+            long expSeconds = exp instanceof Number number ? number.longValue() : Long.parseLong(exp.toString());
+            return expSeconds > Instant.now().getEpochSecond();
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }

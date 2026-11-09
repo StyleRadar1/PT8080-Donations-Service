@@ -72,41 +72,37 @@ public class ResourceOwnershipValidator {
         if (principal instanceof UserPrincipal userPrincipal) {
             return userPrincipal.id();
         }
-
         if (principal instanceof UserDetails userDetails) {
-            String username = userDetails.getUsername();
-            try {
-                return Long.parseLong(username);
-            } catch (NumberFormatException ignored) {
-                // Mapeo de conveniencia para usuarios mock con correo
-                if ("user@styleradar.com".equalsIgnoreCase(username)) {
-                    return 101L;
-                }
-                if ("foundation@styleradar.com".equalsIgnoreCase(username)) {
-                    return 501L;
-                }
-                if ("admin@styleradar.com".equalsIgnoreCase(username)) {
-                    return 1L;
-                }
-            }
+            return parseUserId(userDetails.getUsername());
         }
-
         if (principal instanceof String principalStr) {
-            try {
-                return Long.parseLong(principalStr);
-            } catch (NumberFormatException ignored) {
-                if ("user@styleradar.com".equalsIgnoreCase(principalStr)) {
-                    return 101L;
-                }
-                if ("foundation@styleradar.com".equalsIgnoreCase(principalStr)) {
-                    return 501L;
-                }
-                if ("admin@styleradar.com".equalsIgnoreCase(principalStr)) {
-                    return 1L;
-                }
-            }
+            return parseUserId(principalStr);
         }
 
+        return null;
+    }
+
+    private Long parseUserId(String rawIdentifier) {
+        if (rawIdentifier == null) {
+            return null;
+        }
+        try {
+            return Long.parseLong(rawIdentifier);
+        } catch (NumberFormatException ignored) {
+            return mapMockEmailToId(rawIdentifier);
+        }
+    }
+
+    private Long mapMockEmailToId(String email) {
+        if ("user@styleradar.com".equalsIgnoreCase(email)) {
+            return 101L;
+        }
+        if ("foundation@styleradar.com".equalsIgnoreCase(email)) {
+            return 501L;
+        }
+        if ("admin@styleradar.com".equalsIgnoreCase(email)) {
+            return 1L;
+        }
         return null;
     }
 }

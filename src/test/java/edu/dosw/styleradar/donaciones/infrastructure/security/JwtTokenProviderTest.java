@@ -5,7 +5,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 
+import io.jsonwebtoken.Jwts;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,6 +55,51 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    @DisplayName("Debe validar exitosamente un token vigente con fecha de expiración futura")
+    void shouldValidateValidTokenWithFutureExpiration() {
+        String token = jwtTokenProvider.generateToken(201L, "valid@styleradar.com", Role.USER, "Valid User");
+
+        assertThat(jwtTokenProvider.validateToken(token)).isTrue();
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un token expirado cuya fecha de expiración esté en el pasado")
+    void shouldRejectExpiredToken() {
+        String testSecret = "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+        SecretKey key = new SecretKeySpec(Base64.getDecoder().decode(testSecret), "HmacSHA256");
+        Instant now = Instant.now();
+        String expiredToken = Jwts.builder()
+                .subject("expired@styleradar.com")
+                .claim("userId", 301L)
+                .claim("role", Role.USER.name())
+                .claim("name", "Expired User")
+                .claim("iat", now.minusSeconds(120).getEpochSecond())
+                .claim("exp", now.minusSeconds(60).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+
+        assertThat(jwtTokenProvider.validateToken(expiredToken)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un token que no contenga el claim de expiración 'exp'")
+    void shouldRejectTokenWithoutExpClaim() {
+        String testSecret = "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+        SecretKey key = new SecretKeySpec(Base64.getDecoder().decode(testSecret), "HmacSHA256");
+        Instant now = Instant.now();
+        String tokenWithoutExp = Jwts.builder()
+                .subject("noexp@styleradar.com")
+                .claim("userId", 401L)
+                .claim("role", Role.USER.name())
+                .claim("name", "No Exp User")
+                .claim("iat", now.getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+
+        assertThat(jwtTokenProvider.validateToken(tokenWithoutExp)).isFalse();
+    }
+
+    @Test
     @DisplayName("En entorno local/test debe permitir clave predeterminada de 256 bits si no se suministra una externa")
     void shouldHandleDefaultKeyInLocalOrTest() {
         MockEnvironment env = new MockEnvironment();
@@ -66,16 +116,17 @@ class JwtTokenProviderTest {
     void shouldEnforceSecretInProduction() {
         MockEnvironment prodEnv = new MockEnvironment();
         prodEnv.setActiveProfiles("prod");
+        Duration duration = Duration.ofHours(1);
 
-        assertThatThrownBy(() -> new JwtTokenProvider(null, Duration.ofHours(1), prodEnv))
+        assertThatThrownBy(() -> new JwtTokenProvider(null, duration, prodEnv))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
 
-        assertThatThrownBy(() -> new JwtTokenProvider("", Duration.ofHours(1), prodEnv))
+        assertThatThrownBy(() -> new JwtTokenProvider("", duration, prodEnv))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
 
-        assertThatThrownBy(() -> new JwtTokenProvider("clave-corta-invalida", Duration.ofHours(1), prodEnv))
+        assertThatThrownBy(() -> new JwtTokenProvider("clave-corta-invalida", duration, prodEnv))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -95,13 +146,14 @@ class JwtTokenProviderTest {
     @DisplayName("En perfil default o sin perfil activo debe exigir clave externa y rechazar clave predeterminada")
     void shouldEnforceSecretInDefaultProfile() {
         MockEnvironment defaultEnv = new MockEnvironment(); // Sin perfiles activos (default)
+        Duration duration = Duration.ofHours(1);
 
-        assertThatThrownBy(() -> new JwtTokenProvider(null, Duration.ofHours(1), defaultEnv))
+        assertThatThrownBy(() -> new JwtTokenProvider(null, duration, defaultEnv))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
 
         // También con environment nulo
-        assertThatThrownBy(() -> new JwtTokenProvider(null, Duration.ofHours(1), null))
+        assertThatThrownBy(() -> new JwtTokenProvider(null, duration, null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
     }

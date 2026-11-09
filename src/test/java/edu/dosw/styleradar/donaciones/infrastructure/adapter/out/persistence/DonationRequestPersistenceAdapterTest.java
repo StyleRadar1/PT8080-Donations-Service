@@ -141,8 +141,7 @@ class DonationRequestPersistenceAdapterTest {
 
         List<DonationRequest> list = adapter.findByDonorId(101L);
 
-        assertThat(list).hasSize(2);
-        assertThat(list).allMatch(r -> r.getDonorId().equals(101L));
+        assertThat(list).hasSize(2).allMatch(r -> r.getDonorId().equals(101L));
     }
 
     @Test

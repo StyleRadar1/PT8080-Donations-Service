@@ -102,8 +102,7 @@ class RabbitMQIntegrationTest {
         adapter.publishEvent(domainEvent);
 
         Object receivedMessage = rabbitTemplate.receiveAndConvert(QUEUE_NAME, 5000);
-        assertThat(receivedMessage).isNotNull();
-        assertThat(receivedMessage).isInstanceOf(DonationRequestCreatedIntegrationEvent.class);
+        assertThat(receivedMessage).isNotNull().isInstanceOf(DonationRequestCreatedIntegrationEvent.class);
 
         DonationRequestCreatedIntegrationEvent event = (DonationRequestCreatedIntegrationEvent) receivedMessage;
         assertThat(event.getEventType()).isEqualTo("donacion.solicitud.creada");

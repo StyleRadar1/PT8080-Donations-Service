@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Service
 @Profile({"local", "test", "dev"})
+@SuppressWarnings("java:S2068")
 public class DemoUserService {
 
     private final JwtTokenProvider jwtTokenProvider;

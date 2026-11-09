@@ -32,6 +32,25 @@
         <jacoco.min.line.coverage>0.85</jacoco.min.line.coverage>
         <byte-buddy.version>1.15.11</byte-buddy.version>
         <testcontainers.version>1.20.4</testcontainers.version>
+
+        <!-- SonarQube Quality Gate Properties -->
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.projectKey>styleradar_ms-segunda-vida-donaciones</sonar.projectKey>
+        <sonar.projectName>StyleRadar - Donations Service</sonar.projectName>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.exclusions>
+            **/DonationsServiceApplication.java,
+            **/infrastructure/adapter/in/rest/doc/**,
+            **/application/dto/**,
+            **/infrastructure/adapter/out/persistence/entity/**
+        </sonar.exclusions>
+        <sonar.cpd.exclusions>
+            **/application/dto/**,
+            **/infrastructure/adapter/out/persistence/entity/**,
+            **/infrastructure/adapter/in/rest/doc/**
+        </sonar.cpd.exclusions>
+        <sonar-maven-plugin.version>3.11.0.3922</sonar-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -213,6 +232,13 @@
                         <arg>-parameters</arg>
                     </compilerArgs>
                 </configuration>
+            </plugin>
+
+            <!-- SonarQube Scanner Plugin -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>${sonar-maven-plugin.version}</version>
             </plugin>
 
             <!-- JaCoCo Maven Plugin (85% Line Coverage on verify) -->

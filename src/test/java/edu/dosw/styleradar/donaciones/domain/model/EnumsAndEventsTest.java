@@ -1,7 +1,6 @@
 package edu.dosw.styleradar.donaciones.domain.model;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.DisplayName;

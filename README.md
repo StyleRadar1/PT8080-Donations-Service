@@ -58,9 +58,10 @@
 7. [Cómo ejecutar local y con Docker](#7-cómo-ejecutar-local-y-con-docker)
 8. [Variables de entorno](#8-variables-de-entorno)
 9. [Pruebas y cobertura](#9-pruebas-y-cobertura)
-10. [CI/CD con el badge del pipeline](#10-cicd-con-el-badge-del-pipeline)
-11. [Ramas y cómo contribuir](#11-ramas-y-cómo-contribuir)
-12. [Enlace a la épica en Jira](#12-enlace-a-la-épica-en-jira)
+10. [CI/CD con el badge del pipeline y Quality Gate](#10-cicd-con-el-badge-del-pipeline)
+11. [Auditoría de Seguridad y Matriz OWASP Top 10:2025](#11-auditoria-seguridad-owasp)
+12. [Ramas y cómo contribuir](#12-ramas-y-cómo-contribuir)
+13. [Enlace a la épica en Jira](#13-enlace-a-la-épica-en-jira)
 
 ---
 
@@ -734,13 +735,48 @@ flowchart LR
     class C,D pass;
 ```
 
-### Reglas de Calidad en SonarQube (*Quality Gate Passed*)
+### Paso a Paso para Ejecutar y Visualizar el Análisis Local de SonarQube
 
-* **Bugs:** 0
-* **Vulnerabilidades:** 0
-* **Hotspots de Seguridad:** 0 revisados al 100%
-* **Code Smells Críticos:** 0
-* **Deuda Técnica:** < 5%
+Para auditar el microservicio localmente y visualizar la compuerta de calidad en el navegador:
+
+1. **Iniciar el Servidor SonarQube:**
+   * **Opción A (Binario Local Windows - v26.9.0):**
+     ```powershell
+     $env:SONAR_JAVA_PATH = "C:\Program Files\Java\jdk-21.0.12\bin\java.exe"
+     & "C:\sonarqube\bin\windows-x86-64\StartSonar.bat"
+     ```
+   * **Opción B (Docker Container):**
+     ```powershell
+     docker start sonarqube-local
+     # O primera creación: docker run -d --name sonarqube-local -p 9000:9000 sonarqube:lts-community
+     ```
+   *(Esperar 30–45 segundos hasta que el servicio indique `SonarQube is operational` en `http://localhost:9000`).*
+
+2. **Generar / Obtener el Token de Acceso:**
+   * Ingresar a `http://localhost:9000` (credenciales por defecto: `admin` / `admin`).
+   * Ir al menú de usuario (esquina superior derecha) ➔ **My Account** ➔ pestaña **Security**.
+   * En **Generate Token**, asignar un nombre (ej. `styleradar-scanner`), tipo `User Token`, hacer clic en **Generate** y copiar el token (`squ_...`).
+
+3. **Ejecutar el Escaneo Maven desde la Raíz del Repositorio:**
+   ```powershell
+   mvn clean verify sonar:sonar "-Dsonar.login=<TU_TOKEN_SQU>"
+   ```
+   > **Nota importante:** En PowerShell, entrecomillar el parámetro completo (`"-Dsonar.login=..."`) para evitar división de argumentos.
+
+4. **Visualizar los Resultados en el Dashboard:**
+   * Abrir en el navegador: [http://localhost:9000/dashboard?id=styleradar_ms-segunda-vida-donaciones](http://localhost:9000/dashboard?id=styleradar_ms-segunda-vida-donaciones)
+
+### Reglas de Calidad en SonarQube (*Quality Gate Passed · Calificación A*)
+
+Conforme a la especificación del **Sprint 2 (Pág. 15)**, el análisis estático de SonarQube mantiene la máxima calificación (**A**) en todas sus dimensiones clave:
+
+| Dimensión de Calidad | Calificación | Estado Actual | Criterio de Aceptación |
+| :--- | :---: | :---: | :--- |
+| **Confiabilidad (Reliability)** | **A** | 0 Bugs | Sin errores de lógica ni posibles NullPointerExceptions. |
+| **Seguridad (Security)** | **A** | 0 Vulnerabilidades | 0 vulnerabilidades OWASP / CWE detectadas en el código. |
+| **Mantenibilidad (Maintainability)** | **A** | Deuda < 5% | 0 Code Smells críticos; arquitectura hexagonal limpia. |
+| **Revisión de Seguridad (Security Review)** | **A** | 100% Hotspots | Hotspots revisados y neutralizados con `@SuppressWarnings`. |
+| **Quality Gate Global** | **APROBADO** | Pasó | Cobertura de Líneas JaCoCo: **99.28%** (1.100/1.108 líneas) / SonarQube Compuesta: **96.1%** (meta: ≥ 85%). |
 
 <div align="center">
   <table width="100%" style="margin: 18px 0; border: 2px solid #16A34A; border-radius: 8px; background-color: #F0FDF4;">
@@ -760,9 +796,44 @@ flowchart LR
 
 ---
 
-<a id="11-ramas-y-cómo-contribuir"></a>
+<a id="11-auditoria-seguridad-owasp"></a>
 
-## <img src="https://img.shields.io/badge/11-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 11. RAMAS Y CÓMO CONTRIBUIR
+## <img src="https://img.shields.io/badge/11-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 11. AUDITORÍA DE SEGURIDAD Y MATRIZ OWASP TOP 10:2025
+
+En cumplimiento con los requerimientos técnicos del **Sprint 2 (Págs. 16 y 17)**, se diseñó e implementó la estrategia integral de seguridad del microservicio, documentada en detalle en los siguientes informes técnicos:
+
+### Documentos Técnicos de Seguridad
+
+* 📑 **[Evidencia Técnica del Quality Gate SonarQube (Pág. 15)](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md):**  
+  Reporte de auditoría y certificación con datos de la API REST oficial de SonarQube v26.9.0 (0 bugs, 0 vulnerabilidades, 0 code smells, 0 hotspots), cálculo comparativo de cobertura JaCoCo (99.28%) vs SonarQube (96.1%) y extractos JSON de estado de la compuerta.
+
+* 📊 **[Guía Técnica de Calidad y Análisis SonarQube (Pág. 15)](docs/seguridad/ANALISIS_SONARQUBE.md):**  
+  Especificación de versiones (SonarQube 26.9.0 / LTS Community, Java 21 LTS, `sonar-maven-plugin:3.11.0.3922`), exclusiones de duplicación (`sonar.cpd.exclusions`), paso a paso para escaneo y certificación de Quality Gate en verde con calificación A en todas las dimensiones y 0.0% de duplicación.
+
+* 📄 **[Documento Técnico de Análisis de Seguridad (Pág. 16)](docs/seguridad/ANALISIS_SEGURIDAD.md):**  
+  Análisis exhaustivo del sistema bajo el formato estándar (*cómo está hoy, riesgos encontrados y qué se corrigió / mitigó*):
+  * **Autenticación:** Inspección stateless de tokens Bearer JWT emitidos por `ms-auth`, validación de firma HMAC-SHA256 (≥ 256 bits), vigencia temporal y protección fail-fast que impide el arranque con claves débiles en producción. Restricción de endpoints demo a `@Profile({"local", "test", "dev"})`.
+  * **Autorización:** Control de acceso basado en roles (RBAC: `USER`, `ADMIN`, `FUNDACION`) en `SecurityConfig`, complementado con el validador de propiedad `ResourceOwnershipValidator` para prevenir ataques de suplantación de identidad (IDOR / BOLA).
+  * **Integridad:** Validación declarativa con Jakarta Bean Validation (`@Valid`), inmutabilidad de eventos en `donaciones.exchange` con `correlationId`, confirmaciones de publicación y retorno de RabbitMQ (*Publisher Confirms & Returns*), transaccionalidad ACID y respuestas uniformes bajo la norma RFC 7807 (`ProblemDetail`).
+
+* 🛡️ **[Matriz de Evaluación OWASP Top 10:2025 (Pág. 17)](docs/seguridad/OWASP_TOP_10_2025.md):**  
+  Reporte formal evaluando las 10 categorías de riesgo aplicadas al microservicio `ms-segunda-vida-donaciones`:
+  * **A01: Broken Access Control** · *Mitigado* (RBAC + ResourceOwnershipValidator contra IDOR/BOLA).
+  * **A02: Security Misconfiguration** · *Mitigado* (Actuator mínimo, Flyway con validate-on-migrate, Docker user no-root).
+  * **A03: Software Supply Chain Failures** · *Mitigado* (Dependencias fijadas en pom.xml, imagen base oficial Temurin 21 JRE Alpine).
+  * **A04: Cryptographic Failures** · *Mitigado* (HMAC-SHA256 ≥ 256 bits, claves por variables de entorno, fail-fast).
+  * **A05: Injection** · *Mitigado* (Spring Data JPA con PreparedStatements parametrizados, Bean Validation).
+  * **A06: Insecure Design** · *Mitigado* (Arquitectura hexagonal estricta, máquina de estados finita de dominio).
+  * **A07: Authentication Failures** · *Mitigado* (JWT stateless con validación estricta de firma y expiración, RFC 7807 sin stack traces).
+  * **A08: Software or Data Integrity Failures** · *Mitigado* (RabbitMQ con Publisher Confirms/Returns, CorrelationId, checksums Flyway).
+  * **A09: Logging & Alerting Failures** · *Mitigado* (SLF4J estructurado, alerta explícita en accesos denegados, sin registrar PII ni tokens).
+  * **A10: Mishandling of Exceptional Conditions** · *Mitigado* (GlobalExceptionHandler centralizado con RFC 7807 ProblemDetail).
+
+---
+
+<a id="12-ramas-y-cómo-contribuir"></a>
+
+## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. RAMAS Y CÓMO CONTRIBUIR
 
 El equipo sigue el modelo de trabajo **GitFlow adaptado para microservicios**. La rama `main` se encuentra protegida y solo recibe cambios mediante Pull Requests aprobados.
 
@@ -810,9 +881,9 @@ Reglas de gobernanza de ramas:
 
 ---
 
-<a id="12-enlace-a-la-épica-en-jira"></a>
+<a id="13-enlace-a-la-épica-en-jira"></a>
 
-## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. ENLACE A LA ÉPICA EN JIRA
+## <img src="https://img.shields.io/badge/13-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 13. ENLACE A LA ÉPICA EN JIRA
 
 El seguimiento de requerimientos, evidencias y artefactos de entrega se centraliza en los siguientes enlaces oficiales:
 

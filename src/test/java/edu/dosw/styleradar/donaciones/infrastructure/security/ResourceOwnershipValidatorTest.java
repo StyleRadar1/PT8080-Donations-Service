@@ -1,6 +1,5 @@
 package edu.dosw.styleradar.donaciones.infrastructure.security;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
