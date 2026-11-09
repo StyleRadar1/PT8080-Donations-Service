@@ -4,24 +4,32 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Proveedor de tokens JWT para autenticación segura en la API y Swagger.
+ * En perfiles productivos exige estrictamente una clave secreta segura (>= 256 bits) por variable de entorno.
  */
 @Component
 public class JwtTokenProvider {
 
-    // Clave secreta predeterminada de 256 bits si no se proporciona variable de entorno
-    private static final String DEFAULT_SECRET_BASE64 =
+    private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
+
+    // Clave de desarrollo predeterminada para perfiles local/test exclusivamente
+    private static final String DEFAULT_DEV_SECRET_BASE64 =
             "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
 
     private final SecretKey key;
@@ -30,19 +38,43 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(
             @Value("${styleradar.security.jwt.secret-base64:}") String secretBase64,
-            @Value("${styleradar.security.jwt.duration:PT24H}") Duration duration) {
-        String effectiveSecret = (secretBase64 == null || secretBase64.isBlank())
-                ? DEFAULT_SECRET_BASE64
-                : secretBase64;
+            @Value("${styleradar.security.jwt.duration:PT24H}") Duration duration,
+            Environment env) {
+
+        boolean isLocalOrTestProfile = isLocalOrTestProfile(env);
+        String effectiveSecret = secretBase64;
+
+        if (effectiveSecret == null || effectiveSecret.isBlank()) {
+            if (isLocalOrTestProfile) {
+                log.warn("ADVERTENCIA DE SEGURIDAD: Usando clave secreta JWT predeterminada para entorno local/pruebas.");
+                effectiveSecret = DEFAULT_DEV_SECRET_BASE64;
+            } else {
+                throw new IllegalStateException(
+                        "La variable de entorno JWT_SECRET_BASE64 es obligatoria en ambientes productivos y debe contener al menos 256 bits (32 bytes en Base64)."
+                );
+            }
+        }
 
         byte[] decodedKey;
         try {
             decodedKey = Base64.getDecoder().decode(effectiveSecret);
             if (decodedKey.length < 32) {
-                decodedKey = padTo256Bits(effectiveSecret.getBytes(StandardCharsets.UTF_8));
+                if (isLocalOrTestProfile) {
+                    decodedKey = padTo256Bits(effectiveSecret.getBytes(StandardCharsets.UTF_8));
+                } else {
+                    throw new IllegalStateException(
+                            "JWT_SECRET_BASE64 es requerida y debe contener al menos 256 bits (32 bytes)."
+                    );
+                }
             }
         } catch (IllegalArgumentException e) {
-            decodedKey = padTo256Bits(effectiveSecret.getBytes(StandardCharsets.UTF_8));
+            if (isLocalOrTestProfile) {
+                decodedKey = padTo256Bits(effectiveSecret.getBytes(StandardCharsets.UTF_8));
+            } else {
+                throw new IllegalStateException(
+                        "JWT_SECRET_BASE64 debe ser una cadena Base64 válida con al menos 256 bits.", e
+                );
+            }
         }
 
         this.key = new SecretKeySpec(decodedKey, "HmacSHA256");
@@ -50,6 +82,18 @@ public class JwtTokenProvider {
                 ? Duration.ofHours(24)
                 : duration;
         this.parser = Jwts.parser().verifyWith(this.key).build();
+    }
+
+    private static boolean isLocalOrTestProfile(Environment env) {
+        if (env == null) return true; // Para pruebas unitarias aisladas sin contexto Spring
+        List<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
+        if (activeProfiles.isEmpty()) {
+            activeProfiles = Arrays.asList(env.getDefaultProfiles());
+        }
+        return activeProfiles.contains("local")
+                || activeProfiles.contains("test")
+                || activeProfiles.contains("dev")
+                || activeProfiles.contains("default");
     }
 
     private static byte[] padTo256Bits(byte[] input) {

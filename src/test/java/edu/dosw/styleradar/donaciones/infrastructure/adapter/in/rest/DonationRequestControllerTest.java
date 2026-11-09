@@ -29,13 +29,16 @@ import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCa
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.DonationRequestRestMapper;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtAuthenticationFilter;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtTokenProvider;
+import edu.dosw.styleradar.donaciones.infrastructure.security.ResourceOwnershipValidator;
 import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityConfig;
 import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityErrorHandler;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -73,6 +76,9 @@ class DonationRequestControllerTest {
 
     @MockBean
     private ConfirmDonationReceiptUseCase confirmDonationReceiptUseCase;
+
+    @MockBean
+    private ResourceOwnershipValidator resourceOwnershipValidator;
 
     @Autowired
     private DonationRequestRestMapper donationRequestRestMapper;
@@ -225,5 +231,21 @@ class DonationRequestControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DELIVERED"));
+    }
+
+    @Test
+    @DisplayName("PATCH /donaciones/{id}/confirm - Debe retornar 403 cuando la fundación no coincide con el recurso ni es admin")
+    void shouldReturn403WhenFoundationMismatches() throws Exception {
+        ConfirmReceiptRequestDTO request = new ConfirmReceiptRequestDTO(999L);
+        doThrow(new AccessDeniedException("Acceso denegado: No pertenece a la fundación"))
+                .when(resourceOwnershipValidator).validateOwnerOrAdmin(999L);
+
+        mockMvc.perform(patch("/donaciones/1/confirm")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.title").value("Acceso denegado"))
+                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"));
     }
 }

@@ -32,13 +32,16 @@ import edu.dosw.styleradar.donaciones.domain.port.in.ManagePublicationUseCase;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.PublicationRestMapper;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtAuthenticationFilter;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtTokenProvider;
+import edu.dosw.styleradar.donaciones.infrastructure.security.ResourceOwnershipValidator;
 import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityConfig;
 import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityErrorHandler;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -74,6 +77,9 @@ class SecondHandPublicationControllerTest {
 
     @MockBean
     private ManagePublicationUseCase managePublicationUseCase;
+
+    @MockBean
+    private ResourceOwnershipValidator resourceOwnershipValidator;
 
     @Autowired
     private PublicationRestMapper publicationRestMapper;
@@ -254,5 +260,19 @@ class SecondHandPublicationControllerTest {
                         .param("userId", "101"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("IN_DONATION"));
+    }
+
+    @Test
+    @DisplayName("PATCH /segunda-mano/{id}/retire - Debe retornar 403 Forbidden cuando el usuario no es el propietario ni admin")
+    void shouldReturn403WhenUserIsNotOwner() throws Exception {
+        doThrow(new AccessDeniedException("Acceso denegado: El usuario no es propietario"))
+                .when(resourceOwnershipValidator).validateOwnerOrAdmin(999L);
+
+        mockMvc.perform(patch("/segunda-mano/1/retire")
+                        .param("userId", "999"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.title").value("Acceso denegado"))
+                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"));
     }
 }

@@ -19,6 +19,7 @@ import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestExc
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidStateTransitionException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -29,6 +30,17 @@ import jakarta.servlet.http.HttpServletRequest;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        log.warn("Acceso denegado: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("Acceso denegado");
+        problem.setType(URI.create("https://styleradar.dosw.edu/errors/forbidden"));
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {

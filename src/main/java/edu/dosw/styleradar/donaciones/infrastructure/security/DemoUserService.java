@@ -2,6 +2,7 @@ package edu.dosw.styleradar.donaciones.infrastructure.security;
 
 import edu.dosw.styleradar.donaciones.application.dto.auth.DemoUserDTO;
 import edu.dosw.styleradar.donaciones.application.dto.auth.LoginResponseDTO;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * y la emisión de tokens JWT para interactuar con la API en Swagger UI.
  */
 @Service
+@Profile({"local", "test", "dev"})
 public class DemoUserService {
 
     private final JwtTokenProvider jwtTokenProvider;

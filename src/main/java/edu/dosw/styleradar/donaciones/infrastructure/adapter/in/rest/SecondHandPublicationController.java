@@ -33,6 +33,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.EditPublicationCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.GetPublicationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ManagePublicationUseCase;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.PublicationRestMapper;
+import edu.dosw.styleradar.donaciones.infrastructure.security.ResourceOwnershipValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -58,6 +59,7 @@ public class SecondHandPublicationController {
     private final GetPublicationsUseCase getPublicationsUseCase;
     private final ManagePublicationUseCase managePublicationUseCase;
     private final PublicationRestMapper publicationRestMapper;
+    private final ResourceOwnershipValidator resourceOwnershipValidator;
 
     @Operation(
             summary = "Crear publicación de segunda mano (SR-RF-33, SR-RF-34, SR-RF-35)",
@@ -80,6 +82,7 @@ public class SecondHandPublicationController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> createPublication(
             @Valid @RequestBody CreatePublicationRequestDTO request) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(request.userId());
         CreatePublicationCommand command = publicationRestMapper.toCommand(request);
         SecondHandPublication created = createPublicationUseCase.create(command);
         PublicationResponseDTO response = publicationRestMapper.toResponse(created);
@@ -126,6 +129,7 @@ public class SecondHandPublicationController {
     public ResponseEntity<List<PublicationResponseDTO>> getPublicationsByUserId(
             @Parameter(description = "ID del usuario propietario", example = "101")
             @PathVariable Long userId) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(userId);
         List<SecondHandPublication> list = getPublicationsUseCase.getByUserId(userId);
         return ResponseEntity.ok(publicationRestMapper.toResponseList(list));
     }
@@ -216,6 +220,7 @@ public class SecondHandPublicationController {
             @Parameter(description = "ID de la publicación a editar", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody EditPublicationRequestDTO request) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(request.userId());
         EditPublicationCommand command = publicationRestMapper.toCommand(id, request);
         SecondHandPublication updated = managePublicationUseCase.edit(command);
         return ResponseEntity.ok(publicationRestMapper.toResponse(updated));
@@ -247,6 +252,7 @@ public class SecondHandPublicationController {
             @PathVariable Long id,
             @Parameter(description = "ID del usuario propietario", example = "101")
             @RequestParam Long userId) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(userId);
         SecondHandPublication sold = managePublicationUseCase.markAsSold(userId, id);
         return ResponseEntity.ok(publicationRestMapper.toResponse(sold));
     }
@@ -276,6 +282,7 @@ public class SecondHandPublicationController {
             @PathVariable Long id,
             @Parameter(description = "ID del usuario propietario", example = "101")
             @RequestParam Long userId) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(userId);
         managePublicationUseCase.retire(userId, id);
         return ResponseEntity.noContent().build();
     }
@@ -306,6 +313,7 @@ public class SecondHandPublicationController {
             @PathVariable Long id,
             @Parameter(description = "ID del usuario propietario", example = "101")
             @RequestParam Long userId) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(userId);
         SecondHandPublication inDonation = managePublicationUseCase.markForDonation(userId, id);
         return ResponseEntity.ok(publicationRestMapper.toResponse(inDonation));
     }

@@ -20,7 +20,7 @@ class DemoUserServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(null, Duration.ofHours(2));
+        jwtTokenProvider = new JwtTokenProvider(null, Duration.ofHours(2), null);
         demoUserService = new DemoUserService(jwtTokenProvider);
     }
 

@@ -29,6 +29,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.DecideDonationRequestUseCas
 import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.SchedulePickupCommand;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.DonationRequestRestMapper;
+import edu.dosw.styleradar.donaciones.infrastructure.security.ResourceOwnershipValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -55,6 +56,7 @@ public class DonationRequestController {
     private final ScheduleDonationPickupUseCase scheduleDonationPickupUseCase;
     private final ConfirmDonationReceiptUseCase confirmDonationReceiptUseCase;
     private final DonationRequestRestMapper donationRequestRestMapper;
+    private final ResourceOwnershipValidator resourceOwnershipValidator;
 
     @Operation(
             summary = "Crear solicitud de donación (SR-RF-44, SR-RF-45)",
@@ -81,6 +83,7 @@ public class DonationRequestController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> createDonationRequest(
             @Valid @RequestBody CreateDonationRequestDTO request) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(request.donorId());
         CreateDonationRequestCommand command = donationRequestRestMapper.toCommand(request);
         DonationRequest created = createDonationRequestUseCase.create(command);
         DonationRequestResponseDTO response = donationRequestRestMapper.toResponse(created);
@@ -110,6 +113,7 @@ public class DonationRequestController {
             @Parameter(description = "ID de la solicitud de donación", example = "1")
             @PathVariable Long id) {
         DonationRequest request = createDonationRequestUseCase.getById(id);
+        resourceOwnershipValidator.validateDonationRequestAccess(request);
         return ResponseEntity.ok(donationRequestRestMapper.toResponse(request));
     }
 
@@ -133,6 +137,7 @@ public class DonationRequestController {
     public ResponseEntity<List<DonationRequestResponseDTO>> getRequestsByDonor(
             @Parameter(description = "ID del usuario donante", example = "101")
             @PathVariable Long donorId) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(donorId);
         List<DonationRequest> list = createDonationRequestUseCase.getByDonorId(donorId);
         return ResponseEntity.ok(donationRequestRestMapper.toResponseList(list));
     }
@@ -159,6 +164,7 @@ public class DonationRequestController {
             @PathVariable Long foundationId,
             @Parameter(description = "Estado opcional para filtrar solicitudes (PENDING, APPROVED, REJECTED, IN_PICKUP, DELIVERED)", example = "PENDING")
             @RequestParam(required = false) DonationRequestStatus status) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(foundationId);
         List<DonationRequest> list = createDonationRequestUseCase.getByFoundationId(foundationId, status);
         return ResponseEntity.ok(donationRequestRestMapper.toResponseList(list));
     }
@@ -190,6 +196,7 @@ public class DonationRequestController {
             @Parameter(description = "ID de la solicitud a decidir", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody DecideDonationRequestDTO request) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(request.foundationId());
         DonationRequest decided = decideDonationRequestUseCase.decide(
                 request.foundationId(),
                 id,
@@ -226,6 +233,7 @@ public class DonationRequestController {
             @Parameter(description = "ID de la solicitud de donación aprobada", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody SchedulePickupRequestDTO request) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(request.userId());
         SchedulePickupCommand command = donationRequestRestMapper.toCommand(id, request);
         DonationRequest scheduled = scheduleDonationPickupUseCase.schedulePickup(command);
         return ResponseEntity.ok(donationRequestRestMapper.toResponse(scheduled));
@@ -258,6 +266,7 @@ public class DonationRequestController {
             @Parameter(description = "ID de la solicitud de donación", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody ConfirmReceiptRequestDTO request) {
+        resourceOwnershipValidator.validateOwnerOrAdmin(request.foundationId());
         DonationRequest confirmed = confirmDonationReceiptUseCase.confirmReceipt(request.foundationId(), id);
         return ResponseEntity.ok(donationRequestRestMapper.toResponse(confirmed));
     }
