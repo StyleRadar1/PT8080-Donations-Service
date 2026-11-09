@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +40,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +51,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/segunda-mano")
 @RequiredArgsConstructor
-@Tag(name = "Publicaciones de Segunda Mano", description = "Endpoints para la gestión del catálogo de reventa C2C de ropa de segunda mano")
+@Tag(name = "Publicaciones de Segunda Mano", description = "Endpoints para la gestión del catálogo de reventa C2C de ropa de segunda mano (SR-RF-33 a SR-RF-39 y SR-RF-42)")
 public class SecondHandPublicationController {
 
     private final CreatePublicationUseCase createPublicationUseCase;
@@ -57,11 +59,22 @@ public class SecondHandPublicationController {
     private final ManagePublicationUseCase managePublicationUseCase;
     private final PublicationRestMapper publicationRestMapper;
 
-    @Operation(summary = "Crear publicación de segunda mano", description = "Registra una nueva prenda para reventa en el catálogo con fotos opcionales (máximo 4)")
+    @Operation(
+            summary = "Crear publicación de segunda mano (SR-RF-33, SR-RF-34, SR-RF-35)",
+            description = "Registra una nueva prenda para reventa en el catálogo C2C con hasta 4 fotografías, clasificación de estado de conservación y precio en COP. Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Publicación creada exitosamente",
                     content = @Content(schema = @Schema(implementation = PublicationResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o reglas de negocio infringidas")
+            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o faltantes",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -73,11 +86,17 @@ public class SecondHandPublicationController {
         return ResponseEntity.created(URI.create("/api/v1/segunda-mano/" + response.id())).body(response);
     }
 
-    @Operation(summary = "Obtener publicación por ID", description = "Recupera el detalle completo de una publicación de segunda mano")
+    @Operation(
+            summary = "Obtener publicación por ID (SR-RF-36)",
+            description = "Recupera el detalle completo de una publicación de prenda usada en el catálogo. Endpoint público de lectura."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Publicación encontrada",
                     content = @Content(schema = @Schema(implementation = PublicationResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Publicación no encontrada")
+            @ApiResponse(responseCode = "404", description = "Publicación no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<PublicationResponseDTO> getPublicationById(
@@ -87,10 +106,20 @@ public class SecondHandPublicationController {
         return ResponseEntity.ok(publicationRestMapper.toResponse(publication));
     }
 
-    @Operation(summary = "Obtener publicaciones por usuario", description = "Recupera todas las publicaciones creadas por un usuario específico")
+    @Operation(
+            summary = "Obtener publicaciones por usuario (SR-RF-36)",
+            description = "Recupera todas las publicaciones creadas por un usuario específico (armario personal / prendas en venta). Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de publicaciones del usuario",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PublicationResponseDTO.class))))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PublicationResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -101,22 +130,46 @@ public class SecondHandPublicationController {
         return ResponseEntity.ok(publicationRestMapper.toResponseList(list));
     }
 
-    @Operation(summary = "Buscar publicaciones", description = "Filtra publicaciones en el catálogo según criterios opcionales (tipo, marca, talla, estado, precios, estilo)")
+    @Operation(
+            summary = "Buscar publicaciones en catálogo (SR-RF-36)",
+            description = "Motor de búsqueda con filtros combinados por término de texto, categoría de prenda, marca, color, talla, estado de conservación, rango de precios, estado y estilo. Endpoint público."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de publicaciones coincidentes con los filtros",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PublicationResponseDTO.class))))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PublicationResponseDTO.class)))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping
     public ResponseEntity<List<PublicationResponseDTO>> searchPublications(
+            @Parameter(description = "Término textual para buscar en nombre o descripción", example = "Chaqueta")
             @RequestParam(required = false) String searchTerm,
+
+            @Parameter(description = "Tipo o categoría de prenda (UPPER, LOWER, DRESS, FOOTWEAR, ACCESSORY)", example = "UPPER")
             @RequestParam(required = false) GarmentType garmentType,
+
+            @Parameter(description = "Marca fabricante de la prenda", example = "Levi's")
             @RequestParam(required = false) String brand,
+
+            @Parameter(description = "Color predominante de la prenda", example = "Azul")
             @RequestParam(required = false) String color,
+
+            @Parameter(description = "Talla estandarizada (XS, S, M, L, XL, XXL, ONE_SIZE)", example = "M")
             @RequestParam(required = false) Size size,
+
+            @Parameter(description = "Estado de conservación (BRAND_NEW_WITH_TAGS, LIKE_NEW, GOOD_CONDITION, ACCEPTABLE)", example = "LIKE_NEW")
             @RequestParam(required = false) ConservationStatus conservationStatus,
+
+            @Parameter(description = "Precio mínimo en COP para filtrar", example = "20000.00")
             @RequestParam(required = false) BigDecimal minPrice,
+
+            @Parameter(description = "Precio máximo en COP para filtrar", example = "100000.00")
             @RequestParam(required = false) BigDecimal maxPrice,
+
+            @Parameter(description = "Estado de la publicación (AVAILABLE, SOLD, DONATED, IN_DONATION, RETIRED)", example = "AVAILABLE")
             @RequestParam(required = false) PublicationStatus status,
+
+            @Parameter(description = "Estilo de moda (CASUAL, FORMAL, SPORT, URBAN, VINTAGE)", example = "URBAN")
             @RequestParam(required = false) Style style) {
 
         PublicationSearchCriteria criteria = PublicationSearchCriteria.builder()
@@ -136,13 +189,26 @@ public class SecondHandPublicationController {
         return ResponseEntity.ok(publicationRestMapper.toResponseList(results));
     }
 
-    @Operation(summary = "Editar publicación de segunda mano", description = "Actualiza los atributos de una publicación existente si continúa disponible")
+    @Operation(
+            summary = "Editar publicación de segunda mano (SR-RF-37)",
+            description = "Actualiza los atributos de una prenda publicada si continúa en estado AVAILABLE y el usuario solicitante es el propietario. Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Publicación actualizada exitosamente",
                     content = @Content(schema = @Schema(implementation = PublicationResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de modificación inválidos"),
-            @ApiResponse(responseCode = "404", description = "Publicación no encontrada"),
-            @ApiResponse(responseCode = "409", description = "La publicación no puede ser modificada en su estado actual o el usuario no es el propietario")
+            @ApiResponse(responseCode = "400", description = "Datos de modificación inválidos",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Publicación no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "La publicación no puede ser modificada en su estado actual o el usuario no es el propietario",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -155,12 +221,24 @@ public class SecondHandPublicationController {
         return ResponseEntity.ok(publicationRestMapper.toResponse(updated));
     }
 
-    @Operation(summary = "Marcar publicación como vendida", description = "Cambia el estado de una publicación disponible a VENDIDA")
+    @Operation(
+            summary = "Marcar publicación como vendida (SR-RF-38)",
+            description = "Transiciona el estado de la prenda a VENDIDA (SOLD), retirándola del catálogo de compraventa. Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Publicación marcada como vendida exitosamente",
                     content = @Content(schema = @Schema(implementation = PublicationResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Publicación no encontrada"),
-            @ApiResponse(responseCode = "409", description = "La publicación no está disponible o el usuario no es el propietario")
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Publicación no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "La publicación no está disponible o el usuario no es el propietario",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PatchMapping("/{id}/sell")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -173,11 +251,23 @@ public class SecondHandPublicationController {
         return ResponseEntity.ok(publicationRestMapper.toResponse(sold));
     }
 
-    @Operation(summary = "Retirar publicación del catálogo", description = "Retira una publicación disponible impidiendo su venta posterior")
+    @Operation(
+            summary = "Retirar publicación del catálogo (SR-RF-39)",
+            description = "Retira voluntariamente una publicación disponible impidiendo su venta posterior. Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Publicación retirada exitosamente"),
-            @ApiResponse(responseCode = "404", description = "Publicación no encontrada"),
-            @ApiResponse(responseCode = "409", description = "La publicación no puede ser retirada")
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Publicación no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "La publicación no puede ser retirada en su estado actual",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PatchMapping("/{id}/retire")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -190,12 +280,24 @@ public class SecondHandPublicationController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Destinar publicación a donación", description = "Transiciona el estado de la prenda a EN_DONACION para habilitar solicitudes benéficas")
+    @Operation(
+            summary = "Destinar publicación a donación (SR-RF-42)",
+            description = "Transiciona el estado de la prenda a EN_DONACION (IN_DONATION) para habilitar solicitudes benéficas hacia fundaciones. Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Publicación destinada a donación",
+            @ApiResponse(responseCode = "200", description = "Publicación destinada a donación exitosamente",
                     content = @Content(schema = @Schema(implementation = PublicationResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Publicación no encontrada"),
-            @ApiResponse(responseCode = "409", description = "La publicación no puede ser destinada a donación en su estado actual")
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Publicación no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "La publicación no puede ser destinada a donación en su estado actual",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PatchMapping("/{id}/donate")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")

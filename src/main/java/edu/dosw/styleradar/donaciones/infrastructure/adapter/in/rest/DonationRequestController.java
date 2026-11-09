@@ -3,6 +3,7 @@ package edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +47,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/donaciones")
 @RequiredArgsConstructor
-@Tag(name = "Solicitudes de Donación", description = "Endpoints para la gestión del flujo y logística de donaciones de ropa a fundaciones")
+@Tag(name = "Solicitudes de Donación", description = "Endpoints para la gestión del flujo y logística de donaciones de ropa a fundaciones aliadas (SR-RF-44 a SR-RF-49)")
 public class DonationRequestController {
 
     private final CreateDonationRequestUseCase createDonationRequestUseCase;
@@ -54,13 +56,26 @@ public class DonationRequestController {
     private final ConfirmDonationReceiptUseCase confirmDonationReceiptUseCase;
     private final DonationRequestRestMapper donationRequestRestMapper;
 
-    @Operation(summary = "Crear solicitud de donación", description = "Inicia un trámite de donación para una prenda destinada previamente a donación hacia una fundación elegida")
+    @Operation(
+            summary = "Crear solicitud de donación (SR-RF-44, SR-RF-45)",
+            description = "Inicia un trámite formal de donación para una prenda previamente destinada a donación, seleccionando una fundación aliada. Dispara evento de dominio y queda en estado PENDING. Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Solicitud de donación creada exitosamente",
                     content = @Content(schema = @Schema(implementation = DonationRequestResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de solicitud inválidos"),
-            @ApiResponse(responseCode = "404", description = "Publicación no encontrada"),
-            @ApiResponse(responseCode = "409", description = "La publicación no está destinada a donación o ya tiene una solicitud activa")
+            @ApiResponse(responseCode = "400", description = "Datos de solicitud inválidos o faltantes",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Publicación no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "La publicación no está destinada a donación o ya tiene una solicitud activa",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -72,11 +87,22 @@ public class DonationRequestController {
         return ResponseEntity.created(URI.create("/api/v1/donaciones/" + response.id())).body(response);
     }
 
-    @Operation(summary = "Obtener solicitud de donación por ID", description = "Recupera los datos y estado detallado de una solicitud de donación")
+    @Operation(
+            summary = "Obtener solicitud de donación por ID (SR-RF-46)",
+            description = "Recupera los datos y estado detallado de una solicitud de donación particular. Accesible por USER, FOUNDATION o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Solicitud encontrada",
                     content = @Content(schema = @Schema(implementation = DonationRequestResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Solicitud no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'FOUNDATION', 'ADMIN')")
@@ -87,10 +113,20 @@ public class DonationRequestController {
         return ResponseEntity.ok(donationRequestRestMapper.toResponse(request));
     }
 
-    @Operation(summary = "Listar solicitudes de donación por donante", description = "Obtiene las solicitudes creadas por el usuario donante")
+    @Operation(
+            summary = "Listar solicitudes de donación por donante (SR-RF-46)",
+            description = "Obtiene el historial de solicitudes benéficas creadas por el usuario donante. Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de solicitudes del donante",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class))))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/donor/{donorId}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -101,29 +137,52 @@ public class DonationRequestController {
         return ResponseEntity.ok(donationRequestRestMapper.toResponseList(list));
     }
 
-    @Operation(summary = "Listar solicitudes de donación por fundación", description = "Obtiene las solicitudes dirigidas a una fundación, con filtro opcional por estado")
+    @Operation(
+            summary = "Listar solicitudes de donación por fundación (SR-RF-46)",
+            description = "Obtiene las solicitudes dirigidas a una fundación aliada, con filtro opcional por estado en el ciclo de vida. Requiere rol FOUNDATION o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de solicitudes de la fundación",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class))))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/foundation/{foundationId}")
     @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
     public ResponseEntity<List<DonationRequestResponseDTO>> getRequestsByFoundation(
             @Parameter(description = "ID de la fundación destinataria", example = "501")
             @PathVariable Long foundationId,
-            @Parameter(description = "Estado opcional para filtrar solicitudes", example = "PENDING")
+            @Parameter(description = "Estado opcional para filtrar solicitudes (PENDING, APPROVED, REJECTED, IN_PICKUP, DELIVERED)", example = "PENDING")
             @RequestParam(required = false) DonationRequestStatus status) {
         List<DonationRequest> list = createDonationRequestUseCase.getByFoundationId(foundationId, status);
         return ResponseEntity.ok(donationRequestRestMapper.toResponseList(list));
     }
 
-    @Operation(summary = "Decidir sobre una solicitud de donación", description = "Permite a la fundación aprobar o rechazar la recepción de la prenda donada")
+    @Operation(
+            summary = "Decidir sobre una solicitud de donación (SR-RF-47)",
+            description = "Permite a la fundación aliada receptora aprobar (APPROVED) o rechazar (REJECTED con justificación obligatoria) la recepción de la prenda donada. Requiere rol FOUNDATION o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Decisión registrada exitosamente",
                     content = @Content(schema = @Schema(implementation = DonationRequestResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Parámetros de decisión inválidos"),
-            @ApiResponse(responseCode = "404", description = "Solicitud no encontrada"),
-            @ApiResponse(responseCode = "409", description = "Conflicto con la fundación o la solicitud no está pendiente")
+            @ApiResponse(responseCode = "400", description = "Parámetros de decisión inválidos",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Solicitud no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "Conflicto: la solicitud no está dirigida a esta fundación o ya no se encuentra pendiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PatchMapping("/{id}/decide")
     @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
@@ -140,13 +199,26 @@ public class DonationRequestController {
         return ResponseEntity.ok(donationRequestRestMapper.toResponse(decided));
     }
 
-    @Operation(summary = "Programar recogida y franja horaria", description = "El donante agenda el punto de recogida/entrega y la franja de tiempo para una donación aprobada")
+    @Operation(
+            summary = "Coordinar recogida y franja horaria (SR-RF-48)",
+            description = "El usuario donante agenda el punto de recogida/entrega física y la franja de tiempo para una donación aprobada (transiciona a IN_PICKUP). Requiere rol USER o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Recogida agendada exitosamente",
                     content = @Content(schema = @Schema(implementation = DonationRequestResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Datos o franja de tiempo inválidos"),
-            @ApiResponse(responseCode = "404", description = "Solicitud no encontrada"),
-            @ApiResponse(responseCode = "409", description = "Conflicto con el usuario o la solicitud no se encuentra en estado aprobada")
+            @ApiResponse(responseCode = "400", description = "Datos o franja de tiempo inválidos",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Solicitud no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "Conflicto: el usuario no es el donante o la solicitud no se encuentra aprobada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PatchMapping("/{id}/pickup")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -159,13 +231,26 @@ public class DonationRequestController {
         return ResponseEntity.ok(donationRequestRestMapper.toResponse(scheduled));
     }
 
-    @Operation(summary = "Confirmar recepción física de la prenda", description = "La fundación confirma haber recibido la prenda donada concluyendo el ciclo")
+    @Operation(
+            summary = "Confirmar recepción física de la donación (SR-RF-49)",
+            description = "La fundación aliada confirma haber recibido la prenda donada, culminando el ciclo a ENTREGADA (DELIVERED) y actualizando la publicación a DONADA (DONATED). Requiere rol FOUNDATION o ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Recepción confirmada exitosamente",
+            @ApiResponse(responseCode = "200", description = "Recepción confirmada exitosamente y ciclo completado",
                     content = @Content(schema = @Schema(implementation = DonationRequestResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de confirmación inválidos"),
-            @ApiResponse(responseCode = "404", description = "Solicitud no encontrada"),
-            @ApiResponse(responseCode = "409", description = "Conflicto con la fundación o la solicitud no está en estado de recogida")
+            @ApiResponse(responseCode = "400", description = "Datos de confirmación inválidos",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Solicitud no encontrada",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "Conflicto: la fundación no corresponde o la solicitud no está en estado de recogida",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PatchMapping("/{id}/confirm")
     @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")

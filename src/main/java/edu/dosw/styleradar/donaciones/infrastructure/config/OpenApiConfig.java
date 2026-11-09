@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +48,12 @@ public class OpenApiConfig {
                                         """))
                 )
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
+                .tags(List.of(
+                        new Tag().name("Autenticación & Usuarios Demo").description("Inicio de sesión y generación rápida de tokens JWT para los 3 roles del sistema"),
+                        new Tag().name("Publicaciones de Segunda Mano").description("Gestión del ciclo de vida C2C de ropa de segunda mano (SR-RF-33 a SR-RF-39 y SR-RF-42)"),
+                        new Tag().name("Solicitudes de Donación").description("Flujo altruista y logística de donaciones hacia fundaciones benéficas aliadas (SR-RF-44 a SR-RF-49)"),
+                        new Tag().name("Health Check").description("Monitoreo de disponibilidad y estado operativo del microservicio")
+                ))
                 .info(new Info()
                         .title("STYLE RADAR · ms-segunda-vida-donaciones API")
                         .version("v0.0.1-SNAPSHOT")
