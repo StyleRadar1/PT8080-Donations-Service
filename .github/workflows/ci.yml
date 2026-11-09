@@ -40,12 +40,14 @@ jobs:
       - name: 2. Unit & Integration Tests with JaCoCo Report
         env:
           DOCKER_HOST: unix:///var/run/docker.sock
-        run: mvn -B test jacoco:report
+          DOCKER_API_VERSION: "1.44"
+        run: mvn -B test jacoco:report -Dapi.version=1.44
 
       - name: 3. Verify Quality Gate & JaCoCo Coverage (Threshold >= 85%)
         env:
           DOCKER_HOST: unix:///var/run/docker.sock
-        run: mvn -B verify
+          DOCKER_API_VERSION: "1.44"
+        run: mvn -B verify -Dapi.version=1.44
 
       - name: 4. Package Application JAR
         run: mvn -B package -DskipTests

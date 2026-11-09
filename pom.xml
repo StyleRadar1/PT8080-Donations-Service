@@ -31,6 +31,7 @@
         <jacoco.version>0.8.12</jacoco.version>
         <jacoco.min.line.coverage>0.85</jacoco.min.line.coverage>
         <byte-buddy.version>1.15.11</byte-buddy.version>
+        <testcontainers.version>1.20.4</testcontainers.version>
     </properties>
 
     <dependencies>
@@ -174,12 +175,12 @@
             </plugin>
 
             
-            <!-- Maven Surefire Plugin with Java 24 ByteBuddy support -->
+            <!-- Maven Surefire Plugin with Java 24 ByteBuddy support and Docker API version -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
+                    <argLine>@{argLine} -Dnet.bytebuddy.experimental=true -Dapi.version=1.44</argLine>
                 </configuration>
             </plugin>
 

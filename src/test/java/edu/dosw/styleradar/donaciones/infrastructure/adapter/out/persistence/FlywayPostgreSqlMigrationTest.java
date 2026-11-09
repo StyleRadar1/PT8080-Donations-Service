@@ -28,6 +28,7 @@ class FlywayPostgreSqlMigrationTest {
 
     @BeforeAll
     static void setUp() {
+        System.setProperty("api.version", "1.44");
         boolean isCi = "true".equalsIgnoreCase(System.getenv("CI"))
                 || "true".equalsIgnoreCase(System.getenv("GITHUB_ACTIONS"));
         boolean dockerAvailable = DockerClientFactory.instance().isDockerAvailable();
