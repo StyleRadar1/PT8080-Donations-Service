@@ -4,15 +4,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.ReturnedMessage;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class RabbitMQConfigTest {
 
@@ -30,7 +34,7 @@ class RabbitMQConfigTest {
     }
 
     @Test
-    @DisplayName("Debe crear cola durable q.notificaciones.donacion-solicitud-creada")
+    @DisplayName("Debe crear cola durable q.notificaciones.donacion-solicitud-creada para el microservicio real")
     void shouldCreateNotificationsQueue() {
         Queue queue = rabbitMQConfig.notificationsDonationCreatedQueue(RabbitMQConfig.NOTIFICATIONS_QUEUE_DEFAULT);
 
@@ -58,6 +62,21 @@ class RabbitMQConfigTest {
     }
 
     @Test
+    @DisplayName("Debe crear cola independiente para el simulador sin interferir con la cola de producción")
+    void shouldCreateSimulatorQueueAndBinding() {
+        Queue queue = rabbitMQConfig.simulatorNotificationsQueue(RabbitMQConfig.SIMULATOR_QUEUE_DEFAULT);
+        assertThat(queue).isNotNull();
+        assertThat(queue.getName()).isEqualTo("q.donaciones.simulador-notificaciones");
+
+        TopicExchange exchange = rabbitMQConfig.donationsTopicExchange("donaciones.exchange");
+        Binding binding = rabbitMQConfig.simulatorNotificationsBinding(queue, exchange, "donacion.solicitud.creada");
+
+        assertThat(binding).isNotNull();
+        assertThat(binding.getDestination()).isEqualTo("q.donaciones.simulador-notificaciones");
+        assertThat(binding.getRoutingKey()).isEqualTo("donacion.solicitud.creada");
+    }
+
+    @Test
     @DisplayName("Debe configurar Jackson2JsonMessageConverter con ObjectMapper")
     void shouldCreateJackson2JsonMessageConverter() {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -67,8 +86,8 @@ class RabbitMQConfigTest {
     }
 
     @Test
-    @DisplayName("Debe configurar RabbitTemplate con ConnectionFactory y convertidor JSON")
-    void shouldConfigureRabbitTemplate() {
+    @DisplayName("Debe configurar RabbitTemplate con confirms (ACK/NACK), returns y mandatory")
+    void shouldConfigureRabbitTemplateWithConfirmsAndReturns() {
         ConnectionFactory connectionFactory = Mockito.mock(ConnectionFactory.class);
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(new ObjectMapper());
 
@@ -77,5 +96,21 @@ class RabbitMQConfigTest {
         assertThat(rabbitTemplate).isNotNull();
         assertThat(rabbitTemplate.getConnectionFactory()).isSameAs(connectionFactory);
         assertThat(rabbitTemplate.getMessageConverter()).isSameAs(converter);
+
+        // Invocar callbacks para validar robustez de registro de confirms y returns
+        assertDoesNotThrow(() -> {
+            CorrelationData correlationData = new CorrelationData("event-ack-1");
+            rabbitMQConfig.confirmCallback().confirm(correlationData, true, null);
+            rabbitMQConfig.confirmCallback().confirm(correlationData, false, "Queue full");
+            rabbitMQConfig.confirmCallback().confirm(null, false, "Unknown error");
+
+            ReturnedMessage returned = new ReturnedMessage(
+                    new Message("{}".getBytes()),
+                    312,
+                    "NO_ROUTE",
+                    "donaciones.exchange",
+                    "donacion.solicitud.creada");
+            rabbitMQConfig.returnsCallback().returnedMessage(returned);
+        });
     }
 }

@@ -10,8 +10,9 @@ import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event
 
 /**
  * Consumidor simulador representativo del microservicio 'ms-notificaciones' (puerto 8300).
- * Escucha la cola 'q.notificaciones.donacion-solicitud-creada' vinculada a 'donaciones.exchange'.
- * Habilitable mediante 'app.rabbitmq.simulator.enabled=true' para generar evidencia en consola y pruebas.
+ * Escucha una cola dedicada de simulación ('q.donaciones.simulador-notificaciones') para
+ * NO interferir con la cola de consumo del microservicio real ('q.notificaciones.donacion-solicitud-creada').
+ * Deshabilitado por defecto mediante 'app.rabbitmq.simulator.enabled=false'.
  */
 @Component
 @ConditionalOnProperty(name = "app.rabbitmq.simulator.enabled", havingValue = "true", matchIfMissing = false)
@@ -19,10 +20,10 @@ public class NotificationConsumerSimulator {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationConsumerSimulator.class);
 
-    @RabbitListener(queues = "${app.rabbitmq.queues.notifications-donation-created:q.notificaciones.donacion-solicitud-creada}")
+    @RabbitListener(queues = "${app.rabbitmq.queues.simulator-queue:q.donaciones.simulador-notificaciones}")
     public void onDonationRequestCreated(DonationRequestCreatedIntegrationEvent event) {
         log.info("=========================================================================================");
-        log.info("🔔 [MS-NOTIFICACIONES :8300 - CONSUMIDOR] Evento de integración recibido desde RabbitMQ");
+        log.info("🔔 [MS-NOTIFICACIONES :8300 - SIMULADOR] Evento de integración recibido desde RabbitMQ");
         log.info("🔔 [MS-NOTIFICACIONES] Tipo de Evento: {}", event.getEventType());
         log.info("🔔 [MS-NOTIFICACIONES] EventId: {}", event.getEventId());
         log.info("🔔 [MS-NOTIFICACIONES] Productor: {}", event.getProducer());

@@ -18,7 +18,7 @@ spring:
 app:
   rabbitmq:
     simulator:
-      enabled: ${RABBITMQ_SIMULATOR_ENABLED:true}
+      enabled: ${RABBITMQ_SIMULATOR_ENABLED:false}
 
 logging:
   level:

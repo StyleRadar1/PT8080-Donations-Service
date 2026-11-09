@@ -23,7 +23,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
-      - RABBITMQ_SIMULATOR_ENABLED=true
+      - RABBITMQ_SIMULATOR_ENABLED=false
     depends_on:
       postgres-donaciones:
         condition: service_healthy

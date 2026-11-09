@@ -1,8 +1,11 @@
 package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging;
 
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -16,8 +19,8 @@ import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event
 
 /**
  * Adaptador de salida RabbitMQ para la publicación asíncrona de eventos hacia el broker (puerto 5672).
- * Publica en 'donaciones.exchange' con la clave de enrutamiento 'donacion.solicitud.creada'
- * para que el microservicio ms-notificaciones (puerto 8300) consuma la alerta.
+ * Emite eventos con confirmaciones de publicación (CorrelationData) hacia 'donaciones.exchange'
+ * con la clave de enrutamiento 'donacion.solicitud.creada' para el microservicio ms-notificaciones (puerto 8300).
  */
 @Component("donacionEventPublisherAdapter")
 public class DonationEventPublisherAdapter implements DonationEventPublisherPort {
@@ -57,10 +60,11 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             } else {
                 log.info("Publicando evento genérico en broker RabbitMQ [Exchange: {}, Evento: {}]",
                         exchangeName, event.getClass().getSimpleName());
-                rabbitTemplate.convertAndSend(exchangeName, "donaciones.general", event);
+                CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
+                rabbitTemplate.convertAndSend(exchangeName, "donaciones.general", event, correlationData);
             }
         } catch (AmqpException ex) {
-            log.error("Error al publicar evento en RabbitMQ [Exchange: {}, Evento: {}]: {}",
+            log.error("Fallo crítico al publicar evento en RabbitMQ [Exchange: {}, Evento: {}]: {}. Verifique conectividad con el broker.",
                     exchangeName, event.getClass().getSimpleName(), ex.getMessage(), ex);
             throw ex;
         }
@@ -68,20 +72,22 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private void publishDonationRequestCreated(DonationRequestCreatedEvent domainEvent) {
         DonationRequestCreatedIntegrationEvent integrationEvent = DonationRequestCreatedIntegrationEvent.from(domainEvent);
+        CorrelationData correlationData = new CorrelationData(integrationEvent.getEventId());
 
         log.info(">>> [RabbitMQ PUBLISH] Publicando evento '{}' hacia Exchange '{}' con Routing Key '{}' para ms-notificaciones (8300): {}",
                 integrationEvent.getEventType(), exchangeName, donationRequestCreatedRoutingKey, integrationEvent);
 
-        rabbitTemplate.convertAndSend(exchangeName, donationRequestCreatedRoutingKey, integrationEvent);
+        rabbitTemplate.convertAndSend(exchangeName, donationRequestCreatedRoutingKey, integrationEvent, correlationData);
 
         log.info("<<< [RabbitMQ PUBLISHED] Evento '{}' enviado exitosamente al broker (EventId: {}, SolicitudId: {}, DonanteId: {}, FundaciónId: {})",
                 integrationEvent.getEventType(), integrationEvent.getEventId(), domainEvent.requestId(), domainEvent.donorId(), domainEvent.foundationId());
     }
 
     private void publishGenericStatusEvent(Object event) {
+        CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
         log.info(">>> [RabbitMQ PUBLISH] Publicando actualización de estado hacia Exchange '{}' con Routing Key '{}': {}",
                 exchangeName, donationStatusUpdatedRoutingKey, event);
-        rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event);
+        rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
     }
 
     public String getExchangeName() {
