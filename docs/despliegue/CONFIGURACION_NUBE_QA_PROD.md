@@ -70,7 +70,7 @@ flowchart TD
 
 | Servicio | URL QA | URL PROD | BD QA (Aislada) | BD PROD (Aislada) |
 | :--- | :--- | :--- | :--- | :--- |
-| **`ms-segunda-vida-donaciones`** | `https://styleradar-donaciones-qa.onrender.com` | `https://styleradar-donaciones-prod.onrender.com` | `ep-qa-donations.aws.neon.tech` / Supabase QA | `ep-prod-donations.aws.neon.tech` / Supabase PROD |
+| **`ms-segunda-vida-donaciones`** | `https://styleradar-donaciones-qa-jmunar.azurewebsites.net` | `https://styleradar-donaciones-prod-jmunar.azurewebsites.net` | `bluevelvet-db-qa-jmunar.postgres.database.azure.com` (Azure PostgreSQL QA) | `styleradar-db-prod-jmunar.postgres.database.azure.com` (Azure PostgreSQL PROD) |
 
 * **Regla de Oro:** La base de datos de producción (`styleradar_donations_prod`) reside en un clúster físico o lógico independiente de QA (`styleradar_donations_qa`), con credenciales, usuarios y políticas de firewall distintas.
 
@@ -80,13 +80,13 @@ flowchart TD
 
 ### 3.1. Swagger UI de QA
 El microservicio expone su documentación interactiva OpenAPI 3 en:
-👉 **`https://styleradar-donaciones-qa.onrender.com/api/v1/swagger-ui.html`**  
-*(OpenAPI JSON: `https://styleradar-donaciones-qa.onrender.com/api/v1/v3/api-docs`)*
+👉 **`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui.html`**  
+*(OpenAPI JSON: `https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/v3/api-docs`)*
 
 ### 3.2. Endpoints de Diagnóstico (`/health`)
 Para la validación del estado operativo por parte de load balancers y herramientas de monitoreo:
-* **Endpoint QA:** `GET https://styleradar-donaciones-qa.onrender.com/api/v1/health`
-* **Endpoint PROD:** `GET https://styleradar-donaciones-prod.onrender.com/api/v1/health`
+* **Endpoint QA:** `GET https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health`
+* **Endpoint PROD:** `GET https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health`
 
 **Respuesta esperada (HTTP 200 OK):**
 ```json
@@ -132,8 +132,8 @@ Para que el pipeline `.github/workflows/ci.yml` ejecute el despliegue automátic
    * `AZURE_WEBAPP_PUBLISH_PROFILE_QA`: (Opcional si se despliega en Azure App Service).
    * `AZURE_WEBAPP_PUBLISH_PROFILE_PROD`: (Opcional si se despliega en Azure App Service).
 3. Registrar las siguientes **Repository Variables** (opcionales):
-   * `QA_APP_URL`: `https://styleradar-donaciones-qa.onrender.com`
-   * `PROD_APP_URL`: `https://styleradar-donaciones-prod.onrender.com`
+   * `QA_APP_URL`: `https://styleradar-donaciones-qa-jmunar.azurewebsites.net`
+   * `PROD_APP_URL`: `https://styleradar-donaciones-prod-jmunar.azurewebsites.net`
 
 ---
 

@@ -24,11 +24,11 @@
   </p>
 
   <p align="center">
-    <a href="https://styleradar-donaciones-prod.onrender.com/api/v1/swagger-ui.html">
-      <img src="https://img.shields.io/badge/PROD-Cloud_Deployed-16A34A?style=for-the-badge&logo=render&logoColor=white" alt="PROD Deployment" />
+    <a href="https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui.html">
+      <img src="https://img.shields.io/badge/PROD-Azure_Cloud_Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="PROD Deployment" />
     </a>
-    <a href="https://styleradar-donaciones-qa.onrender.com/api/v1/swagger-ui.html">
-      <img src="https://img.shields.io/badge/QA-Active_Swagger-5600EF?style=for-the-badge&logo=render&logoColor=white" alt="QA Deployment" />
+    <a href="https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui.html">
+      <img src="https://img.shields.io/badge/QA-Azure_Cloud_Active-5600EF?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="QA Deployment" />
     </a>
     <a href="https://sonarcloud.io">
       <img src="https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="Quality Gate" />
@@ -308,7 +308,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 
 | Servicio | URL QA | URL PROD | BD QA | BD PROD |
 | :--- | :--- | :--- | :--- | :--- |
-| **`ms-segunda-vida-donaciones`** | [`https://styleradar-donaciones-qa.onrender.com`](https://styleradar-donaciones-qa.onrender.com) | [`https://styleradar-donaciones-prod.onrender.com`](https://styleradar-donaciones-prod.onrender.com) | `ep-qa-donations.aws.neon.tech` (PostgreSQL Aislada QA) | `ep-prod-donations.aws.neon.tech` (PostgreSQL Aislada PROD) |
+| **`ms-segunda-vida-donaciones`** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net) | `bluevelvet-db-qa-jmunar.postgres.database.azure.com` (PostgreSQL Aislada QA) | `styleradar-db-prod-jmunar.postgres.database.azure.com` (PostgreSQL Aislada PROD) |
 
 > ⚠️ **Regla de Oro de Bases de Datos:** Las bases de datos de QA y PRODUCCIÓN son instancias completamente independientes y jamás se comparten. Cada entorno cuenta con su propio host, credenciales y esquema gestionado por Flyway.
 
@@ -316,8 +316,8 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Producción (PROD)** | **Activo** (Fase 5) | Entorno de producción cloud con aislamiento de BD y aprobación CMV | `https://styleradar-donaciones-prod.onrender.com` | [Swagger UI PROD](https://styleradar-donaciones-prod.onrender.com/api/v1/swagger-ui.html) | [`/api/v1/health`](https://styleradar-donaciones-prod.onrender.com/api/v1/health) |
-| **Calidad / Pruebas (QA)** | **Activo** (Fase 5) | Entorno staging cloud con despliegue automático desde `develop` | `https://styleradar-donaciones-qa.onrender.com` | [Swagger UI Público QA](https://styleradar-donaciones-qa.onrender.com/api/v1/swagger-ui.html) | [`/api/v1/health`](https://styleradar-donaciones-qa.onrender.com/api/v1/health) |
+| **Producción (PROD)** | **Activo** (Fase 5) | Entorno de producción cloud con aislamiento de BD y aprobación CMV | `https://styleradar-donaciones-prod-jmunar.azurewebsites.net` | [Swagger UI PROD](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui.html) | [`/api/v1/health`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health) |
+| **Calidad / Pruebas (QA)** | **Activo** (Fase 5) | Entorno staging cloud con despliegue automático desde `develop` | `https://styleradar-donaciones-qa-jmunar.azurewebsites.net` | [Swagger UI Público QA](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui.html) | [`/api/v1/health`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health) |
 | **Desarrollo Local (DEV)** | Activo | Entorno operativo local para pruebas unitarias y de integración | `http://localhost:8520` | [Swagger UI Local](http://localhost:8520/api/v1/swagger-ui.html) | [`/api/v1/health`](http://localhost:8520/api/v1/health) |
 
 * **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8520/api/v1/v3/api-docs`

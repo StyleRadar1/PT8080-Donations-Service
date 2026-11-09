@@ -63,6 +63,13 @@ app:
     simulator:
       enabled: ${RABBITMQ_SIMULATOR_ENABLED:false}
 
+# Configuración de Seguridad y JWT
+styleradar:
+  security:
+    jwt:
+      secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:}}
+      duration: ${JWT_DURATION:PT24H}
+
 # Configuración explícita de Springdoc OpenAPI
 springdoc:
   api-docs:

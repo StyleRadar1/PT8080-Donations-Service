@@ -5,8 +5,8 @@
 -- Bounded Context: Economía Circular, Donaciones Benéficas y Citas Logísticas
 -- =============================================================================
 
--- Extensiones necesarias
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- Extensiones necesarias (PostgreSQL 13+ incluye gen_random_uuid() de forma nativa sin extensiones)
+-- CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- -----------------------------------------------------------------------------
 -- 1. Tabla: articulos_segunda_mano (Ciclo C2C / Resale)

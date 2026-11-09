@@ -75,64 +75,77 @@ jobs:
           path: target/site/jacoco/
           retention-days: 14
 
+      - name: 10. Publish Application JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-jar
+          path: target/ms-segunda-vida-donaciones-*.jar
+          retention-days: 7
+
   # ==============================================================================
   # Fase 5: Despliegue Automático al Ambiente QA (Trigger: Push/Merge a 'develop')
   # ==============================================================================
   deploy-qa:
-    name: Deploy to QA Environment (Cloud Staging)
+    name: Deploy to QA Environment (Azure Cloud Staging)
     needs: build-and-test
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     environment:
       name: qa
-      url: ${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa.onrender.com' }}
+      url: ${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa-jmunar.azurewebsites.net' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
 
-      - name: 2. Deploy to QA Cloud Service (Deploy Hook / Webhook / Azure)
+      - name: 2. Download Application JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: application-jar
+          path: target
+
+      - name: 3. Deploy to Azure Web App (QA)
+        if: env.AZURE_WEBAPP_PUBLISH_PROFILE_QA != ''
+        env:
+          AZURE_WEBAPP_PUBLISH_PROFILE_QA: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: styleradar-donaciones-qa-jmunar
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}
+          package: 'target/*.jar'
+
+      - name: 4. Deploy to Alternative Cloud Service (Webhook / Render / Fallback)
         id: deploy_qa
         run: |
           echo "======================================================================"
-          echo " Iniciando despliegue automatizado hacia el entorno QA (Staging)..."
+          echo " Iniciando verificación de despliegue entorno QA (Azure / Staging)..."
           echo " Rama origen: ${{ github.ref }}"
           echo " Commit SHA:  ${{ github.sha }}"
+          echo " Target Host: https://styleradar-donaciones-qa-jmunar.azurewebsites.net"
           echo "======================================================================"
 
           DEPLOYED=false
 
-          # 1. Soporte para Deploy Hook de Render (u otro webhook HTTPS)
-          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_QA }}" ]; then
-            echo "-> Desplegando en Render QA mediante Webhook oficial..."
-            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK_QA }}")
-            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-              echo "✅ Webhook de Render QA invocado exitosamente (HTTP $HTTP_CODE)."
-              DEPLOYED=true
-            else
-              echo "⚠️ El webhook devolvió código HTTP $HTTP_CODE. Verificando estado..."
-            fi
+          if [ -n "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}" ]; then
+            echo "✅ Despliegue en Azure Web App QA ejecutado mediante Publish Profile."
+            DEPLOYED=true
           fi
 
-          # 2. Soporte para Webhook genérico de Despliegue QA
+          # Soporte para Webhook de despliegue alternativo
           if [ "$DEPLOYED" = false ] && [ -n "${{ secrets.DEPLOY_WEBHOOK_QA }}" ]; then
-            echo "-> Invocando Webhook genérico de despliegue QA..."
+            echo "-> Invocando Webhook alternativo de despliegue QA..."
             curl -s -X POST "${{ secrets.DEPLOY_WEBHOOK_QA }}"
             DEPLOYED=true
           fi
 
-          # 3. Notificación de configuración de secretos
           if [ "$DEPLOYED" = false ]; then
-            echo "ℹ️ Aviso informativo: No se ha configurado un Webhook o Publish Profile en los secretos de GitHub."
-            echo "   Para habilitar el despliegue automático continuo hacia Render, Azure o Railway:"
-            echo "   Configurar RENDER_DEPLOY_HOOK_QA o DEPLOY_WEBHOOK_QA en Settings -> Secrets and variables -> Actions."
-            echo "   El paquete OCI y los artefactos de compilación quedaron 100% validados para despliegue."
+            echo "ℹ️ Aviso informativo: No se ha configurado AZURE_WEBAPP_PUBLISH_PROFILE_QA o DEPLOY_WEBHOOK_QA en GitHub Secrets."
+            echo "   El paquete JAR y contenedor OCI quedaron 100% verificados."
           fi
 
-      - name: 3. QA Smoke Test & Health Check
+      - name: 5. QA Smoke Test & Health Check
         run: |
-          QA_HEALTH_URL="${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa.onrender.com' }}/api/v1/health"
+          QA_HEALTH_URL="${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa-jmunar.azurewebsites.net' }}/api/v1/health"
           echo "Ejecutando Smoke Test contra endpoint de salud de QA: $QA_HEALTH_URL"
           for i in {1..12}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$QA_HEALTH_URL" || true)
@@ -147,59 +160,68 @@ jobs:
 
   # ==============================================================================
   # Fase 5: Despliegue al Ambiente PROD (Trigger: Push/Merge a 'master' o 'main')
-  # Requiere aprobación manual / CMV según especificación de Pág. 18
+  # Requiere aprobación previa de CMV y validación de compuerta
   # ==============================================================================
   deploy-prod:
-    name: Deploy to PROD Environment (Production Cloud - CMV / Approval Required)
+    name: Deploy to PROD Environment (Azure Production Cloud - CMV / Approval Required)
     needs: build-and-test
     if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && github.event_name == 'push'
     environment:
       name: production
-      url: ${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod.onrender.com' }}
+      url: ${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
 
-      - name: 2. Deploy to PROD Cloud Service
+      - name: 2. Download Application JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: application-jar
+          path: target
+
+      - name: 3. Deploy to Azure Web App (PROD)
+        if: env.AZURE_WEBAPP_PUBLISH_PROFILE_PROD != ''
+        env:
+          AZURE_WEBAPP_PUBLISH_PROFILE_PROD: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: styleradar-donaciones-prod-jmunar
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          package: 'target/*.jar'
+
+      - name: 4. Deploy to Alternative Cloud Service (Webhook / Render / Fallback)
         id: deploy_prod
         run: |
           echo "======================================================================"
-          echo " Iniciando despliegue hacia PRODUCCIÓN (PROD)..."
+          echo " Iniciando verificación de despliegue PRODUCCIÓN (Azure PROD)..."
           echo " Rama origen: ${{ github.ref }}"
           echo " Commit SHA:  ${{ github.sha }}"
           echo " Criterio:    Aprobación previa de CMV requerida."
+          echo " Target Host: https://styleradar-donaciones-prod-jmunar.azurewebsites.net"
           echo "======================================================================"
 
           DEPLOYED=false
 
-          # 1. Soporte para Deploy Hook de Render PROD
-          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_PROD }}" ]; then
-            echo "-> Desplegando en Render PROD mediante Webhook oficial..."
-            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK_PROD }}")
-            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-              echo "✅ Webhook de Render PROD invocado exitosamente (HTTP $HTTP_CODE)."
-              DEPLOYED=true
-            fi
+          if [ -n "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}" ]; then
+            echo "✅ Despliegue en Azure Web App PROD ejecutado mediante Publish Profile."
+            DEPLOYED=true
           fi
 
-          # 2. Soporte para Webhook genérico de Despliegue PROD
           if [ "$DEPLOYED" = false ] && [ -n "${{ secrets.DEPLOY_WEBHOOK_PROD }}" ]; then
-            echo "-> Invocando Webhook genérico de despliegue PROD..."
+            echo "-> Invocando Webhook alternativo de despliegue PROD..."
             curl -s -X POST "${{ secrets.DEPLOY_WEBHOOK_PROD }}"
             DEPLOYED=true
           fi
 
           if [ "$DEPLOYED" = false ]; then
-            echo "ℹ️ Aviso informativo: No se ha configurado un Webhook en los secretos de GitHub para PROD."
-            echo "   Configurar RENDER_DEPLOY_HOOK_PROD o DEPLOY_WEBHOOK_PROD en Settings -> Secrets and variables -> Actions."
+            echo "ℹ️ Aviso informativo: No se ha configurado AZURE_WEBAPP_PUBLISH_PROFILE_PROD o DEPLOY_WEBHOOK_PROD en GitHub Secrets."
           fi
 
-      - name: 3. PROD Smoke Test & Health Check
+      - name: 5. PROD Smoke Test & Health Check
         run: |
-          PROD_HEALTH_URL="${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod.onrender.com' }}/api/v1/health"
+          PROD_HEALTH_URL="${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}/api/v1/health"
           echo "Ejecutando Smoke Test contra endpoint de salud de PROD: $PROD_HEALTH_URL"
           for i in {1..12}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_HEALTH_URL" || true)
