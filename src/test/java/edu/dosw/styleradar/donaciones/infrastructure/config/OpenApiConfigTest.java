@@ -24,5 +24,11 @@ class OpenApiConfigTest {
         assertEquals("v0.0.1-SNAPSHOT", openAPI.getInfo().getVersion());
         assertEquals(1, openAPI.getServers().size());
         assertEquals("/api/v1", openAPI.getServers().get(0).getUrl());
+        assertNotNull(openAPI.getComponents().getSecuritySchemes().get("bearerAuth"));
+        assertEquals("bearer", openAPI.getComponents().getSecuritySchemes().get("bearerAuth").getScheme());
+        assertEquals("JWT", openAPI.getComponents().getSecuritySchemes().get("bearerAuth").getBearerFormat());
+        assertEquals(1, openAPI.getSecurity().size());
+        assertEquals(true, openAPI.getSecurity().get(0).containsKey("bearerAuth"));
+        assertEquals(4, openAPI.getTags().size());
     }
 }
