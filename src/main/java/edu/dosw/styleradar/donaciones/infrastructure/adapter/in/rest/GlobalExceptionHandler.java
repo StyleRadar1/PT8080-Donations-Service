@@ -30,6 +30,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final String TIMESTAMP_PROPERTY = "timestamp";
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
@@ -38,7 +39,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("Acceso denegado");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/forbidden"));
         problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty(TIMESTAMP_PROPERTY, Instant.now());
         return problem;
     }
 
@@ -49,7 +50,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("Recurso no encontrado");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/not-found"));
         problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty(TIMESTAMP_PROPERTY, Instant.now());
         return problem;
     }
 
@@ -65,7 +66,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("Solicitud inválida");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/bad-request"));
         problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty(TIMESTAMP_PROPERTY, Instant.now());
         return problem;
     }
 
@@ -76,7 +77,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("Conflicto de dominio");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/conflict"));
         problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty(TIMESTAMP_PROPERTY, Instant.now());
         return problem;
     }
 
@@ -87,7 +88,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("Error de validación");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/validation-error"));
         problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty(TIMESTAMP_PROPERTY, Instant.now());
 
         Map<String, String> fieldErrors = new HashMap<>();
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
@@ -104,7 +105,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("Error interno del servidor");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/internal-server-error"));
         problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty(TIMESTAMP_PROPERTY, Instant.now());
         return problem;
     }
 }

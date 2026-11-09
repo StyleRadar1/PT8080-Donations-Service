@@ -5,9 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Adaptador de compatibilidad retroactiva.
- * @deprecated Utilizar {@link DonationEventPublisherAdapter} o {@link DonacionEventPublisherAdapter}.
+ * Adaptador de compatibilidad para delegar en {@link DonationEventPublisherAdapter}.
  */
-@Deprecated
 public class RabbitMQEventPublisherAdapter extends DonationEventPublisherAdapter {
 
     public RabbitMQEventPublisherAdapter(

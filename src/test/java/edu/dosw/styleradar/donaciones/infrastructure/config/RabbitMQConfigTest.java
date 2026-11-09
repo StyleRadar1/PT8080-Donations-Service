@@ -3,6 +3,7 @@ package edu.dosw.styleradar.donaciones.infrastructure.config;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.mock;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.Queue;
@@ -88,7 +89,7 @@ class RabbitMQConfigTest {
     @Test
     @DisplayName("Debe configurar RabbitTemplate con confirms (ACK/NACK), returns y mandatory")
     void shouldConfigureRabbitTemplateWithConfirmsAndReturns() {
-        ConnectionFactory connectionFactory = Mockito.mock(ConnectionFactory.class);
+        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(new ObjectMapper());
 
         RabbitTemplate rabbitTemplate = rabbitMQConfig.rabbitTemplate(connectionFactory, converter);

@@ -14,6 +14,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
@@ -103,9 +104,10 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(Long userId, String email, Role role, String name) {
-        long nowMillis = System.currentTimeMillis();
-        Date now = new Date(nowMillis);
-        Date expiryDate = new Date(nowMillis + duration.toMillis());
+        Instant nowInstant = Instant.now();
+        Instant expiryInstant = nowInstant.plus(duration);
+        Date now = Date.from(nowInstant);
+        Date expiryDate = Date.from(expiryInstant);
 
         return Jwts.builder()
                 .subject(email)
@@ -121,7 +123,7 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Claims claims = parser.parseSignedClaims(token).getPayload();
-            return claims.getExpiration() != null && claims.getExpiration().after(new Date());
+            return claims.getExpiration() != null && claims.getExpiration().toInstant().isAfter(Instant.now());
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }

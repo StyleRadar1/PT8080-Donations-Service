@@ -1,7 +1,6 @@
 package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging;
 
 import java.time.Instant;
-import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

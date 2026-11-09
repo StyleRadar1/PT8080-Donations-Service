@@ -93,8 +93,7 @@ class PublicationPersistenceAdapterTest {
 
         List<SecondHandPublication> userPublications = adapter.findByUserId(201L);
 
-        assertThat(userPublications).hasSize(2);
-        assertThat(userPublications).allMatch(p -> p.getUserId().equals(201L));
+        assertThat(userPublications).hasSize(2).allMatch(p -> p.getUserId().equals(201L));
     }
 
     @Test

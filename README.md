@@ -735,6 +735,37 @@ flowchart LR
     class C,D pass;
 ```
 
+### Paso a Paso para Ejecutar y Visualizar el Análisis Local de SonarQube
+
+Para auditar el microservicio localmente y visualizar la compuerta de calidad en el navegador:
+
+1. **Iniciar el Servidor SonarQube:**
+   * **Opción A (Binario Local Windows - v26.9.0):**
+     ```powershell
+     $env:SONAR_JAVA_PATH = "C:\Program Files\Java\jdk-21.0.12\bin\java.exe"
+     & "C:\sonarqube\bin\windows-x86-64\StartSonar.bat"
+     ```
+   * **Opción B (Docker Container):**
+     ```powershell
+     docker start sonarqube-local
+     # O primera creación: docker run -d --name sonarqube-local -p 9000:9000 sonarqube:lts-community
+     ```
+   *(Esperar 30–45 segundos hasta que el servicio indique `SonarQube is operational` en `http://localhost:9000`).*
+
+2. **Generar / Obtener el Token de Acceso:**
+   * Ingresar a `http://localhost:9000` (credenciales por defecto: `admin` / `admin`).
+   * Ir al menú de usuario (esquina superior derecha) ➔ **My Account** ➔ pestaña **Security**.
+   * En **Generate Token**, asignar un nombre (ej. `styleradar-scanner`), tipo `User Token`, hacer clic en **Generate** y copiar el token (`squ_...`).
+
+3. **Ejecutar el Escaneo Maven desde la Raíz del Repositorio:**
+   ```powershell
+   mvn clean verify sonar:sonar "-Dsonar.login=<TU_TOKEN_SQU>"
+   ```
+   > **Nota importante:** En PowerShell, entrecomillar el parámetro completo (`"-Dsonar.login=..."`) para evitar división de argumentos.
+
+4. **Visualizar los Resultados en el Dashboard:**
+   * Abrir en el navegador: [http://localhost:9000/dashboard?id=styleradar_ms-segunda-vida-donaciones](http://localhost:9000/dashboard?id=styleradar_ms-segunda-vida-donaciones)
+
 ### Reglas de Calidad en SonarQube (*Quality Gate Passed · Calificación A*)
 
 Conforme a la especificación del **Sprint 2 (Pág. 15)**, el análisis estático de SonarQube mantiene la máxima calificación (**A**) en todas sus dimensiones clave:

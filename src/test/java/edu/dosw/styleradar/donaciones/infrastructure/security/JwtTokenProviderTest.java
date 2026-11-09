@@ -66,16 +66,17 @@ class JwtTokenProviderTest {
     void shouldEnforceSecretInProduction() {
         MockEnvironment prodEnv = new MockEnvironment();
         prodEnv.setActiveProfiles("prod");
+        Duration duration = Duration.ofHours(1);
 
-        assertThatThrownBy(() -> new JwtTokenProvider(null, Duration.ofHours(1), prodEnv))
+        assertThatThrownBy(() -> new JwtTokenProvider(null, duration, prodEnv))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
 
-        assertThatThrownBy(() -> new JwtTokenProvider("", Duration.ofHours(1), prodEnv))
+        assertThatThrownBy(() -> new JwtTokenProvider("", duration, prodEnv))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
 
-        assertThatThrownBy(() -> new JwtTokenProvider("clave-corta-invalida", Duration.ofHours(1), prodEnv))
+        assertThatThrownBy(() -> new JwtTokenProvider("clave-corta-invalida", duration, prodEnv))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -95,13 +96,14 @@ class JwtTokenProviderTest {
     @DisplayName("En perfil default o sin perfil activo debe exigir clave externa y rechazar clave predeterminada")
     void shouldEnforceSecretInDefaultProfile() {
         MockEnvironment defaultEnv = new MockEnvironment(); // Sin perfiles activos (default)
+        Duration duration = Duration.ofHours(1);
 
-        assertThatThrownBy(() -> new JwtTokenProvider(null, Duration.ofHours(1), defaultEnv))
+        assertThatThrownBy(() -> new JwtTokenProvider(null, duration, defaultEnv))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
 
         // También con environment nulo
-        assertThatThrownBy(() -> new JwtTokenProvider(null, Duration.ofHours(1), null))
+        assertThatThrownBy(() -> new JwtTokenProvider(null, duration, null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
     }

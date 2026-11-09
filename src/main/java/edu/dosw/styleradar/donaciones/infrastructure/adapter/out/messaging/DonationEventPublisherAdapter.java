@@ -50,23 +50,17 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             return;
         }
 
-        try {
-            if (event instanceof DonationRequestCreatedEvent domainEvent) {
-                publishDonationRequestCreated(domainEvent);
-            } else if (event instanceof DonationRequestDecidedEvent
-                    || event instanceof PickupScheduledEvent
-                    || event instanceof DonationDeliveredEvent) {
-                publishGenericStatusEvent(event);
-            } else {
-                log.info("Publicando evento genérico en broker RabbitMQ [Exchange: {}, Evento: {}]",
-                        exchangeName, event.getClass().getSimpleName());
-                CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
-                rabbitTemplate.convertAndSend(exchangeName, "donaciones.general", event, correlationData);
-            }
-        } catch (AmqpException ex) {
-            log.error("Fallo crítico al publicar evento en RabbitMQ [Exchange: {}, Evento: {}]: {}. Verifique conectividad con el broker.",
-                    exchangeName, event.getClass().getSimpleName(), ex.getMessage(), ex);
-            throw ex;
+        if (event instanceof DonationRequestCreatedEvent domainEvent) {
+            publishDonationRequestCreated(domainEvent);
+        } else if (event instanceof DonationRequestDecidedEvent
+                || event instanceof PickupScheduledEvent
+                || event instanceof DonationDeliveredEvent) {
+            publishGenericStatusEvent(event);
+        } else {
+            log.info("Publicando evento genérico en broker RabbitMQ [Exchange: {}, Evento: {}]",
+                    exchangeName, event.getClass().getSimpleName());
+            CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
+            rabbitTemplate.convertAndSend(exchangeName, "donaciones.general", event, correlationData);
         }
     }
 

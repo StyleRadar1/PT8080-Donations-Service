@@ -2,6 +2,7 @@ package edu.dosw.styleradar.donaciones.domain.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +71,7 @@ public class SecondHandPublication {
     public void publish() {
         validateInvariants();
         this.status = PublicationStatus.AVAILABLE;
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         this.publishedAt = now;
         this.updatedAt = now;
     }
@@ -97,7 +98,7 @@ public class SecondHandPublication {
         this.photos = newPhotos != null ? new ArrayList<>(newPhotos) : new ArrayList<>();
 
         validateInvariants();
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     /**
@@ -115,7 +116,7 @@ public class SecondHandPublication {
         }
 
         this.status = PublicationStatus.SOLD;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     /**
@@ -130,7 +131,7 @@ public class SecondHandPublication {
         }
 
         this.status = PublicationStatus.RETIRED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     /**
@@ -142,7 +143,7 @@ public class SecondHandPublication {
         }
 
         this.status = PublicationStatus.IN_DONATION;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     /**
@@ -154,6 +155,6 @@ public class SecondHandPublication {
         }
 
         this.status = PublicationStatus.DONATED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 }

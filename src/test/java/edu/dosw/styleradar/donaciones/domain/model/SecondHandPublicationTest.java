@@ -142,17 +142,18 @@ class SecondHandPublicationTest {
                 .build();
         pub.publish();
 
+        BigDecimal newPrice = BigDecimal.valueOf(30000.0);
         pub.setStatus(PublicationStatus.SOLD);
         assertThrows(InvalidStateTransitionException.class,
-                () -> pub.edit(validGarment, Size.M, ConservationStatus.LIKE_NEW, BigDecimal.valueOf(30000.0), null));
+                () -> pub.edit(validGarment, Size.M, ConservationStatus.LIKE_NEW, newPrice, null));
 
         pub.setStatus(PublicationStatus.RETIRED);
         assertThrows(InvalidStateTransitionException.class,
-                () -> pub.edit(validGarment, Size.M, ConservationStatus.LIKE_NEW, BigDecimal.valueOf(30000.0), null));
+                () -> pub.edit(validGarment, Size.M, ConservationStatus.LIKE_NEW, newPrice, null));
 
         pub.setStatus(PublicationStatus.DONATED);
         assertThrows(InvalidStateTransitionException.class,
-                () -> pub.edit(validGarment, Size.M, ConservationStatus.LIKE_NEW, BigDecimal.valueOf(30000.0), null));
+                () -> pub.edit(validGarment, Size.M, ConservationStatus.LIKE_NEW, newPrice, null));
     }
 
     @Test
