@@ -104,59 +104,78 @@ jobs:
           name: application-jar
           path: target
 
-      - name: 3. Deploy to Azure Web App (QA)
-        if: env.AZURE_WEBAPP_PUBLISH_PROFILE_QA != ''
-        env:
-          AZURE_WEBAPP_PUBLISH_PROFILE_QA: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}
+      - name: 3. Validate Azure Deployment Credentials (QA)
+        run: |
+          if [ -z "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}" ] && [ -z "${{ secrets.DEPLOY_WEBHOOK_QA }}" ]; then
+            echo "❌ ERROR: Faltan las credenciales de despliegue de Azure para QA en GitHub Secrets."
+            echo "   Debe configurar AZURE_WEBAPP_PUBLISH_PROFILE_QA o DEPLOY_WEBHOOK_QA en el repositorio."
+            exit 1
+          fi
+          echo "✅ Credenciales de despliegue para QA validadas."
+
+      - name: 4. Deploy to Azure Web App (QA)
+        if: "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA != '' }}"
         uses: azure/webapps-deploy@v3
         with:
           app-name: styleradar-donaciones-qa-jmunar
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}
           package: 'target/*.jar'
 
-      - name: 4. Deploy to Alternative Cloud Service (Webhook / Render / Fallback)
-        id: deploy_qa
+      - name: 5. Deploy via Webhook (QA Fallback)
+        if: "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA == '' && secrets.DEPLOY_WEBHOOK_QA != '' }}"
         run: |
-          echo "======================================================================"
-          echo " Iniciando verificación de despliegue entorno QA (Azure / Staging)..."
-          echo " Rama origen: ${{ github.ref }}"
-          echo " Commit SHA:  ${{ github.sha }}"
-          echo " Target Host: https://styleradar-donaciones-qa-jmunar.azurewebsites.net"
-          echo "======================================================================"
-
-          DEPLOYED=false
-
-          if [ -n "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}" ]; then
-            echo "✅ Despliegue en Azure Web App QA ejecutado mediante Publish Profile."
-            DEPLOYED=true
+          echo "-> Invocando Webhook de despliegue QA..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.DEPLOY_WEBHOOK_QA }}")
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "❌ ERROR: El webhook de despliegue QA retornó código HTTP $HTTP_CODE"
+            exit 1
           fi
+          echo "✅ Webhook de despliegue QA ejecutado exitosamente (HTTP $HTTP_CODE)."
 
-          # Soporte para Webhook de despliegue alternativo
-          if [ "$DEPLOYED" = false ] && [ -n "${{ secrets.DEPLOY_WEBHOOK_QA }}" ]; then
-            echo "-> Invocando Webhook alternativo de despliegue QA..."
-            curl -s -X POST "${{ secrets.DEPLOY_WEBHOOK_QA }}"
-            DEPLOYED=true
-          fi
-
-          if [ "$DEPLOYED" = false ]; then
-            echo "ℹ️ Aviso informativo: No se ha configurado AZURE_WEBAPP_PUBLISH_PROFILE_QA o DEPLOY_WEBHOOK_QA en GitHub Secrets."
-            echo "   El paquete JAR y contenedor OCI quedaron 100% verificados."
-          fi
-
-      - name: 5. QA Smoke Test & Health Check
+      - name: 6. QA Smoke Test, Health Check & Version Verification
         run: |
           QA_HEALTH_URL="${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa-jmunar.azurewebsites.net' }}/api/v1/health"
-          echo "Ejecutando Smoke Test contra endpoint de salud de QA: $QA_HEALTH_URL"
-          for i in {1..12}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$QA_HEALTH_URL" || true)
-            echo "Intento $i: HTTP Status -> $STATUS"
-            if [ "$STATUS" -eq 200 ]; then
-              echo "✅ Endpoint /health en QA respondió exitosamente (HTTP 200)."
-              exit 0
+          EXPECTED_VERSION="0.0.1-SNAPSHOT"
+          echo "======================================================================"
+          echo " Iniciando Smoke Test contra endpoint de salud de QA: $QA_HEALTH_URL"
+          echo " Versión esperada a verificar: $EXPECTED_VERSION"
+          echo "======================================================================"
+
+          SUCCESS=false
+          for i in {1..15}; do
+            echo "Intento $i de 15..."
+            RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$QA_HEALTH_URL" || true)
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
+            BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
+
+            echo "HTTP Status -> $HTTP_STATUS"
+            echo "Response Body -> $BODY"
+
+            if [ "$HTTP_STATUS" -eq 200 ]; then
+              STATUS_FIELD=$(echo "$BODY" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || true)
+              VERSION_FIELD=$(echo "$BODY" | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || true)
+
+              if [ "$STATUS_FIELD" = "UP" ]; then
+                echo "✅ Estado del servicio en QA verificado: UP"
+                if [ -n "$VERSION_FIELD" ] && [ "$VERSION_FIELD" != "$EXPECTED_VERSION" ]; then
+                  echo "❌ ERROR: La versión reportada ($VERSION_FIELD) no coincide con la esperada ($EXPECTED_VERSION)."
+                  exit 1
+                else
+                  echo "✅ Versión desplegada en QA verificada: ${VERSION_FIELD:-$EXPECTED_VERSION}"
+                fi
+                SUCCESS=true
+                break
+              fi
             fi
             sleep 10
           done
-          echo "⚠️ QA Health check en espera (el contenedor puede estar aprovisionándose o la URL aún no está mapeada)."
+
+          if [ "$SUCCESS" = false ]; then
+            echo "❌ ERROR CRÍTICO: El health check de QA no respondió HTTP 200 con status UP después de 15 intentos (150s)."
+            echo "El despliegue falló o el servicio no está saludable en: $QA_HEALTH_URL"
+            exit 1
+          fi
+          echo "✅ Despliegue en QA completado y verificado con éxito."
 
   # ==============================================================================
   # Fase 5: Despliegue al Ambiente PROD (Trigger: Push/Merge a 'master' o 'main')
@@ -181,55 +200,75 @@ jobs:
           name: application-jar
           path: target
 
-      - name: 3. Deploy to Azure Web App (PROD)
-        if: env.AZURE_WEBAPP_PUBLISH_PROFILE_PROD != ''
-        env:
-          AZURE_WEBAPP_PUBLISH_PROFILE_PROD: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+      - name: 3. Validate Azure Deployment Credentials (PROD)
+        run: |
+          if [ -z "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}" ] && [ -z "${{ secrets.DEPLOY_WEBHOOK_PROD }}" ]; then
+            echo "❌ ERROR: Faltan las credenciales de despliegue de Azure para PROD en GitHub Secrets."
+            echo "   Debe configurar AZURE_WEBAPP_PUBLISH_PROFILE_PROD o DEPLOY_WEBHOOK_PROD en el repositorio."
+            exit 1
+          fi
+          echo "✅ Credenciales de despliegue para PROD validadas."
+
+      - name: 4. Deploy to Azure Web App (PROD)
+        if: "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD != '' }}"
         uses: azure/webapps-deploy@v3
         with:
           app-name: styleradar-donaciones-prod-jmunar
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
           package: 'target/*.jar'
 
-      - name: 4. Deploy to Alternative Cloud Service (Webhook / Render / Fallback)
-        id: deploy_prod
+      - name: 5. Deploy via Webhook (PROD Fallback)
+        if: "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD == '' && secrets.DEPLOY_WEBHOOK_PROD != '' }}"
         run: |
-          echo "======================================================================"
-          echo " Iniciando verificación de despliegue PRODUCCIÓN (Azure PROD)..."
-          echo " Rama origen: ${{ github.ref }}"
-          echo " Commit SHA:  ${{ github.sha }}"
-          echo " Criterio:    Aprobación previa de CMV requerida."
-          echo " Target Host: https://styleradar-donaciones-prod-jmunar.azurewebsites.net"
-          echo "======================================================================"
-
-          DEPLOYED=false
-
-          if [ -n "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}" ]; then
-            echo "✅ Despliegue en Azure Web App PROD ejecutado mediante Publish Profile."
-            DEPLOYED=true
+          echo "-> Invocando Webhook de despliegue PROD..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.DEPLOY_WEBHOOK_PROD }}")
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "❌ ERROR: El webhook de despliegue PROD retornó código HTTP $HTTP_CODE"
+            exit 1
           fi
+          echo "✅ Webhook de despliegue PROD ejecutado exitosamente (HTTP $HTTP_CODE)."
 
-          if [ "$DEPLOYED" = false ] && [ -n "${{ secrets.DEPLOY_WEBHOOK_PROD }}" ]; then
-            echo "-> Invocando Webhook alternativo de despliegue PROD..."
-            curl -s -X POST "${{ secrets.DEPLOY_WEBHOOK_PROD }}"
-            DEPLOYED=true
-          fi
-
-          if [ "$DEPLOYED" = false ]; then
-            echo "ℹ️ Aviso informativo: No se ha configurado AZURE_WEBAPP_PUBLISH_PROFILE_PROD o DEPLOY_WEBHOOK_PROD en GitHub Secrets."
-          fi
-
-      - name: 5. PROD Smoke Test & Health Check
+      - name: 6. PROD Smoke Test, Health Check & Version Verification
         run: |
           PROD_HEALTH_URL="${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}/api/v1/health"
-          echo "Ejecutando Smoke Test contra endpoint de salud de PROD: $PROD_HEALTH_URL"
-          for i in {1..12}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_HEALTH_URL" || true)
-            echo "Intento $i: HTTP Status -> $STATUS"
-            if [ "$STATUS" -eq 200 ]; then
-              echo "✅ Endpoint /health en PROD respondió exitosamente (HTTP 200)."
-              exit 0
+          EXPECTED_VERSION="0.0.1-SNAPSHOT"
+          echo "======================================================================"
+          echo " Iniciando Smoke Test contra endpoint de salud de PROD: $PROD_HEALTH_URL"
+          echo " Versión esperada a verificar: $EXPECTED_VERSION"
+          echo "======================================================================"
+
+          SUCCESS=false
+          for i in {1..15}; do
+            echo "Intento $i de 15..."
+            RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$PROD_HEALTH_URL" || true)
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
+            BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
+
+            echo "HTTP Status -> $HTTP_STATUS"
+            echo "Response Body -> $BODY"
+
+            if [ "$HTTP_STATUS" -eq 200 ]; then
+              STATUS_FIELD=$(echo "$BODY" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || true)
+              VERSION_FIELD=$(echo "$BODY" | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || true)
+
+              if [ "$STATUS_FIELD" = "UP" ]; then
+                echo "✅ Estado del servicio en PROD verificado: UP"
+                if [ -n "$VERSION_FIELD" ] && [ "$VERSION_FIELD" != "$EXPECTED_VERSION" ]; then
+                  echo "❌ ERROR: La versión reportada ($VERSION_FIELD) no coincide con la esperada ($EXPECTED_VERSION)."
+                  exit 1
+                else
+                  echo "✅ Versión desplegada en PROD verificada: ${VERSION_FIELD:-$EXPECTED_VERSION}"
+                fi
+                SUCCESS=true
+                break
+              fi
             fi
             sleep 10
           done
-          echo "⚠️ PROD Health check en espera (el contenedor puede estar aprovisionándose o la URL aún no está mapeada)."
+
+          if [ "$SUCCESS" = false ]; then
+            echo "❌ ERROR CRÍTICO: El health check de PROD no respondió HTTP 200 con status UP después de 15 intentos (150s)."
+            echo "El despliegue falló o el servicio no está saludable en: $PROD_HEALTH_URL"
+            exit 1
+          fi
+          echo "✅ Despliegue en PROD completado y verificado con éxito."

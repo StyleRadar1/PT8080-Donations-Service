@@ -75,8 +75,8 @@ Todos los recursos en la nube de **StyleRadar** se encuentran alojados en la sus
 | **Resource Group** | `rg-styleradar` | `rg-styleradar` | Grupo de recursos exclusivo de StyleRadar en Azure. |
 | **Azure App Service** | `styleradar-donaciones-qa-jmunar` | `styleradar-donaciones-prod-jmunar` | Linux App Service Plan (Java 21). |
 | **URL Base del Servicio** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net) | HTTPS activo por defecto con certificados gestionados por Azure. |
-| **Swagger UI Público** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui.html`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui.html) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui.html`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui.html) | Documentación interactiva OpenAPI 3 con módulo de autenticación demo. |
-| **Health Check Endpoint** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health) | Monitoreo y validación (retorna HTTP 200 OK con payload JSON). |
+| **Swagger UI Público** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) | Documentación interactiva OpenAPI 3 (Auth Demo disponible en QA; restringido en PROD). |
+| **Health Check Endpoint** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health) | Monitoreo y validación de versión y salud (retorna HTTP 200 OK con payload JSON). |
 | **Azure PostgreSQL Flexible**| `styleradar-db-qa-jmunar.postgres.database.azure.com` | `styleradar-db-prod-jmunar.postgres.database.azure.com` | **Instancias 100% aisladas e independientes en Azure.** |
 | **Base de Datos** | `styleradar_donations_qa` | `styleradar_donations_prod` | Esquemas migrados automáticamente mediante Flyway. |
 | **Perfil Activo Spring** | `qa` (`SPRING_PROFILES_ACTIVE=qa`) | `prod` (`SPRING_PROFILES_ACTIVE=prod`) | Configuraciones desacopladas en `application-qa.yml` y `application-prod.yml`. |
@@ -95,11 +95,14 @@ Todos los recursos en la nube de **StyleRadar** se encuentran alojados en la sus
 
 ### 3.1. Swagger UI de QA
 El microservicio expone su documentación interactiva OpenAPI 3 en:
-👉 **`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui.html`**  
+👉 **`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html`**  
 *(OpenAPI JSON: `https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/v3/api-docs`)*
 
-### 3.2. Endpoints de Diagnóstico (`/health`)
-Para la validación del estado operativo por parte de load balancers y herramientas de monitoreo:
+> 🔒 **Seguridad en Producción vs. QA:**  
+> Por diseño de seguridad perimetral, los endpoints de demostración (`/api/v1/auth/**`) y el servicio de simulación `DemoUserService` están etiquetados con `@Profile({"local", "test", "dev", "qa"})`. En el ambiente **QA**, se encuentran activos para facilitar la evaluación y pruebas controladas. En el ambiente **PROD**, estos beans no se instancian, respondiendo `HTTP 404 Not Found` para evitar la emisión no autorizada de tokens con rol `ADMIN` o la divulgación de credenciales demo.
+
+### 3.2. Endpoints de Diagnóstico (`/health`) y Validación de Versión
+Para la validación del estado operativo por parte de load balancers, herramientas de monitoreo y el pipeline CI/CD:
 * **Endpoint QA:** `GET https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health`
 * **Endpoint PROD:** `GET https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health`
 
@@ -108,6 +111,7 @@ Para la validación del estado operativo por parte de load balancers y herramien
 {
   "status": "UP",
   "service": "ms-segunda-vida-donaciones",
+  "version": "0.0.1-SNAPSHOT",
   "port": 8520,
   "timestamp": "2026-11-09T20:00:00.000000Z"
 }
@@ -136,19 +140,22 @@ El microservicio utiliza perfiles Spring Boot desacoplados (`application-qa.yml`
 
 ---
 
-## 5. Configuración de Secretos en GitHub Actions
+## 5. Configuración de Secretos y Reglas de Fallo en GitHub Actions
 
-Para que el pipeline `.github/workflows/ci.yml` ejecute el despliegue automático:
+Para que el pipeline `.github/workflows/ci.yml` ejecute el despliegue automático, se requiere registrar las credenciales en GitHub Actions (**Settings ➔ Secrets and variables ➔ Actions**):
 
-1. Ir a **Settings ➔ Secrets and variables ➔ Actions** en el repositorio GitHub.
-2. Registrar los siguientes **Repository Secrets**:
-   * `RENDER_DEPLOY_HOOK_QA`: URL del Webhook de despliegue automático de Render para el servicio QA.
-   * `RENDER_DEPLOY_HOOK_PROD`: URL del Webhook de despliegue de Render para PROD.
-   * `AZURE_WEBAPP_PUBLISH_PROFILE_QA`: (Opcional si se despliega en Azure App Service).
-   * `AZURE_WEBAPP_PUBLISH_PROFILE_PROD`: (Opcional si se despliega en Azure App Service).
-3. Registrar las siguientes **Repository Variables** (opcionales):
-   * `QA_APP_URL`: `https://styleradar-donaciones-qa-jmunar.azurewebsites.net`
-   * `PROD_APP_URL`: `https://styleradar-donaciones-prod-jmunar.azurewebsites.net`
+* `AZURE_WEBAPP_PUBLISH_PROFILE_QA`: Contenido XML del perfil de publicación de Azure Web App (`styleradar-donaciones-qa-jmunar`).
+* `AZURE_WEBAPP_PUBLISH_PROFILE_PROD`: Contenido XML del perfil de publicación de Azure Web App (`styleradar-donaciones-prod-jmunar`).
+* `DEPLOY_WEBHOOK_QA` / `DEPLOY_WEBHOOK_PROD`: (Opcional) Webhook de despliegue alternativo.
+
+### Reglas Estrictas de Validación y Fallo en el Pipeline:
+1. **Fallo por Credenciales Faltantes:** Si no se detecta `AZURE_WEBAPP_PUBLISH_PROFILE_QA` (en `deploy-qa`) o `AZURE_WEBAPP_PUBLISH_PROFILE_PROD` (en `deploy-prod`), el job falla de inmediato con código de salida `exit 1`.
+2. **Validación de Versión y Estado Saludable en Smoke Test:** Tras invocar el despliegue, el pipeline sondea hasta 15 veces (intervalos de 10 segundos) el endpoint `/api/v1/health`:
+   * Verifica que el estado HTTP sea `200 OK`.
+   * Verifica que el payload JSON contenga `"status": "UP"`.
+   * Verifica que el campo `"version"` coincida con la versión empaquetada (`0.0.1-SNAPSHOT`).
+   * Si después de 15 intentos no responde adecuadamente o la versión difiere, el pipeline aborta con `exit 1` marcando el build como fallido.
+3. **Calidad Automatizada vs. Auditoría SonarQube:** El pipeline de GitHub Actions valida de manera estricta la compuerta de cobertura de código mediante **JaCoCo (`≥ 85%`)**. El análisis estático de **SonarQube v26.9.0** se ejecuta de manera independiente (`mvn sonar:sonar`), certificando el Quality Gate en Calificación A (0 issues).
 
 ---
 

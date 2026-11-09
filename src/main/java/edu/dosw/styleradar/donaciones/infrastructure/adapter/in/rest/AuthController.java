@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,10 +30,13 @@ import java.util.List;
 /**
  * Controlador REST para autenticación, inicio de sesión y obtención de tokens JWT
  * para probar el sistema en Swagger UI con los diferentes roles.
+ * Restringido a ambientes de desarrollo y pruebas controladas (local, test, dev, qa).
+ * En producción (prod) este bean NO se carga, garantizando la seguridad perimetral.
  */
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Profile({"local", "test", "dev", "qa"})
 @Tag(
         name = "Autenticación & Usuarios Demo",
         description = "Endpoints para inicio de sesión, obtención inmediata de tokens JWT (Admin, Usuario Normal, Fundación) para usar en el botón 'Authorize' de Swagger"

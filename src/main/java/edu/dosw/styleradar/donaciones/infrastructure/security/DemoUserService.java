@@ -2,6 +2,7 @@ package edu.dosw.styleradar.donaciones.infrastructure.security;
 
 import edu.dosw.styleradar.donaciones.application.dto.auth.DemoUserDTO;
 import edu.dosw.styleradar.donaciones.application.dto.auth.LoginResponseDTO;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Servicio que gestiona los usuarios de prueba (Admin, Normal, Fundación)
  * y la emisión de tokens JWT para interactuar con la API en Swagger UI.
+ * Restringido a ambientes de desarrollo y pruebas controladas (local, test, dev, qa).
+ * En producción (prod) este bean NO se carga, evitando la exposición de identidades o credenciales.
  */
 @Service
+@Profile({"local", "test", "dev", "qa"})
 @SuppressWarnings("java:S2068")
 public class DemoUserService {
 

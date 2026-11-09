@@ -309,10 +309,10 @@ El microservicio se encuentra desplegado y operativo 24/7 en **Microsoft Azure**
 
 | Método | Endpoint | RF Asociado | Descripción | Rol / Acceso Requerido | Códigos HTTP |
 | :---: | :--- | :---: | :--- | :--- | :---: |
-| `GET` | `/api/v1/health` | Diagnóstico | Monitoreo de salud y estado operativo del microservicio | Público | `200` |
-| `POST` | `/api/v1/auth/login` | Seguridad JWT | Autenticar usuario demo y obtener token Bearer JWT firmado (`HS256`) | Público (Catálogo Demo) | `200`, `401` |
-| `GET` | `/api/v1/auth/quick-token` | Seguridad JWT | Obtener token JWT rápido por perfil (`NORA_VENDEDORA`, `TOMAS_FUNDACION`, `CARLOS_COMPRADOR`, `ADMIN`) | Público (Catálogo Demo) | `200`, `400` |
-| `GET` | `/api/v1/auth/demo-users` | Seguridad JWT | Listar usuarios de demostración precargados y sus UUIDs para pruebas en Swagger | Público (Catálogo Demo) | `200` |
+| `GET` | `/api/v1/health` | Diagnóstico | Monitoreo de salud, versión y estado operativo del microservicio | Público | `200` |
+| `POST` | `/api/v1/auth/login` | Seguridad JWT | Autenticar usuario demo y obtener token Bearer JWT (`HS256`). Restringido a dev/test/qa. | Público (Solo dev/test/qa; Deshabilitado en prod) | `200`, `401`, `404` |
+| `GET` | `/api/v1/auth/quick-token` | Seguridad JWT | Generar token JWT rápido por perfil demo para Swagger. Restringido a dev/test/qa. | Público (Solo dev/test/qa; Deshabilitado en prod) | `200`, `400`, `404` |
+| `GET` | `/api/v1/auth/demo-users` | Seguridad JWT | Listar usuarios de prueba precargados para Swagger. Restringido a dev/test/qa. | Público (Solo dev/test/qa; Deshabilitado en prod) | `200`, `404` |
 | `POST` | `/api/v1/segunda-mano` | `SR-RF-33`, `34`, `35` | Publicar prenda de segunda mano con hasta 4 fotos, estado de conservación y precio en COP | `USER`, `ADMIN` (Valida `sellerId`) | `201`, `400`, `401`, `403` |
 | `GET` | `/api/v1/segunda-mano` | `SR-RF-36` | Buscar prendas disponibles con filtros combinables (`clothingType`, `size`, `condition`, `minPrice`, `maxPrice`, `color`, `style`) | Público | `200` |
 | `GET` | `/api/v1/segunda-mano/{id}` | `SR-RF-36` | Consultar el detalle completo de una publicación de segunda mano por UUID | Público | `200`, `404` |
@@ -344,6 +344,7 @@ curl -X GET "https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/he
 {
   "service": "ms-segunda-vida-donaciones",
   "status": "UP",
+  "version": "0.0.1-SNAPSHOT",
   "port": 8520,
   "timestamp": "2026-11-09T22:30:00.000000"
 }
@@ -613,34 +614,38 @@ mvn clean verify
 
 ## <img src="https://img.shields.io/badge/10-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 10. CI/CD CON EL BADGE DEL PIPELINE
 
-El ciclo de vida de integración y despliegue continuo está automatizado en **GitHub Actions** (`.github/workflows/ci.yml`), integrando compilación con JDK 21, ejecución de las 168 pruebas, validación de cobertura JaCoCo (`≥ 85%`), análisis estático SonarQube, construcción de imagen Docker OCI y despliegue automatizado hacia **Azure App Service**:
+El ciclo de vida de integración y despliegue continuo está automatizado en **GitHub Actions** (`.github/workflows/ci.yml`), integrando compilación con JDK 21, ejecución de las 168 pruebas, verificación estricta de cobertura JaCoCo (`≥ 85%`), empaquetado del artefacto JAR, construcción de imagen Docker OCI y despliegue automatizado hacia **Azure App Service**:
 
-* **`develop` ➔ Ambiente QA (`deploy-qa`):** Despliegue automático en cada push/merge a `develop` hacia `https://styleradar-donaciones-qa-jmunar.azurewebsites.net` con verificación de smoke test sobre `/api/v1/health`.
-* **`master` / `main` ➔ Ambiente PROD (`deploy-prod`):** Despliegue hacia `https://styleradar-donaciones-prod-jmunar.azurewebsites.net` protegido mediante entorno `production` (requiere CMV y aprobación del profesor).
+* **`develop` ➔ Ambiente QA (`deploy-qa`):** Despliegue automático en cada push/merge a `develop` hacia `https://styleradar-donaciones-qa-jmunar.azurewebsites.net` con validación obligatoria de credenciales y *Smoke Test* (`/api/v1/health` status `UP` y versión `0.0.1-SNAPSHOT`). Si faltan credenciales o el health check no responde adecuadamente, el pipeline falla de inmediato (`exit 1`).
+* **`master` / `main` ➔ Ambiente PROD (`deploy-prod`):** Despliegue hacia `https://styleradar-donaciones-prod-jmunar.azurewebsites.net` protegido mediante entorno `production` (requiere CMV y aprobación del profesor), validación de credenciales y *Smoke Test* de salud y versión.
+
+> [!NOTE]
+> **Aclaración sobre el Pipeline de CI/CD y SonarQube:**
+> El workflow de GitHub Actions (`ci.yml`) ejecuta de forma automatizada la compuerta de calidad de **cobertura con JaCoCo** (`mvn verify`), asegurando el umbral mínimo obligatorio (≥ 85%).
+> Por su parte, la auditoría estática de **SonarQube v26.9.0** se ejecuta de manera independiente y local (`mvn sonar:sonar`), certificando el Quality Gate en **Calificación A (0 issues)**, debidamente documentada con evidencias oficiales en [`docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md`](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md).
 
 ### Matriz de Pipelines y Quality Gates
 
 | Pipeline / Compuerta | Entorno Destino | Trigger | Criterio de Aprobación | Estado |
 | :--- | :--- | :--- | :--- | :---: |
 | **CI - Build, Test & JaCoCo** | Transversal | Push / PR a `develop`, `master`, `feature/**` | 168 tests en verde + Cobertura JaCoCo ≥ 85% (`99.37%`) | [![CI Pipeline](https://img.shields.io/badge/CI_Build_%26_Tests-Passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
-| **CD - Despliegue Automático QA** | Azure QA (`rg-styleradar`) | Push / Merge a `develop` | CI en verde + Smoke Test HTTP 200 en `/api/v1/health` | [![QA Pipeline](https://img.shields.io/badge/Deploy_QA-Azure_Active-5600EF?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
-| **CD - Despliegue a Producción** | Azure PROD (`rg-styleradar`) | Push / Merge a `master` (con CMV) | Aprobación CMV + Smoke Test HTTP 200 en `/api/v1/health` | [![PROD Pipeline](https://img.shields.io/badge/Deploy_PROD-Azure_Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
-| **SonarQube Quality Gate** | Transversal | Análisis Estático SonarQube v26.9.0 | **0 Bugs, 0 Vulnerabilidades, 0 Code Smells, 0 Hotspots (Rating A)** | [![Quality Gate](https://img.shields.io/badge/SonarQube-Passed_Rating_A-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md) |
+| **CD - Despliegue Automático QA** | Azure QA (`rg-styleradar`) | Push / Merge a `develop` | CI en verde + Credenciales Azure + Smoke Test HTTP 200 en `/api/v1/health` (Status UP y versión esperada) | [![QA Pipeline](https://img.shields.io/badge/Deploy_QA-Azure_Active-5600EF?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
+| **CD - Despliegue a Producción** | Azure PROD (`rg-styleradar`) | Push / Merge a `master` (con CMV) | Aprobación CMV + Credenciales Azure + Smoke Test HTTP 200 en `/api/v1/health` (Status UP y versión esperada) | [![PROD Pipeline](https://img.shields.io/badge/Deploy_PROD-Azure_Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
+| **Auditoría SonarQube (Local/Audit)** | Transversal | Análisis Estático SonarQube v26.9.0 | **0 Bugs, 0 Vulnerabilidades, 0 Code Smells, 0 Hotspots (Rating A)** | [![Quality Gate](https://img.shields.io/badge/SonarQube-Passed_Rating_A-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md) |
 
 ```mermaid
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
-    B --> C["170 Tests & JaCoCo<br>(99.37% ≥ 85%)"]
-    C --> D["SonarQube Analysis<br>(Rating A · 0 Issues)"]
-    D --> E["Build Docker OCI<br>(Temurin 21 Alpine)"]
-    E -->|Rama develop| F["Deploy Automático QA<br>(Azure App Service QA)"]
-    E -->|Rama master + CMV| G["Deploy Producción PROD<br>(Azure App Service PROD)"]
+    B --> C["168 Tests & JaCoCo<br>(99.37% ≥ 85%)"]
+    C --> D["Empaquetado JAR &<br>Docker OCI Image"]
+    D -->|Rama develop| E["Deploy Automático QA<br>(Azure App Service QA)"]
+    D -->|Rama master + CMV| F["Deploy Producción PROD<br>(Azure App Service PROD)"]
 
     classDef step fill:#12063A,stroke:#5600EF,stroke-width:2px,color:#FFFFFF;
     classDef pass fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#0C0C12;
 
-    class A,B,E step;
-    class C,D,F,G pass;
+    class A,B,D step;
+    class C,E,F pass;
 ```
 
 ### Calidad de Código (SonarQube) y Seguridad (OWASP Top 10:2025)

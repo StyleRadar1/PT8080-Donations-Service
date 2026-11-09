@@ -22,13 +22,14 @@ class HealthControllerTest {
     }
 
     @Test
-    @DisplayName("Debe retornar estado UP y puerto 8520 con código HTTP 200")
+    @DisplayName("Debe retornar estado UP, versión y puerto 8520 con código HTTP 200")
     void shouldReturnHealthStatusUp() throws Exception {
         mockMvc.perform(get("/health")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.service").value("ms-segunda-vida-donaciones"))
+                .andExpect(jsonPath("$.version").value("0.0.1-SNAPSHOT"))
                 .andExpect(jsonPath("$.port").value(8520))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }

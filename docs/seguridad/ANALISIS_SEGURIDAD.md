@@ -34,8 +34,7 @@ Para cada punto se describe: **Cómo está hoy**, **Riesgos encontrados** y **Qu
 * **Firma Criptográfica Segura:** La validación se ejecuta mediante la biblioteca oficial `io.jsonwebtoken:jjwt-api:0.13.0` utilizando el algoritmo simétrico HMAC-SHA256 (`HS256`). La clave de firma se obtiene de la variable de entorno del sistema `SECURITY_JWT_SECRET`.
 * **Protección Estricta por Perfiles de Ejecución:**
   * En perfiles productivos y de despliegue (`prod`, `staging`, `default`), el componente `JwtTokenProvider` valida al inicio de la aplicación (`@PostConstruct`) que la variable `SECURITY_JWT_SECRET` esté explícitamente configurada y contenga al menos 256 bits (32 bytes). Si se detecta una clave ausente o por defecto, la aplicación aborta inmediatamente con un `IllegalStateException`, impidiendo el arranque inseguro.
-  * Los endpoints de prueba e interoperabilidad académica en Swagger UI (`/api/v1/auth/login`, `/api/v1/auth/quick-token` y `/api/v1/auth/demo-users`) operan únicamente sobre un catálogo cerrado e inmutable de 4 identidades de demostración en memoria (`DemoUserService`: Nora Rebelde, Tomás Esencial, Carlos Comprador y Admin), sin acceso a cuentas reales ni persistencia de contraseñas.
-* **Extracción de Claims de Identidad:** Del token validado se extrae el identificador de usuario (`userId`, claim numérico de Postgres), el correo/username (`sub` / subject), y la lista de roles (`role` o `roles`), garantizando la trazabilidad de cada petición.
+  * Los endpoints de demostración (`/api/v1/auth/login`, `/api/v1/auth/quick-token` y `/api/v1/auth/demo-users`) y el servicio `DemoUserService` se encuentran estrictamente restringidos mediante `@Profile({"local", "test", "dev", "qa"})`. En el entorno de producción (`prod`), Spring Boot **no instancia estos beans**, impidiendo la emisión no autenticada de tokens administrativos y la divulgación de credenciales demo (retorna `HTTP 404 Not Found`).
 
 ### 2.2. Riesgos Encontrados
 
@@ -48,7 +47,7 @@ Para cada punto se describe: **Cómo está hoy**, **Riesgos encontrados** y **Qu
 
 ### 2.3. Qué se corrigió / mitigaciones implementadas
 
-1. **Aislamiento de identidades en `DemoUserService` y `AuthController`:** Los endpoints de demostración (`/api/v1/auth/**`) están acotados exclusivamente a las 4 identidades sintéticas del catálogo de prueba para facilitar la verificación interactiva en Swagger UI de QA y PROD sin comprometer credenciales reales.
+1. **Restricción estricta de perfiles en `DemoUserService` y `AuthController`:** Se etiquetaron ambas clases con `@Profile({"local", "test", "dev", "qa"})`. En el entorno `prod`, Spring Boot no registra estos beans en el contexto de aplicación, eliminando la superficie de ataque en producción y garantizando que las credenciales de demo y la emisión de tokens rápidos únicamente existan en desarrollo y pruebas controladas.
 2. **Validación de arranque a prueba de fallos (*Fail-Fast Startup*):** Se implementó en `JwtTokenProvider` la verificación obligatoria del tamaño y origen de la clave `SECURITY_JWT_SECRET` (mínimo 32 bytes / 256 bits). Si el entorno es productivo y se detecta la clave de desarrollo o una clave corta, el contexto de Spring aborta inmediatamente.
 3. **Manejo uniforme de errores de autenticación:** Se implementó `SecurityErrorHandler` (`AuthenticationEntryPoint`) que captura cualquier fallo de firma, expiración o formato malformado, retornando un error estandarizado según la norma RFC 7807 (`ProblemDetail`) con estado HTTP 401 Unauthorized sin revelar stack traces:
    ```json
