@@ -50,7 +50,7 @@ public class JwtTokenProvider {
                 effectiveSecret = DEFAULT_DEV_SECRET_BASE64;
             } else {
                 throw new IllegalStateException(
-                        "La variable de entorno JWT_SECRET_BASE64 es obligatoria en ambientes productivos y debe contener al menos 256 bits (32 bytes en Base64)."
+                        "La variable de entorno JWT_SECRET_BASE64 es obligatoria y debe contener al menos 256 bits (32 bytes en Base64) en cualquier perfil distinto a local, test o dev."
                 );
             }
         }
@@ -85,15 +85,11 @@ public class JwtTokenProvider {
     }
 
     private static boolean isLocalOrTestProfile(Environment env) {
-        if (env == null) return true; // Para pruebas unitarias aisladas sin contexto Spring
+        if (env == null) return false;
         List<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
-        if (activeProfiles.isEmpty()) {
-            activeProfiles = Arrays.asList(env.getDefaultProfiles());
-        }
         return activeProfiles.contains("local")
                 || activeProfiles.contains("test")
-                || activeProfiles.contains("dev")
-                || activeProfiles.contains("default");
+                || activeProfiles.contains("dev");
     }
 
     private static byte[] padTo256Bits(byte[] input) {

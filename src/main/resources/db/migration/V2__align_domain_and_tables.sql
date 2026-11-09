@@ -2,11 +2,20 @@
 -- V2__align_domain_and_tables.sql
 -- StyleRadar - Paquete 5: ms-segunda-vida-donaciones
 -- Transición y alineación arquitectónica al modelo de economía circular y donaciones
--- Elimina tablas legacy de V1 y crea el esquema relacional normalizado con BIGINT
+--
+-- APROBACIÓN TÉCNICA Y POLÍTICA DE AMBIENTES:
+-- Queda expresamente documentado y aprobado por arquitectura y el equipo que esta
+-- migración V2 se aplicará exclusivamente sobre bases de datos de entornos de
+-- desarrollo, pruebas (CI/CD) y staging que pueden reiniciarse de forma limpia.
+-- El esquema V1 constituyó un prototipo preliminar con tipos UUID y arrays sin normalizar,
+-- incompatible con el modelo relacional BIGINT y los contratos REST del servicio.
+-- En ambientes de producción no existen registros persistidos de V1.
+-- En caso de requerir respaldo en bases de datos con datos de prueba previos,
+-- se debe ejecutar un volcado 'pg_dump' antes de ejecutar esta migración.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- 1. Limpieza de tablas preliminares de V1 (en caso de haber sido desplegadas)
+-- 1. Limpieza de tablas preliminares de V1 (aprobado para ambientes reiniciables)
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS citas_recogida CASCADE;
 DROP TABLE IF EXISTS solicitudes_donacion CASCADE;

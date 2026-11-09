@@ -90,4 +90,32 @@ class JwtTokenProviderTest {
         assertThat(shortKeyProvider.validateToken(token)).isTrue();
         assertThat(shortKeyProvider.getUserId(token)).isEqualTo(501L);
     }
+
+    @Test
+    @DisplayName("En perfil default o sin perfil activo debe exigir clave externa y rechazar clave predeterminada")
+    void shouldEnforceSecretInDefaultProfile() {
+        MockEnvironment defaultEnv = new MockEnvironment(); // Sin perfiles activos (default)
+
+        assertThatThrownBy(() -> new JwtTokenProvider(null, Duration.ofHours(1), defaultEnv))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
+
+        // También con environment nulo
+        assertThatThrownBy(() -> new JwtTokenProvider(null, Duration.ofHours(1), null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("JWT_SECRET_BASE64 es obligatoria");
+    }
+
+    @Test
+    @DisplayName("En perfil dev debe permitir clave predeterminada")
+    void shouldAllowDefaultKeyInDevProfile() {
+        MockEnvironment devEnv = new MockEnvironment();
+        devEnv.setActiveProfiles("dev");
+
+        JwtTokenProvider devProvider = new JwtTokenProvider(null, null, devEnv);
+        String token = devProvider.generateToken(101L, "dev@styleradar.com", Role.USER, "Dev User");
+
+        assertThat(devProvider.validateToken(token)).isTrue();
+        assertThat(devProvider.getRole(token)).isEqualTo(Role.USER);
+    }
 }

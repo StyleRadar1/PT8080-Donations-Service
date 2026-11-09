@@ -5,6 +5,7 @@ import edu.dosw.styleradar.donaciones.application.dto.auth.LoginResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.authentication.BadCredentialsException;
 
 import java.time.Duration;
@@ -20,7 +21,9 @@ class DemoUserServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(null, Duration.ofHours(2), null);
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("test");
+        jwtTokenProvider = new JwtTokenProvider(null, Duration.ofHours(2), env);
         demoUserService = new DemoUserService(jwtTokenProvider);
     }
 

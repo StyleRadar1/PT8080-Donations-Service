@@ -25,5 +25,16 @@ Este directorio gestiona la evolución controlada del esquema de base de datos r
 
 ---
 
+## ⚠️ Aprobación Formal de Política de Transición y Preservación de Datos
+
+* **Uso de Cláusulas Destructivas (`DROP TABLE ... CASCADE`):** La migración `V2` elimina las tablas preliminares `articulos_segunda_mano`, `solicitudes_donacion` y `citas_recogida` correspondientes a la versión `V1`.
+* **Aprobación Expresa de Ambientes:** Queda formalmente documentado y aprobado que la migración `V2` **se aplicará exclusivamente sobre bases de datos de entornos de desarrollo, pruebas continuas (CI/CD) y staging que pueden reiniciarse**.
+* **Justificación de Arquitectura:**
+  1. El esquema inicial `V1` constituyó un prototipo exploratorio no normalizado con identificadores `UUID` y arrays `TEXT[]`, incompatible con los contratos REST del servicio (puerto 8520) y los identificadores autonuméricos `BIGINT` del ecosistema.
+  2. En entornos de producción no existen registros almacenados bajo el esquema preliminar `V1`.
+  3. En caso de requerir respaldo en algún ambiente de laboratorio con datos preliminares, el equipo de infraestructura debe ejecutar un volcado previo mediante `pg_dump` antes de desplegar Flyway `V2`.
+
+---
+
 ## Verificación y Pruebas Automatizadas
 * La ejecución de las migraciones se valida automáticamente en la suite de pruebas mediante `FlywayPostgreSqlMigrationTest` utilizando Testcontainers sobre una instancia real de PostgreSQL 16.

@@ -1,18 +1,20 @@
 package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence;
 
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.MigrationInfo;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationInfo;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.DockerClientFactory;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,18 +22,41 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Prueba de integración de migraciones Flyway sobre una base de datos real PostgreSQL 16.
  * Valida la transición completa desde V1 (esquema inicial UUID) hasta V2 (esquema oficial BIGINT).
  */
-@Testcontainers(disabledWithoutDocker = true)
 class FlywayPostgreSqlMigrationTest {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("styleradar_donations_test")
-            .withUsername("test_user")
-            .withPassword("test_password");
+    static PostgreSQLContainer<?> postgres;
+
+    @BeforeAll
+    static void setUp() {
+        boolean isCi = "true".equalsIgnoreCase(System.getenv("CI"))
+                || "true".equalsIgnoreCase(System.getenv("GITHUB_ACTIONS"));
+        boolean dockerAvailable = DockerClientFactory.instance().isDockerAvailable();
+
+        if (!isCi && !dockerAvailable) {
+            Assumptions.abort("Docker no está disponible en el entorno local. Se omite la prueba de integración de PostgreSQL.");
+            return;
+        }
+
+        postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+                .withDatabaseName("styleradar_donations_test")
+                .withUsername("test_user")
+                .withPassword("test_password");
+        postgres.start();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        if (postgres != null && postgres.isRunning()) {
+            postgres.stop();
+        }
+    }
 
     @Test
     @DisplayName("Debe ejecutar exitosamente las migraciones Flyway V1 y V2 en PostgreSQL 16")
     void shouldApplyFlywayMigrationsCleanlyOnPostgreSql() throws SQLException {
+        assertThat(postgres).isNotNull();
+        assertThat(postgres.isRunning()).isTrue();
+
         Flyway flyway = Flyway.configure()
                 .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
                 .locations("classpath:db/migration")

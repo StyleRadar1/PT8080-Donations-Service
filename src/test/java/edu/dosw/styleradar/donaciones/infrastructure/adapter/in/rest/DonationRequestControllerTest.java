@@ -34,6 +34,7 @@ import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityConfig;
 import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityErrorHandler;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -48,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DonationRequestController.class)
+@ActiveProfiles("test")
 @Import({
         DonationRequestRestMapper.class,
         GlobalExceptionHandler.class,

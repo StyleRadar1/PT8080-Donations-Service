@@ -31,10 +31,20 @@ jobs:
       - name: 1. Clean & Compile
         run: mvn -B clean compile
 
+      - name: Verify Docker Daemon & Socket Permissions
+        run: |
+          docker version
+          sudo systemctl start docker || true
+          sudo chmod 666 /var/run/docker.sock || true
+
       - name: 2. Unit & Integration Tests with JaCoCo Report
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
         run: mvn -B test jacoco:report
 
       - name: 3. Verify Quality Gate & JaCoCo Coverage (Threshold >= 85%)
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
         run: mvn -B verify
 
       - name: 4. Package Application JAR
