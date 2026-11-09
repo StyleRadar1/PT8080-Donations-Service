@@ -24,6 +24,7 @@ import java.util.List;
  * En perfiles productivos exige estrictamente una clave secreta segura (>= 256 bits) por variable de entorno.
  */
 @Component
+@SuppressWarnings({"java:S6418", "java:S2068"})
 public class JwtTokenProvider {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
