@@ -68,9 +68,24 @@ flowchart TD
 
 ## 2. Matriz de Despliegue en la Nube (Pág. 8)
 
+Todos los recursos en la nube de **StyleRadar** se encuentran alojados en la suscripción de Azure dentro del Grupo de Recursos dedicado **`rg-styleradar`** (Región: **Canada Central**):
+
+| Recurso / Componente | Entorno Staging / QA | Entorno Producción / PROD | Notas Técnicas |
+| :--- | :--- | :--- | :--- |
+| **Resource Group** | `rg-styleradar` | `rg-styleradar` | Grupo de recursos exclusivo de StyleRadar en Azure. |
+| **Azure App Service** | `styleradar-donaciones-qa-jmunar` | `styleradar-donaciones-prod-jmunar` | Linux App Service Plan (Java 21). |
+| **URL Base del Servicio** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net) | HTTPS activo por defecto con certificados gestionados por Azure. |
+| **Swagger UI Público** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui.html`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui.html) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui.html`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui.html) | Documentación interactiva OpenAPI 3 con módulo de autenticación demo. |
+| **Health Check Endpoint** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health) | Monitoreo y validación (retorna HTTP 200 OK con payload JSON). |
+| **Azure PostgreSQL Flexible**| `styleradar-db-qa-jmunar.postgres.database.azure.com` | `styleradar-db-prod-jmunar.postgres.database.azure.com` | **Instancias 100% aisladas e independientes en Azure.** |
+| **Base de Datos** | `styleradar_donations_qa` | `styleradar_donations_prod` | Esquemas migrados automáticamente mediante Flyway. |
+| **Perfil Activo Spring** | `qa` (`SPRING_PROFILES_ACTIVE=qa`) | `prod` (`SPRING_PROFILES_ACTIVE=prod`) | Configuraciones desacopladas en `application-qa.yml` y `application-prod.yml`. |
+
+### 2.1. Tabla Resumen Oficial del Curso (Pág. 8 del Enunciado)
+
 | Servicio | URL QA | URL PROD | BD QA (Aislada) | BD PROD (Aislada) |
 | :--- | :--- | :--- | :--- | :--- |
-| **`ms-segunda-vida-donaciones`** | `https://styleradar-donaciones-qa-jmunar.azurewebsites.net` | `https://styleradar-donaciones-prod-jmunar.azurewebsites.net` | `bluevelvet-db-qa-jmunar.postgres.database.azure.com` (Azure PostgreSQL QA) | `styleradar-db-prod-jmunar.postgres.database.azure.com` (Azure PostgreSQL PROD) |
+| **`ms-segunda-vida-donaciones`** | `https://styleradar-donaciones-qa-jmunar.azurewebsites.net` | `https://styleradar-donaciones-prod-jmunar.azurewebsites.net` | `styleradar-db-qa-jmunar.postgres.database.azure.com` (Azure PostgreSQL QA) | `styleradar-db-prod-jmunar.postgres.database.azure.com` (Azure PostgreSQL PROD) |
 
 * **Regla de Oro:** La base de datos de producción (`styleradar_donations_prod`) reside en un clúster físico o lógico independiente de QA (`styleradar_donations_qa`), con credenciales, usuarios y políticas de firewall distintas.
 

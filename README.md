@@ -308,7 +308,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 
 | Servicio | URL QA | URL PROD | BD QA | BD PROD |
 | :--- | :--- | :--- | :--- | :--- |
-| **`ms-segunda-vida-donaciones`** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net) | `bluevelvet-db-qa-jmunar.postgres.database.azure.com` (PostgreSQL Aislada QA) | `styleradar-db-prod-jmunar.postgres.database.azure.com` (PostgreSQL Aislada PROD) |
+| **`ms-segunda-vida-donaciones`** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net) | `styleradar-db-qa-jmunar.postgres.database.azure.com` (PostgreSQL Aislada QA) | `styleradar-db-prod-jmunar.postgres.database.azure.com` (PostgreSQL Aislada PROD) |
 
 > ⚠️ **Regla de Oro de Bases de Datos:** Las bases de datos de QA y PRODUCCIÓN son instancias completamente independientes y jamás se comparten. Cada entorno cuenta con su propio host, credenciales y esquema gestionado por Flyway.
 

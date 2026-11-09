@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +33,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Profile({"local", "test", "dev"})
 @Tag(
         name = "Autenticación & Usuarios Demo",
         description = "Endpoints para inicio de sesión, obtención inmediata de tokens JWT (Admin, Usuario Normal, Fundación) para usar en el botón 'Authorize' de Swagger"
