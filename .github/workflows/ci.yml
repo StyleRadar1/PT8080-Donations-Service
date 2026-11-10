@@ -60,11 +60,11 @@ jobs:
         run: mvn -B verify -Dapi.version=1.44
 
       - name: 7. Package Application JAR
-        run: mvn -B package -DskipTests
+        run: mvn -B package -DskipTests -Dbuild.commit.sha=${{ github.sha }}
 
       - name: 8. Build Docker OCI Image
         run: |
-          docker build -t sr-ms-segunda-vida-donaciones:${{ github.sha }} .
+          docker build --build-arg COMMIT_SHA=${{ github.sha }} -t sr-ms-segunda-vida-donaciones:${{ github.sha }} .
           docker tag sr-ms-segunda-vida-donaciones:${{ github.sha }} sr-ms-segunda-vida-donaciones:latest
 
       - name: 9. Publish JaCoCo Coverage Artifact
@@ -135,18 +135,18 @@ jobs:
           fi
           echo "✅ Webhook de despliegue QA ejecutado exitosamente (HTTP $HTTP_CODE)."
 
-      - name: 6. QA Smoke Test, Health Check & Version Verification
+      - name: 6. QA Smoke Test, Health Check & Deployment Verification
         run: |
           QA_HEALTH_URL="${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa-jmunar.azurewebsites.net' }}/api/v1/health"
-          EXPECTED_VERSION="0.0.1-SNAPSHOT"
+          EXPECTED_COMMIT_SHA="${{ github.sha }}"
           echo "======================================================================"
           echo " Iniciando Smoke Test contra endpoint de salud de QA: $QA_HEALTH_URL"
-          echo " Versión esperada a verificar: $EXPECTED_VERSION"
+          echo " Commit SHA esperado a verificar: $EXPECTED_COMMIT_SHA"
           echo "======================================================================"
 
           SUCCESS=false
-          for i in {1..15}; do
-            echo "Intento $i de 15..."
+          for i in {1..20}; do
+            echo "Intento $i de 20..."
             RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$QA_HEALTH_URL" || true)
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
             BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
@@ -156,26 +156,27 @@ jobs:
 
             if [ "$HTTP_STATUS" -eq 200 ]; then
               STATUS_FIELD=$(echo "$BODY" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || true)
-              VERSION_FIELD=$(echo "$BODY" | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || true)
+              COMMIT_SHA_FIELD=$(echo "$BODY" | grep -o '"commitSha":"[^"]*"' | cut -d'"' -f4 || true)
 
               if [ "$STATUS_FIELD" = "UP" ]; then
-                echo "✅ Estado del servicio en QA verificado: UP"
-                if [ -n "$VERSION_FIELD" ] && [ "$VERSION_FIELD" != "$EXPECTED_VERSION" ]; then
-                  echo "❌ ERROR: La versión reportada ($VERSION_FIELD) no coincide con la esperada ($EXPECTED_VERSION)."
-                  exit 1
+                echo "-> Estado del servicio en QA: UP"
+                if [ -z "$COMMIT_SHA_FIELD" ]; then
+                  echo "⏳ El commitSha aún no está presente en la respuesta (posible reinicio en curso con versión previa)..."
+                elif [ "$COMMIT_SHA_FIELD" != "$EXPECTED_COMMIT_SHA" ] && [[ "$EXPECTED_COMMIT_SHA" != "$COMMIT_SHA_FIELD"* ]]; then
+                  echo "⏳ El commitSha reportado ($COMMIT_SHA_FIELD) aún no coincide con el nuevo commit ($EXPECTED_COMMIT_SHA). Esperando propagación del artefacto..."
                 else
-                  echo "✅ Versión desplegada en QA verificada: ${VERSION_FIELD:-$EXPECTED_VERSION}"
+                  echo "✅ Commit SHA desplegado en QA verificado exitosamente: $COMMIT_SHA_FIELD"
+                  SUCCESS=true
+                  break
                 fi
-                SUCCESS=true
-                break
               fi
             fi
             sleep 10
           done
 
           if [ "$SUCCESS" = false ]; then
-            echo "❌ ERROR CRÍTICO: El health check de QA no respondió HTTP 200 con status UP después de 15 intentos (150s)."
-            echo "El despliegue falló o el servicio no está saludable en: $QA_HEALTH_URL"
+            echo "❌ ERROR CRÍTICO: El health check de QA no confirmó el despliegue del commit $EXPECTED_COMMIT_SHA con status UP tras 20 intentos (200s)."
+            echo "El nuevo artefacto no se desplegó correctamente en: $QA_HEALTH_URL"
             exit 1
           fi
           echo "✅ Despliegue en QA completado y verificado con éxito."
@@ -234,18 +235,18 @@ jobs:
           fi
           echo "✅ Webhook de despliegue PROD ejecutado exitosamente (HTTP $HTTP_CODE)."
 
-      - name: 6. PROD Smoke Test, Health Check & Version Verification
+      - name: 6. PROD Smoke Test, Health Check & Deployment Verification
         run: |
           PROD_HEALTH_URL="${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}/api/v1/health"
-          EXPECTED_VERSION="0.0.1-SNAPSHOT"
+          EXPECTED_COMMIT_SHA="${{ github.sha }}"
           echo "======================================================================"
           echo " Iniciando Smoke Test contra endpoint de salud de PROD: $PROD_HEALTH_URL"
-          echo " Versión esperada a verificar: $EXPECTED_VERSION"
+          echo " Commit SHA esperado a verificar: $EXPECTED_COMMIT_SHA"
           echo "======================================================================"
 
           SUCCESS=false
-          for i in {1..15}; do
-            echo "Intento $i de 15..."
+          for i in {1..20}; do
+            echo "Intento $i de 20..."
             RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$PROD_HEALTH_URL" || true)
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
             BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
@@ -255,26 +256,27 @@ jobs:
 
             if [ "$HTTP_STATUS" -eq 200 ]; then
               STATUS_FIELD=$(echo "$BODY" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || true)
-              VERSION_FIELD=$(echo "$BODY" | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || true)
+              COMMIT_SHA_FIELD=$(echo "$BODY" | grep -o '"commitSha":"[^"]*"' | cut -d'"' -f4 || true)
 
               if [ "$STATUS_FIELD" = "UP" ]; then
-                echo "✅ Estado del servicio en PROD verificado: UP"
-                if [ -n "$VERSION_FIELD" ] && [ "$VERSION_FIELD" != "$EXPECTED_VERSION" ]; then
-                  echo "❌ ERROR: La versión reportada ($VERSION_FIELD) no coincide con la esperada ($EXPECTED_VERSION)."
-                  exit 1
+                echo "-> Estado del servicio en PROD: UP"
+                if [ -z "$COMMIT_SHA_FIELD" ]; then
+                  echo "⏳ El commitSha aún no está presente en la respuesta (posible reinicio en curso con versión previa)..."
+                elif [ "$COMMIT_SHA_FIELD" != "$EXPECTED_COMMIT_SHA" ] && [[ "$EXPECTED_COMMIT_SHA" != "$COMMIT_SHA_FIELD"* ]]; then
+                  echo "⏳ El commitSha reportado ($COMMIT_SHA_FIELD) aún no coincide con el nuevo commit ($EXPECTED_COMMIT_SHA). Esperando propagación del artefacto..."
                 else
-                  echo "✅ Versión desplegada en PROD verificada: ${VERSION_FIELD:-$EXPECTED_VERSION}"
+                  echo "✅ Commit SHA desplegado en PROD verificado exitosamente: $COMMIT_SHA_FIELD"
+                  SUCCESS=true
+                  break
                 fi
-                SUCCESS=true
-                break
               fi
             fi
             sleep 10
           done
 
           if [ "$SUCCESS" = false ]; then
-            echo "❌ ERROR CRÍTICO: El health check de PROD no respondió HTTP 200 con status UP después de 15 intentos (150s)."
-            echo "El despliegue falló o el servicio no está saludable en: $PROD_HEALTH_URL"
+            echo "❌ ERROR CRÍTICO: El health check de PROD no confirmó el despliegue del commit $EXPECTED_COMMIT_SHA con status UP tras 20 intentos (200s)."
+            echo "El nuevo artefacto no se desplegó correctamente en: $PROD_HEALTH_URL"
             exit 1
           fi
           echo "✅ Despliegue en PROD completado y verificado con éxito."

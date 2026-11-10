@@ -21,6 +21,17 @@ public class HealthController {
     @Value("${app.version:0.0.1-SNAPSHOT}")
     private String version = "0.0.1-SNAPSHOT";
 
+    @Value("${app.commit-sha:${APP_COMMIT_SHA:local-dev}}")
+    private String commitSha = "local-dev";
+
+    public HealthController() {
+    }
+
+    public HealthController(String version, String commitSha) {
+        this.version = version;
+        this.commitSha = commitSha;
+    }
+
     @GetMapping
     @Operation(summary = "Diagnóstico y salud del servicio", description = "Verifica que el microservicio esté en ejecución y respondiendo peticiones.")
     @ApiResponse(responseCode = "200", description = "Servicio activo y saludable")
@@ -29,6 +40,7 @@ public class HealthController {
                 "status", "UP",
                 "service", "ms-segunda-vida-donaciones",
                 "version", version,
+                "commitSha", commitSha,
                 "port", 8520,
                 "timestamp", LocalDateTime.now(ZoneOffset.UTC).toString()
         ));

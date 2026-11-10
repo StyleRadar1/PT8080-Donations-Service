@@ -32,6 +32,7 @@
         <jacoco.min.line.coverage>0.85</jacoco.min.line.coverage>
         <byte-buddy.version>1.15.11</byte-buddy.version>
         <testcontainers.version>1.20.4</testcontainers.version>
+        <build.commit.sha>local-dev</build.commit.sha>
 
         <!-- SonarQube Quality Gate Properties -->
         <sonar.host.url>http://localhost:9000</sonar.host.url>

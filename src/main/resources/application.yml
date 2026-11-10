@@ -49,8 +49,10 @@ spring:
       simple:
         auto-startup: ${RABBITMQ_LISTENER_AUTO_STARTUP:true}
 
-# Configuración de mensajería asíncrona RabbitMQ (Fase 3 - El Plus)
+# Configuración de la aplicación y mensajería asíncrona RabbitMQ (Fase 3 - El Plus)
 app:
+  version: "@project.version@"
+  commit-sha: "${APP_COMMIT_SHA:@build.commit.sha@}"
   rabbitmq:
     exchange:
       donations: ${RABBITMQ_DONATIONS_EXCHANGE:donaciones.exchange}

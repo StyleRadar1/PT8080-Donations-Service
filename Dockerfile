@@ -10,13 +10,17 @@ COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
 # Copy project source tree and package application artifact
+ARG COMMIT_SHA=local-dev
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B -Dbuild.commit.sha=${COMMIT_SHA}
 
 # ==============================================================================
 # Stage 2: Minimal Production Runtime with Eclipse Temurin 21 JRE Alpine
 # ==============================================================================
 FROM eclipse-temurin:21-jre-alpine
+
+ARG COMMIT_SHA=local-dev
+ENV APP_COMMIT_SHA=${COMMIT_SHA}
 
 # Non-root unprivileged system user and group (UID/GID 10001)
 RUN addgroup -g 10001 -S appgroup && \
