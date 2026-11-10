@@ -45,6 +45,13 @@ public class JwtTokenProvider {
         boolean isLocalOrTestProfile = isLocalOrTestProfile(env);
         String effectiveSecret = secretBase64;
 
+        if ((effectiveSecret == null || effectiveSecret.isBlank()) && env != null) {
+            effectiveSecret = env.getProperty("JWT_SECRET_BASE64");
+            if (effectiveSecret == null || effectiveSecret.isBlank()) {
+                effectiveSecret = env.getProperty("SECURITY_JWT_SECRET");
+            }
+        }
+
         if (effectiveSecret == null || effectiveSecret.isBlank()) {
             if (isLocalOrTestProfile) {
                 log.warn("ADVERTENCIA DE SEGURIDAD: Usando clave secreta JWT predeterminada para entorno local/pruebas.");

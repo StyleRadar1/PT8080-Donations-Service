@@ -53,7 +53,7 @@ CREATE TABLE fotos_publicacion (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     publicacion_id BIGINT NOT NULL REFERENCES publicaciones_segunda_mano(id) ON DELETE CASCADE,
     url_foto VARCHAR(512) NOT NULL,
-    orden SMALLINT NOT NULL DEFAULT 0
+    orden INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX idx_fotos_publicacion ON fotos_publicacion (publicacion_id);

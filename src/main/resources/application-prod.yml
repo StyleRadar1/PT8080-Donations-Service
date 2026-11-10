@@ -1,0 +1,88 @@
+# ==============================================================================
+# Perfil PROD (Producción en la Nube - StyleRadar ms-segunda-vida-donaciones)
+# ==============================================================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  # Base de Datos Relacional Aislada e Independiente para Producción (Pág. 8)
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:styleradar_donations_prod}?sslmode=require}
+    username: ${DB_USER:styleradar_prod_user}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: StyleRadar-Donations-PROD-HikariPool
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      validation-timeout: 5000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        show_sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    locations: classpath:db/migration
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:}
+    port: ${RABBITMQ_PORT:5671}
+    username: ${RABBITMQ_USERNAME:}
+    password: ${RABBITMQ_PASSWORD:}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    ssl:
+      enabled: ${RABBITMQ_SSL_ENABLED:true}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
+# Configuración de mensajería asíncrona en PROD
+app:
+  rabbitmq:
+    exchange:
+      donations: ${RABBITMQ_DONATIONS_EXCHANGE:donaciones.exchange}
+    queues:
+      notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
+      simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
+    simulator:
+      enabled: false
+
+# Documentación OpenAPI en Producción
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tryItOutEnabled: false
+    operationsSorter: method
+    tagsSorter: alpha
+
+# Health Check y Métricas de Producción
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    edu.dosw.styleradar.donaciones: WARN
+    org.springframework.web: WARN
+    org.springframework.security: ERROR

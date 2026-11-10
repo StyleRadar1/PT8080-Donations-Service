@@ -6,7 +6,7 @@
 
 <div align="center">
 
-  <a href="https://github.com/StyleRadar">
+  <a href="https://github.com/StyleRadar1">
     <img src="https://raw.githubusercontent.com/JUANNICOLASA/Frontend-Style-Radar/main/styleradar-frontend-v3/assets/logo/styleradar-logo.svg" width="340" alt="StyleRadar Logo Oficial" />
   </a>
 
@@ -20,23 +20,27 @@
 
   <p align="center">
     <strong><font color="#5600EF">Descubre tu estilo. En tu ciudad.</font></strong><br />
-    <em>Plataforma de moda local con inventario multi-sede geolocalizado en tiempo real y probador virtual para Bogotá.</em>
+    <em>Plataforma de moda local con inventario multi-sede geolocalizado en tiempo real, economía circular y probador virtual para Bogotá.</em>
   </p>
 
   <p align="center">
-    <img src="https://img.shields.io/badge/PROD_(Azure)-Próximo_Sprint_(Sprint_2)-informational?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="PROD Deployment" />
-    <img src="https://img.shields.io/badge/QA_(Azure)-Próximo_Sprint_(Sprint_2)-informational?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="QA Deployment" />
-    <a href="https://sonarcloud.io">
-      <img src="https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="Quality Gate" />
+    <a href="https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html">
+      <img src="https://img.shields.io/badge/PROD-Azure_Cloud_Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="PROD Deployment" />
     </a>
-    <a href="target/site/jacoco/index.html">
-      <img src="https://img.shields.io/badge/JaCoCo_Coverage-%E2%89%A5_85%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" />
+    <a href="https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html">
+      <img src="https://img.shields.io/badge/QA-Azure_Cloud_Active-5600EF?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="QA Deployment" />
+    </a>
+    <a href="docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md">
+      <img src="https://img.shields.io/badge/SonarQube-Rating_A_%C2%B7_0_Issues-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="Quality Gate" />
+    </a>
+    <a href="#9-pruebas-y-cobertura">
+      <img src="https://img.shields.io/badge/JaCoCo_Coverage-99.37%25_(%E2%89%A5_85%25)-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" />
     </a>
     <a href="#6-tecnologías-y-dependencias">
       <img src="https://img.shields.io/badge/Java-21_LTS-12063A?style=for-the-badge&logo=openjdk&logoColor=C4B5FD" alt="Java 21" />
     </a>
     <a href="#6-tecnologías-y-dependencias">
-      <img src="https://img.shields.io/badge/Spring_Boot-3.3.x-12063A?style=for-the-badge&logo=spring&logoColor=C4B5FD" alt="Spring Boot 3.3" />
+      <img src="https://img.shields.io/badge/Spring_Boot-3.3.4-12063A?style=for-the-badge&logo=spring&logoColor=C4B5FD" alt="Spring Boot 3.3" />
     </a>
     <a href="#7-cómo-ejecutar-local-y-con-docker">
       <img src="https://img.shields.io/badge/Docker-OCI_Container-12063A?style=for-the-badge&logo=docker&logoColor=C4B5FD" alt="Docker OCI" />
@@ -58,10 +62,9 @@
 7. [Cómo ejecutar local y con Docker](#7-cómo-ejecutar-local-y-con-docker)
 8. [Variables de entorno](#8-variables-de-entorno)
 9. [Pruebas y cobertura](#9-pruebas-y-cobertura)
-10. [CI/CD con el badge del pipeline y Quality Gate](#10-cicd-con-el-badge-del-pipeline)
-11. [Auditoría de Seguridad y Matriz OWASP Top 10:2025](#11-auditoria-seguridad-owasp)
-12. [Ramas y cómo contribuir](#12-ramas-y-cómo-contribuir)
-13. [Enlace a la épica en Jira](#13-enlace-a-la-épica-en-jira)
+10. [CI/CD con el badge del pipeline](#10-cicd-con-el-badge-del-pipeline)
+11. [Ramas y cómo contribuir](#11-ramas-y-cómo-contribuir)
+12. [Enlace a la épica en Jira](#12-enlace-a-la-épica-en-jira)
 
 ---
 
@@ -72,20 +75,20 @@
 * **Identificador de Servicio:** `ms-segunda-vida-donaciones`
 * **Paquete Arquitectónico:** `Paquete 5: Probador virtual + Donaciones + API Gateway`
 * **Puerto de Escucha Oficial:** `8520` (context-path: `/api/v1`)
-* **Base de Datos Asignada:** `PostgreSQL 16` (`styleradar_donations`), aislada bajo el patrón *Database-per-Service*.
-* **Bounded Context:** `Segunda Vida y Donaciones` (Economía Circular)
+* **Base de Datos Asignada:** `PostgreSQL 16` (`styleradar_donations_qa` en QA / `styleradar_donations_prod` en PROD), aisladas en Azure bajo el patrón *Database-per-Service*.
+* **Bounded Context:** `Segunda Vida y Donaciones` (Economía Circular Textil y Sostenibilidad Social)
 
 ### Responsabilidades del Dominio
 
-Este microservicio encapsula exclusivamente la lógica de negocio correspondiente a la economía circular de la plataforma StyleRadar, dividida en dos ejes: venta C2C de ropa de segunda mano y donaciones altruistas a fundaciones aliadas.
+Este microservicio encapsula exclusivamente la lógica de negocio correspondiente a la economía circular de la plataforma StyleRadar, dividida en dos ejes: **compraventa C2C de ropa de segunda mano (`SR-RF-33` a `SR-RF-39`)** y **donaciones altruistas a fundaciones benéficas aliadas (`SR-RF-42`, `SR-RF-44` a `SR-RF-49`)**.
 
 | Qué HACE este Microservicio (Alcance) | Qué NO HACE este Microservicio (Límites) |
 | :--- | :--- |
-| • Gestiona el ciclo de vida C2C de ropa de segunda mano (publicación, hasta 4 fotos, descripción, talla, marca, precio en COP, escala de estado y retiro/venta). | • NO autentica usuarios (delegado a `ms-auth` en `:8081`). |
-| • Gestiona el flujo altruista de donaciones a fundaciones aliadas (SR-RF-42 a SR-RF-49). | • NO procesa pasarela de pagos monetarios de tiendas (delegado a `ms-pagos-suscripciones` en `:8090`). |
-| • Coordinación de logística de recogida/acopio de donaciones (franjas horarias, puntos de acopio, estados PENDIENTE, APROBADA, RECHAZADA, EN_RECOGIDA, ENTREGADA). | • NO despacha emails ni notificaciones push directas (delegado a `ms-notificaciones` en `:8088`). |
-| • Publicación y consumo de eventos asíncronos vía RabbitMQ Topic Exchanges. | • NO genera la superposición de prendas por Inteligencia Artificial (delegado a `ms-probador-virtual` en `:8092`). |
-| • Garantiza persistencia ACID e idempotencia en su base de datos PostgreSQL 16. | • NO accede directamente a bases de datos de otros microservicios. |
+| • Gestiona el ciclo de vida C2C de ropa de segunda mano: publicación con hasta 4 fotos, descripción, tipo, marca, color, estilo, talla, escala de estado (`NEW_WITH_TAGS`, `LIKE_NEW`, `GOOD_CONDITION`, `ACCEPTABLE_USED`), precio en COP, edición, venta y retiro voluntario. | • NO emite identidades productivas de usuarios (delegado a `ms-auth` en `:8081`; valida tokens JWT de forma stateless). |
+| • Gestiona el flujo completo de donaciones a fundaciones aliadas: marcado de prenda para donar, selección de fundación, envío de solicitud, decisión justificada (aprobación/rechazo), coordinación de entrega/recogida (`DeliverySchedule`) y confirmación final de recepción. | • NO procesa pasarela de pagos monetarios de tiendas comerciales (delegado a `ms-pagos-suscripciones` en `:8090`). |
+| • Aplica control de acceso basado en roles (`USER`, `FOUNDATION`, `ADMIN`) y validación estricta de propiedad de recursos (`ResourceOwnershipValidator`) contra ataques IDOR/BOLA. | • NO despacha correos electrónicos ni notificaciones push directas (delegado a `ms-notificaciones` en `:8088` vía eventos RabbitMQ). |
+| • Publica eventos asíncronos de integración en RabbitMQ (`donacion.solicitud.creada`, `donacion.estado.actualizado`) con confirmación del broker (*Publisher Confirms & Returns*) y trazabilidad (`X-Correlation-Id`). | • NO genera superposición de prendas por Inteligencia Artificial (delegado a `ms-probador-virtual` en `:8092`). |
+| • Garantiza persistencia ACID e índices de consulta rápida (`< 2s`) en bases de datos PostgreSQL 16 independientes para QA y PROD. | • NO accede directamente a bases de datos de otros microservicios. |
 
 ### Arquetipos de Moda y Personajes de StyleRadar
 
@@ -98,7 +101,7 @@ Este microservicio encapsula exclusivamente la lógica de negocio correspondient
 </div>
 
 > [!NOTE]
-> Este microservicio atiende a **Nora (Rebelde)** mediante la comercialización circular de ropa vintage y segunda mano, y a **Tomás (Esencial)** a través de la canalización de prendas altruistas a fundaciones de impacto social.
+> Este microservicio atiende a **Nora (Rebelde)** mediante la comercialización circular de ropa vintage y segunda mano (`SecondHandPublication`), y a **Tomás (Esencial)** a través de la canalización de prendas altruistas a fundaciones de impacto social (`DonationRequest`).
 
 ---
 
@@ -106,16 +109,16 @@ Este microservicio encapsula exclusivamente la lógica de negocio correspondient
 
 ## <img src="https://img.shields.io/badge/02-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 2. EQUIPO Y RESPONSABLES
 
-Desarrollado y mantenido por el **Squad Portal 8080 (PT8080)** para la asignatura DOSW 2026.
+Desarrollado y mantenido por el **Squad Portal 8080 (`PT8080`)** para la asignatura DOSW 2026:
 
 <div align="center">
 
-| Rol | Nombre Completo |
-| :--- | :--- |
-| **Líder de Equipo** | Daniel Valero |
-| **Backend & Arquitectura** | José Martínez |
-| **Backend & DevOps** | Juan Munar |
-| **Frontend** | Kevin Ángel |
+| Rol | Nombre Completo | Responsabilidad en el Paquete 5 |
+| :--- | :--- | :--- |
+| **Líder de Equipo (Scrum Master)** | Daniel Valero | Gestión de arquitectura, revisión de PRs y coordinación del Squad Portal 8080. |
+| **Backend, DevOps & Seguridad (Owner `ms-segunda-vida-donaciones`)** | Juan Munar | Diseño hexagonal, implementación de los 14 RFs, SonarQube/OWASP y despliegue en Azure (QA/PROD). |
+| **Backend & Arquitectura** | José Martínez | Integración de microservicios del Paquete 5 y mensajería asíncrona. |
+| **Frontend** | Kevin Ángel | Integración del módulo de Segunda Vida y Donaciones en el cliente web StyleRadar. |
 
 </div>
 
@@ -125,171 +128,137 @@ Desarrollado y mantenido por el **Squad Portal 8080 (PT8080)** para la asignatur
 
 ## <img src="https://img.shields.io/badge/03-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 3. ARQUITECTURA HEXAGONAL CON SU DIAGRAMA
 
-El microservicio implementa **Arquitectura Hexagonal (Puertos y Adaptadores - Alistair Cockburn)** combinada con principios tácticos de **Domain-Driven Design (DDD)**. El núcleo de negocio permanece 100% puro y completamente aislado de frameworks (`Spring`), mecanismos de persistencia (`JPA / PostgreSQL`) o brokers de mensajería (`RabbitMQ`). La comunicación entre el mundo exterior y la lógica de negocio se realiza estrictamente a través de interfaces bien tipadas (*Puertos*).
+El microservicio implementa **Arquitectura Hexagonal Estricta (Puertos y Adaptadores)** combinada con principios tácticos de **Domain-Driven Design (DDD)**. El núcleo de dominio es 100% puro y libre de dependencias de frameworks externos. Todos los casos de uso cumplen la regla obligatoria del curso: **Interfaz de Puerto de Entrada (`domain.port.in.*UseCase`) + Implementación de Aplicación (`application.usecase.*UseCaseImpl`)**.
+
+> 📐 **Documento Completo de Arquitectura:** Consulta el detalle exhaustivo de componentes, clases y modelo relacional en [`docs/arquitectura/DOCUMENTO_ARQUITECTURA.md`](docs/arquitectura/DOCUMENTO_ARQUITECTURA.md).
 
 ---
 
-### 3.1 Diagrama de Arquitectura Hexagonal (Estructura de Puertos y Adaptadores)
-
-El siguiente diagrama detalla la separación canónica en dos hemisferios (*Primary Adapters* y *Secondary Adapters*) junto con las tres capas concéntricas del microservicio `ms-segunda-vida-donaciones`:
+### 3.1 Diagrama de Componentes Específico (Arquitectura Hexagonal Real Codificada)
 
 <div align="center">
-  <img src="docs/diagramas/diagrama_arquitectura_hexagonal.png" width="92%" alt="Diagrama de Arquitectura Hexagonal ms-segunda-vida-donaciones" />
+  <img src="docs/diagramas/diagrama_arquitectura_hexagonal_donations.png" width="92%" alt="Diagrama de Arquitectura Hexagonal ms-segunda-vida-donaciones" />
   <br>
   <sub>Figura 3.1: Arquitectura Hexagonal concéntrica con división en adaptadores primarios (Driving / Entrada) y adaptadores secundarios (Driven / Salida).</sub>
 </div>
 
 <br>
 
-#### Documentación Técnica de Capas y Adaptadores:
+```mermaid
+flowchart LR
+    subgraph Inbound["Adaptadores Primarios (infrastructure.adapter.in)"]
+        SHC["SecondHandPublicationController<br>(/api/v1/segunda-mano)"]
+        DRC["DonationRequestController<br>(/api/v1/donaciones)"]
+        AC["AuthController<br>(/api/v1/auth)"]
+        HC["HealthController<br>(/api/v1/health)"]
+    end
 
-1. **Hemisferio Izquierdo · Adaptadores Primarios (*Primary / Driving Adapters*):**
-   * **`Controllers (Donación y Segunda Mano)`:** Controladores REST (`HealthController`, `ArticuloRestController`, `DonacionRestController`, `RecogidaRestController`) que reciben y validan peticiones HTTP provenientes del frontend web de StyleRadar (Angular) y clientes autorizados.
-   * **`API endpoints (Swagger / OpenAPI 8520)`:** Documentación interactiva del contrato OpenAPI 3.0 expuesta en el puerto oficial `8520` a través de `/swagger-ui.html` y `/api-docs`.
-   * **`EventConsumer (RabbitMQ Listener / Console)`:** Adaptadores de infraestructura que consumen eventos asíncronos distribuidos en el broker RabbitMQ (ej: eventos de cuentas de usuario o tiendas).
+    subgraph PortsIn["Puertos de Entrada (domain.port.in)"]
+        PI_SH["CreatePublicationUseCase<br>GetPublicationsUseCase<br>ManagePublicationUseCase"]
+        PI_DR["CreateDonationRequestUseCase<br>DecideDonationRequestUseCase<br>ScheduleDonationPickupUseCase<br>ConfirmDonationReceiptUseCase"]
+    end
 
-2. **Capa Intermedia · Casos de Uso (*Application Layer*):**
-   * **`Use cases (Casos de Uso)`:** Interfaces y servicios de aplicación encargados de orquestar las operaciones del negocio (`PublicarArticuloUseCase`, `GestionarDonacionUseCase`, `ProgramarRecogidaUseCase`, `ConsultarCatalogoUseCase`), sin acoplamiento a frameworks.
-   * **`APPLICATION`:** Mapeadores de entrada/salida (MapStruct) y servicios de coordinación transaccional.
+    subgraph UseCases["Capa de Aplicación (application.usecase)"]
+        UC_SH["CreatePublicationUseCaseImpl<br>GetPublicationsUseCaseImpl<br>ManagePublicationUseCaseImpl"]
+        UC_DR["CreateDonationRequestUseCaseImpl<br>DecideDonationRequestUseCaseImpl<br>ScheduleDonationPickupUseCaseImpl<br>ConfirmDonationReceiptUseCaseImpl"]
+    end
 
-3. **Núcleo Central · Dominio Puro (*Domain Core*):**
-   * **`DOMAIN`:** Corazón del microservicio, implementado en Java 21 puro sin dependencias externas ni anotaciones de base de datos.
-   * **`Entities`:** Entidades del modelo de negocio (`ArticuloSegundaMano`, `SolicitudDonacion`, `CitaRecogida`) y Value Objects inmutables (`CategoriaArticulo`, `EstadoConservacion`, `EstadoPublicacionArticulo`, `EstadoSolicitudDonacion`).
-   * **`Repositories`:** Puertos de salida (*SPI - Output Ports*) que declaran los contratos de persistencia que el dominio exige (`ArticuloRepositoryPort`, `SolicitudDonacionRepositoryPort`, `CitaRecogidaRepositoryPort`).
+    subgraph Domain["Núcleo de Dominio Puro (domain.model)"]
+        DOM["SecondHandPublication · Garment<br>DonationRequest · PublicationSearchCriteria<br>ConservationStatus / PublicationStatus / DonationRequestStatus"]
+    end
 
-4. **Hemisferio Derecho · Adaptadores Secundarios (*Secondary / Driven Adapters*):**
-   * **`EntityManager (PostgreSQL 16 / Spring Data)`:** Adaptadores de persistencia JPA que implementan los puertos de repositorio del dominio conectándose a la base de datos relacional aislada `styleradar_donations`.
-   * **`RabbitMQAdapter (CloudAMQP Publisher)`:** Adaptador emisor que publica eventos durables de integración hacia los Topic Exchanges (`styleradar.donations.exchange`, `styleradar.resale.exchange`).
-   * **`MailAdapter (SMTP / Notificaciones)`:** Adaptador de mensajería para confirmación de recogidas, aceptación de donaciones y alertas automáticas a donantes y fundaciones aliadas.
+    subgraph PortsOut["Puertos de Salida (domain.port.out)"]
+        PO1["PublicationRepositoryPort"]
+        PO2["DonationRequestRepositoryPort"]
+        PO3["DonationEventPublisherPort /<br>DonacionEventPublisherPort"]
+    end
+
+    subgraph Outbound["Adaptadores Secundarios (infrastructure.adapter.out)"]
+        AD1["PublicationPersistenceAdapter<br>(JPA + PublicationSpecifications)"]
+        AD2["DonationRequestPersistenceAdapter<br>(JPA)"]
+        AD3["DonationEventPublisherAdapter &<br>DonacionEventPublisherAdapter"]
+    end
+
+    SHC --> PI_SH --> UC_SH --> DOM
+    DRC --> PI_DR --> UC_DR --> DOM
+    UC_SH --> PO1 --> AD1
+    UC_DR --> PO2 --> AD2
+    UC_DR --> PO3 --> AD3
+```
 
 ---
 
 ### 3.2 Diagrama de Clases del Dominio y Puertos
 
-El modelo de clases del microservicio refleja la separación estricta entre el Dominio puro, los Puertos de abstracción y los Adaptadores de infraestructura:
-
 <div align="center">
   <img src="docs/diagramas/clasesSR_donations.png" width="95%" alt="Diagrama de Clases ms-segunda-vida-donaciones" />
   <br>
-  <sub>Figura 3.2: Diagrama de Clases de ms-segunda-vida-donaciones detallando entidades, value objects, casos de uso y puertos SPI.</sub>
+  <sub>Figura 3.2: Diagrama de Clases de ms-segunda-vida-donaciones detallando entidades de dominio, objetos de valor, casos de uso y puertos.</sub>
 </div>
 
-<br>
-
-#### Documentación Técnica del Modelo de Clases:
-
-* **Entidades de Negocio y Agregados:**
-  * **`ArticuloSegundaMano`:** Modela una prenda o accesorio publicado para venta circular C2C o donación. Encapsula identificador único UUID, identificación del donante o vendedor, título, descripción, categoría, estado de conservación (`NUEVO_CON_ETIQUETA`, `EXCELENTE`, `BUENO`, `ACEPTABLE`), precio en COP, URLs de fotos y estado de publicación (`DISPONIBLE`, `RESERVADO`, `DONADO`, `RETIRADO`).
-  * **`SolicitudDonacion`:** Agregado raíz que formaliza la entrega altruista de una o más prendas a una fundación aliada. Gestiona la máquina de estados del trámite (`PENDIENTE` &rarr; `APROBADA` / `RECHAZADA` &rarr; `EN_RECOGIDA` &rarr; `ENTREGADA`).
-  * **`CitaRecogida`:** Modela la orden logística de recolección física de las prendas donadas, asociando dirección de recogida, transportador asignado, fecha programada, franja horaria (`MAÑANA`, `TARDE`) y estado logístico.
-
-* **Puertos de Entrada (*Inbound / Driving Ports*):**
-  * `PublicarArticuloUseCase`: Métodos para publicación, actualización y retiro voluntario de artículos C2C.
-  * `GestionarDonacionUseCase`: Radicación formal de solicitudes, evaluación por parte de la fundación y gestión de motivos de rechazo.
-  * `ProgramarRecogidaUseCase`: Agendamiento, confirmación de retiro y cierre de ciclo de transporte.
-  * `ConsultarCatalogoUseCase`: Búsquedas filtradas del catálogo circular y detalle por identificador.
-
-* **Puertos de Salida (*Outbound / Driven Ports - SPI*):**
-  * `ArticuloRepositoryPort`, `SolicitudDonacionRepositoryPort`, `CitaRecogidaRepositoryPort`: Contratos agnósticos de acceso a datos implementados en la infraestructura JPA.
-  * `EventPublisherPort`: Contrato para la emisión asíncrona de eventos de integración hacia RabbitMQ.
-  * `NotificacionPort`: Contrato para la emisión de comunicados hacia usuarios y fundaciones aliadas.
+#### Componentes Reales Codificados en el Dominio:
+* **Agregados y Objetos de Valor (`domain.model`):**
+  * **`SecondHandPublication`:** Modela una prenda publicada en el mercado circular C2C (`id`, `userId`, `garment`, `conservationStatus`, `price`, `photoUrls`, `status`, `createdAt`, `updatedAt`). Comportamientos de negocio ricos: `create(...)`, `edit(...)`, `markAsSold()`, `retire()`, `markForDonation()`, `markAsDonated()`.
+  * **`Garment` (Value Object):** Encapsula las propiedades textiles (`name`, `description`, `type`, `brand`, `color`, `style`, `size`).
+  * **`DonationRequest`:** Agregado raíz del flujo de donación benéfica (`id`, `publicationId`, `donorId`, `foundationId`, `message`, `status`, `rejectionReason`, `deliveryPoint`, `pickupWindowStart`, `pickupWindowEnd`, `createdAt`, `decidedAt`, `receivedAt`). Comportamientos de negocio ricos: `create(...)`, `approve()`, `reject(reason)`, `schedulePickup(...)`, `confirmReceipt()`.
+  * **Enumeraciones de Dominio:** `ConservationStatus` (`BRAND_NEW_WITH_TAGS`, `LIKE_NEW`, `GOOD_CONDITION`, `ACCEPTABLE`), `GarmentType` (`UPPER`, `LOWER`, `DRESS`, `FOOTWEAR`, `ACCESSORY`), `PublicationStatus` (`AVAILABLE`, `SOLD`, `DONATED`, `IN_DONATION`, `RETIRED`), `DonationRequestStatus` (`PENDING`, `APPROVED`, `REJECTED`, `IN_PICKUP`, `DELIVERED`), `Size` (`XS`, `S`, `M`, `L`, `XL`, `XXL`, `ONE_SIZE`), `Style` (`CASUAL`, `FORMAL`, `SPORT`, `URBAN`, `VINTAGE`).
+* **Puertos de Entrada (`domain.port.in`) e Implementaciones (`application.usecase`):**
+  * `CreatePublicationUseCase` ➔ `CreatePublicationUseCaseImpl`
+  * `GetPublicationsUseCase` ➔ `GetPublicationsUseCaseImpl`
+  * `ManagePublicationUseCase` ➔ `ManagePublicationUseCaseImpl`
+  * `CreateDonationRequestUseCase` ➔ `CreateDonationRequestUseCaseImpl`
+  * `DecideDonationRequestUseCase` ➔ `DecideDonationRequestUseCaseImpl`
+  * `ScheduleDonationPickupUseCase` ➔ `ScheduleDonationPickupUseCaseImpl`
+  * `ConfirmDonationReceiptUseCase` ➔ `ConfirmDonationReceiptUseCaseImpl`
+* **Puertos de Salida (`domain.port.out`) y Adaptadores (`infrastructure.adapter.out`):**
+  * `PublicationRepositoryPort` ➔ `PublicationPersistenceAdapter`
+  * `DonationRequestRepositoryPort` ➔ `DonationRequestPersistenceAdapter`
+  * `DonationEventPublisherPort` / `DonacionEventPublisherPort` ➔ `DonationEventPublisherAdapter`, `DonacionEventPublisherAdapter`, `RabbitMQEventPublisherAdapter`
 
 ---
 
-### 3.3 Diagrama Entidad-Relación (E-R) de Base de Datos
+### 3.3 Diagrama Entidad-Relación (E-R) de Base de Datos (Desplegado en QA y PROD)
 
-El microservicio utiliza **PostgreSQL 16** bajo el patrón arquitectónico *Database-per-Service*. La persistencia relacional se estructura formalmente mediante el siguiente **Diagrama Entidad-Relación (E-R)** compuesto por tres tablas:
+El microservicio utiliza **PostgreSQL 16** bajo el patrón *Database-per-Service*, con migraciones automáticas gestionadas por **Flyway** (`V1__init_schema.sql` y `V2__align_domain_and_tables.sql`) desplegadas en instancias independientes de Azure PostgreSQL Flexible Server para QA y PROD:
 
 <div align="center">
   <img src="docs/diagramas/DiagramaBD_donations.png" width="95%" alt="Diagrama Entidad-Relación (E-R) PostgreSQL 16 ms-segunda-vida-donaciones" />
   <br>
-  <sub>Figura 3.3: Diagrama Entidad-Relación (E-R) del modelo de datos de ms-segunda-vida-donaciones en PostgreSQL 16.</sub>
+  <sub>Figura 3.3: Diagrama de Base de Datos de ms-segunda-vida-donaciones en PostgreSQL 16.</sub>
 </div>
 
-<br>
-
-#### Documentación Técnica de las 3 Tablas del Modelo E-R:
-
-1. **`publicaciones_segunda_mano` (Entidad Principal / Fuerte):**
-   * **Propósito:** Centraliza las publicaciones de prendas y artículos de moda ofertados por los usuarios para venta circular C2C o donación altruista.
-   * **Atributos y Tipos de Datos:**
-     * `id`: `<PK>` Identificador primario autoincremental de tipo `BigInt`.
-     * `usuario_id`: `NN` Identificador numérico `BigInt` del usuario propietario (vendedor o donante).
-     * `nombre_prenda`: `NN` Título o denominación del artículo (`VarChar(120)`).
-     * `descripcion`: Campo opcional descriptivo de la prenda (`VarChar(1000)`).
-     * `tipo_prenda`: `NN` Categoría de la prenda (`VarChar(30)`).
-     * `marca`: `NN` Marca del fabricante (`VarChar(80)`).
-     * `color`: `NN` Color predominante (`VarChar(50)`).
-     * `estilo`: `NN` Estilo o arquetipo de moda (`VarChar(30)`).
-     * `talla`: `NN` Talla comercial estandarizada (`VarChar(20)`).
-     * `estado_conservacion`: `NN` Calificación de conservación según escala estándar (`VarChar(30)`).
-     * `precio`: `NN` Valor monetario en pesos colombianos (`Numeric(12, 2)`).
-     * `estado`: `NN` Estado de publicación en el ciclo de vida (`VarChar(30)`).
-     * `fecha_publicacion`: `NN` Fecha y hora de alta en el catálogo (`Timestamp with time zone`).
-     * `fecha_actualizacion`: Fecha y hora de última modificación (`Timestamp with time zone`).
-
-2. **`fotos_publicacion` (Entidad Débil / Galería de Fotografías):**
-   * **Propósito:** Almacena las URLs de las imágenes fotográficas asociadas a cada publicación para su visualización en catálogo y probador virtual.
-   * **Atributos y Tipos de Datos:**
-     * `id`: `<PK>` Identificador primario de la fotografía (`BigInt`).
-     * `publicacion_id`: `<FK>` `NN` Clave foránea que referencia a `publicaciones_segunda_mano(id)`.
-     * `url_foto`: `NN` Enlace seguro a la imagen en el storage (`VarChar(512)`).
-     * `orden`: `NN` Secuencia numérica de la foto en la galería (`SmallInt`).
-   * **Relación:** **`tiene (1..4)`** — Cada publicación de segunda mano tiene asociadas obligatoriamente entre 1 y 4 fotos (según requerimiento de negocio SR-RF-33).
-
-3. **`solicitudes_donacion` (Entidad de Donación Benéfica):**
-   * **Propósito:** Formaliza la solicitud de donación hacia fundaciones aliadas cuando una prenda es destinada a impacto social.
-   * **Atributos y Tipos de Datos:**
-     * `id`: `<PK>` Identificador único de la solicitud de donación (`BigInt`).
-     * `publicacion_id`: `<FK>` `NN` Clave foránea que referencia a la prenda en `publicaciones_segunda_mano(id)`.
-     * `donante_id`: `NN` Identificador del usuario donante (`BigInt`).
-     * `fundacion_id`: `NN` Identificador de la fundación beneficiaria (`BigInt`).
-     * `mensaje`: Mensaje explicativo o notas del donante (`VarChar(500)`).
-     * `estado`: `NN` Estado de la solicitud (`VarChar(30)` - PENDIENTE, APROBADA, RECHAZADA, EN_RECOGIDA, ENTREGADA).
-     * `motivo_rechazo`: Justificación en caso de no ser aceptada por la fundación (`VarChar(500)`).
-     * `punto_entrega`: Ubicación acordada para la entrega o acopio (`VarChar(200)`).
-     * `franja_inicio` y `franja_fin`: Ventana horaria programada para entrega o recogida (`Timestamp with time zone`).
-     * `fecha_solicitud`: `NN` Timestamp de radicación formal (`Timestamp with time zone`).
-     * `fecha_decision`: Momento en que la fundación aprueba o rechaza (`Timestamp with time zone`).
-     * `fecha_recepcion`: Momento de recepción efectiva en el centro de acopio (`Timestamp with time zone`).
-   * **Relación:** **`genera`** — Una publicación marcada para donación genera la solicitud hacia la fundación aliada receptora.
+#### Tablas Físicas Desplegadas (`V2__align_domain_and_tables.sql`):
+1. **`publicaciones_segunda_mano`:** Centraliza las publicaciones de prendas de segunda mano (`id BIGINT PK`, `usuario_id BIGINT`, `nombre_prenda`, `descripcion`, `tipo_prenda`, `marca`, `color`, `estilo`, `talla`, `estado_conservacion`, `precio NUMERIC(12,2)`, `estado`, `fecha_publicacion`, `fecha_actualizacion`).
+2. **`fotos_publicacion`:** Galería de hasta 4 fotografías por publicación (`id BIGINT PK`, `publicacion_id BIGINT FK`, `url_foto VARCHAR(512)`, `orden INTEGER`).
+3. **`solicitudes_donacion`:** Solicitudes de donación a fundaciones aliadas (`id BIGINT PK`, `publicacion_id BIGINT FK`, `donante_id BIGINT`, `fundacion_id BIGINT`, `mensaje`, `estado`, `motivo_rechazo`, `punto_entrega`, `franja_inicio`, `franja_fin`, `fecha_solicitud`, `fecha_decision`, `fecha_recepcion`).
 
 ---
 
-### 3.4 Estructura Oficial de Paquetes en `src/main/java/`
+### 3.4 Estructura Real de Paquetes en `src/main/java/`
 
 ```text
 src/main/java/edu/dosw/styleradar/donaciones/
-├── domain/                                  <-- NÚCLEO DE DOMINIO (Cero dependencias externas)
-│   ├── model/                               <-- Entidades (PrendaSegundaMano, SolicitudDonacion) y VOs
-│   ├── event/                               <-- Definición de Eventos puros de Dominio
-│   ├── exception/                           <-- Excepciones de reglas de negocio
+├── DonationsServiceApplication.java             <-- Punto de entrada Spring Boot 3.3.4
+├── domain/                                      <-- NÚCLEO DE DOMINIO PURO (0 dependencias externas)
+│   ├── model/                                   <-- SecondHandPublication, Garment, DonationRequest, PublicationSearchCriteria y Enums
+│   ├── event/                                   <-- Eventos de dominio (PublicationCreatedEvent, DonationRequestCreatedEvent, etc.)
+│   ├── exception/                               <-- DomainException, DomainConflictException, InvalidStateTransitionException, ResourceNotFoundException
 │   └── port/
-│       ├── in/                              <-- Input Ports (Interfaces para casos de uso)
-│       └── out/                             <-- Output Ports (Interfaces para persistencia y broker)
-├── application/                             <-- CAPA DE APLICACIÓN (Orquestación)
-│   ├── usecase/                             <-- Implementación de casos de uso (*UseCaseImpl)
-│   ├── service/impl/                        <-- Servicios de aplicación adicionales
-│   ├── dto/
-│   │   ├── request/                         <-- DTOs de entrada inmutables
-│   │   ├── response/                        <-- DTOs de salida para clientes
-│   │   └── event/                           <-- DTOs de mensajería para eventos
-│   └── mapper/
-│       ├── in/                              <-- Mappers Request -> Modelo
-│       └── out/                             <-- Mappers Modelo -> Response
-└── infrastructure/                          <-- CAPA DE INFRAESTRUCTURA (Adaptadores & Spring)
+│       ├── in/                                  <-- 7 Interfaces *UseCase y Commands inmutables (Puertos de Entrada)
+│       └── out/                                 <-- PublicationRepositoryPort, DonationRequestRepositoryPort, DonationEventPublisherPort
+├── application/                                 <-- CAPA DE APLICACIÓN (Orquestación de Casos de Uso)
+│   ├── usecase/                                 <-- 7 Clases *UseCaseImpl (@Service / @Transactional)
+│   └── dto/                                     <-- DTOs de entrada/salida (request, response, auth)
+└── infrastructure/                              <-- CAPA DE INFRAESTRUCTURA (Adaptadores & Configuración)
     ├── adapter/
     │   ├── in/
-    │   │   ├── rest/                        <-- Controladores REST y subcarpeta doc/
-    │   │   ├── amqp/                        <-- Consumidores de eventos RabbitMQ
-    │   │   └── websocket/                   <-- Handlers STOMP (si aplica)
+    │   │   ├── rest/                            <-- SecondHandPublicationController, DonationRequestController, AuthController, HealthController, GlobalExceptionHandler
+    │   │   └── messaging/                       <-- NotificationConsumerSimulator (Consumidor de verificación)
     │   └── out/
-    │       ├── persistence/                 <-- Adaptador JPA, Entidades y Repositorios
-    │       ├── messaging/                   <-- Adaptadores RabbitMQ Publisher
-    │       ├── security/                    <-- Proveedor de tokens y seguridad
-    │       └── external/                    <-- Clientes HTTP y APIs externas
-    ├── config/                              <-- Beans de configuración Spring (OpenAPI, etc.)
-    └── exception/                           <-- GlobalExceptionHandler (RFC 7807)
+    │       ├── persistence/                     <-- PublicationPersistenceAdapter, DonationRequestPersistenceAdapter, Entidades JPA, PublicationSpecifications y Mappers
+    │       └── messaging/                       <-- DonationEventPublisherAdapter, DonacionEventPublisherAdapter, DonationRequestCreatedIntegrationEvent
+    ├── security/                                <-- SecurityConfig, JwtAuthenticationFilter, JwtTokenProvider, ResourceOwnershipValidator, DemoUserService
+    └── config/                                  <-- OpenApiConfig, RabbitMQConfig
 ```
 
 ---
@@ -298,22 +267,34 @@ src/main/java/edu/dosw/styleradar/donaciones/
 
 ## <img src="https://img.shields.io/badge/04-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 4. ENDPOINTS Y ENLACE A SWAGGER
 
-La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encuentran disponibles y clasificados por entorno:
+El microservicio se encuentra desplegado y operativo 24/7 en **Microsoft Azure** dentro del Grupo de Recursos dedicado **`rg-styleradar`** (`Canada Central`).
 
-### Matriz Oficial de Enlaces por Entorno (PROD, QA, LOCAL)
+### 4.1 Tabla de Despliegue en la Nube (Pág. 8 del Enunciado)
 
-| Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
+| Servicio | URL QA | URL PROD | BD QA (Aislada) | BD PROD (Aislada) |
+| :--- | :--- | :--- | :--- | :--- |
+| **`ms-segunda-vida-donaciones`** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net) | `styleradar-db-qa-jmunar.postgres.database.azure.com` (`styleradar_donations_qa`) | `styleradar-db-prod-jmunar.postgres.database.azure.com` (`styleradar_donations_prod`) |
+
+> ⚠️ **Regla de Oro de Bases de Datos (Pág. 8):** Las bases de datos de QA (`styleradar-db-qa-jmunar`) y PRODUCCIÓN (`styleradar-db-prod-jmunar`) son servidores Azure PostgreSQL Flexible Server completamente independientes y jamás se comparten.
+
+### 4.2 Tabla de Swagger Público · Registro del Curso (Pág. 10 del Enunciado)
+
+| Equipo | Servicio | URL de Swagger en QA | URL de Swagger en PROD |
+| :--- | :--- | :--- | :--- |
+| **`Portal8080`** | **`ms-segunda-vida-donaciones`** | [`https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) | [`https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
+
+### 4.3 Matriz Oficial de Enlaces Operativos por Entorno (PROD, QA, LOCAL)
+
+| Entorno | Estado | URL Base | Swagger OpenAPI UI | Health Check (`/health`) | OpenAPI JSON (`/v3/api-docs`) |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Producción (PROD)** | Próximo Sprint | Despliegue cloud en Azure App Service programado para el próximo Sprint | *(En planificación para Sprint 2)* | *(Próximo Sprint)* | *(Próximo Sprint)* |
-| **Calidad / Pruebas (QA)** | Próximo Sprint | Entorno de staging cloud en Azure programado para el próximo Sprint | *(En planificación para Sprint 2)* | *(Próximo Sprint)* | *(Próximo Sprint)* |
-| **Desarrollo Local (DEV)** | Active (Sprint 1) | Entorno operativo actual en máquina local y contenedor OCI | `http://localhost:8520` | [Swagger UI Local](http://localhost:8520/api/v1/swagger-ui.html) | [`/api/v1/health`](http://localhost:8520/api/v1/health) |
-
-* **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8520/api/v1/v3/api-docs`
+| **Producción (`PROD`)** | 🟢 **Activo** | `https://styleradar-donaciones-prod-jmunar.azurewebsites.net` | [Swagger UI PROD](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) | [`/api/v1/health`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health) | [`/api/v1/v3/api-docs`](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/v3/api-docs) |
+| **Calidad (`QA`)** | 🟢 **Activo** | `https://styleradar-donaciones-qa-jmunar.azurewebsites.net` | [Swagger UI QA](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) | [`/api/v1/health`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health) | [`/api/v1/v3/api-docs`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/v3/api-docs) |
+| **Local (`DEV`)** | 🟢 Activo | `http://localhost:8520` | [Swagger UI Local](http://localhost:8520/api/v1/swagger-ui/index.html) | [`/api/v1/health`](http://localhost:8520/api/v1/health) | [`/api/v1/v3/api-docs`](http://localhost:8520/api/v1/v3/api-docs) |
 
 <div align="center">
   <img src="docs/evidencias/swagger-ui.png" width="90%" alt="Evidencia Swagger OpenAPI UI" />
   <br>
-  <sub>Documentación interactiva Swagger OpenAPI UI activa en http://localhost:8520/api/v1/swagger-ui.html exponiendo los endpoints del servicio.</sub>
+  <sub>Documentación interactiva Swagger OpenAPI UI exponiendo los controladores de Segunda Mano, Donaciones, Autenticación Demo y Health.</sub>
 </div>
 
 <br>
@@ -321,79 +302,96 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 <div align="center">
   <img src="docs/evidencias/swagger-healthcheck-200.png" width="90%" alt="Evidencia Swagger Health Check 200 OK" />
   <br>
-  <sub>Ejecución interactiva del endpoint de diagnóstico /api/v1/health desde Swagger UI respondiendo con código HTTP 200 OK y estado UP.</sub>
+  <sub>Ejecución interactiva del endpoint de diagnóstico /api/v1/health respondiendo con código HTTP 200 OK y estado UP.</sub>
 </div>
 
-### Tabla de Endpoints Expuestos
+### 4.4 Tabla Completa de los 19 Endpoints REST Expuestos
 
-| Método | Endpoint | Descripción | Rol Requerido | Códigos HTTP |
-| :---: | :--- | :--- | :--- | :---: |
-| `GET` | `/api/v1/health` | Diagnóstico y monitoreo operativo del microservicio | Público | `200` |
-| `GET` | `/api/v1/segunda-mano` | Buscar y listar publicaciones activas de prendas usadas | Autenticado | `200`, `400` |
-| `GET` | `/api/v1/segunda-mano/{id}` | Consulta de detalle de una publicación de prenda usada | Autenticado | `200`, `404` |
-| `POST` | `/api/v1/segunda-mano` | Crear publicación C2C de ropa de segunda mano | `VENDEDOR`, `CLIENTE` | `201`, `400` |
-| `PUT` | `/api/v1/segunda-mano/{id}` | Editar información editable de prenda de segunda mano | Propietario | `200`, `404` |
-| `PATCH` | `/api/v1/segunda-mano/{id}/vendida` | Marcar prenda de segunda mano como vendida | Propietario | `200`, `409` |
-| `DELETE` | `/api/v1/segunda-mano/{id}` | Retirar voluntariamente una publicación | Propietario | `204`, `404` |
-| `POST` | `/api/v1/donaciones/solicitudes` | Enviar solicitud formal de donación a fundación aliada | `DONANTE` | `201`, `400` |
-| `GET` | `/api/v1/donaciones/solicitudes` | Consultar solicitudes de donación por estado o fundación | `FUNDACION`, `ADMIN` | `200`, `403` |
-| `PATCH` | `/api/v1/donaciones/solicitudes/{id}/estado` | Aceptar o rechazar solicitud de donación | `FUNDACION` | `200`, `400`, `404` |
-| `POST` | `/api/v1/donaciones/solicitudes/{id}/recogida` | Coordinar logística de recogida y franja horaria | `DONANTE`, `FUNDACION` | `200`, `400` |
-| `PATCH` | `/api/v1/donaciones/solicitudes/{id}/recepcion` | Confirmar recepción de donación y emitir constancia | `FUNDACION` | `200`, `409` |
+| Método | Endpoint | RF Asociado | Descripción | Rol / Acceso Requerido | Códigos HTTP |
+| :---: | :--- | :---: | :--- | :--- | :---: |
+| `GET` | `/api/v1/health` | Diagnóstico | Monitoreo de salud, versión y estado operativo del microservicio | Público | `200` |
+| `POST` | `/api/v1/auth/login` | Seguridad JWT | Autenticar usuario demo y obtener token Bearer JWT (`HS256`). Restringido a dev/test/qa. | Público (Solo dev/test/qa; Deshabilitado en prod) | `200`, `401`, `404` |
+| `GET` | `/api/v1/auth/quick-token` | Seguridad JWT | Generar token JWT rápido por perfil demo para Swagger. Restringido a dev/test/qa. | Público (Solo dev/test/qa; Deshabilitado en prod) | `200`, `400`, `404` |
+| `GET` | `/api/v1/auth/demo-users` | Seguridad JWT | Listar usuarios de prueba precargados para Swagger. Restringido a dev/test/qa. | Público (Solo dev/test/qa; Deshabilitado en prod) | `200`, `404` |
+| `POST` | `/api/v1/segunda-mano` | `SR-RF-33`, `34`, `35` | Publicar prenda de segunda mano con hasta 4 fotos, estado de conservación y precio en COP | `USER`, `ADMIN` (Valida `sellerId`) | `201`, `400`, `401`, `403` |
+| `GET` | `/api/v1/segunda-mano` | `SR-RF-36` | Buscar prendas disponibles con filtros combinables (`clothingType`, `size`, `condition`, `minPrice`, `maxPrice`, `color`, `style`) | Público | `200` |
+| `GET` | `/api/v1/segunda-mano/{id}` | `SR-RF-36` | Consultar el detalle completo de una publicación de segunda mano por UUID | Público | `200`, `404` |
+| `GET` | `/api/v1/segunda-mano/user/{userId}` | `SR-RF-33` | Listar todas las publicaciones de segunda mano de un usuario vendedor | Público | `200` |
+| `PUT` | `/api/v1/segunda-mano/{id}` | `SR-RF-37` | Editar datos de una publicación mientras se encuentre en estado `AVAILABLE` | Propietario (`USER`) o `ADMIN` | `200`, `400`, `403`, `404`, `409` |
+| `PATCH` | `/api/v1/segunda-mano/{id}/sell` | `SR-RF-38` | Marcar prenda de segunda mano como vendida (`SOLD`) y retirarla del catálogo | Propietario (`USER`) o `ADMIN` | `200`, `403`, `404`, `409` |
+| `PATCH` | `/api/v1/segunda-mano/{id}/retire` | `SR-RF-39` | Retirar voluntariamente una publicación activa (`RETIRED`) | Propietario (`USER`) o `ADMIN` | `200`, `403`, `404`, `409` |
+| `PATCH` | `/api/v1/segunda-mano/{id}/donate` | `SR-RF-42` | Marcar una prenda publicada para donación (`MARKED_FOR_DONATION`) y opcionalmente radicar solicitud | Propietario (`USER`) o `ADMIN` | `200`, `400`, `403`, `404`, `409` |
+| `POST` | `/api/v1/donaciones` | `SR-RF-44`, `45` | Crear y enviar una solicitud formal de donación a una fundación aliada (dispara evento RabbitMQ) | `USER`, `ADMIN` (Valida `donorId`) | `201`, `400`, `401`, `403` |
+| `GET` | `/api/v1/donaciones/{id}` | `SR-RF-46` | Consultar el detalle y estado de una solicitud de donación por UUID | Donante, Fundación destino o `ADMIN` | `200`, `401`, `403`, `404` |
+| `GET` | `/api/v1/donaciones/donor/{donorId}` | `SR-RF-46` | Listar todas las solicitudes de donación realizadas por un donante | Donante propietario o `ADMIN` | `200`, `401`, `403` |
+| `GET` | `/api/v1/donaciones/foundation/{foundationId}` | `SR-RF-46` | Consultar solicitudes recibidas por una fundación con filtro opcional por `status` | `FOUNDATION` propietaria o `ADMIN` | `200`, `401`, `403` |
+| `PATCH` | `/api/v1/donaciones/{id}/decide` | `SR-RF-47` | Aceptar (`APPROVED`) o rechazar (`REJECTED`) una solicitud de donación con notas obligatorias | `FOUNDATION` destinataria o `ADMIN` | `200`, `400`, `403`, `404`, `409` |
+| `PATCH` | `/api/v1/donaciones/{id}/pickup` | `SR-RF-48` | Coordinar entrega o recogida de donación (modo, fecha, franja horaria, dirección y aceptación) | Donante, `FOUNDATION` o `ADMIN` | `200`, `400`, `403`, `404`, `409` |
+| `PATCH` | `/api/v1/donaciones/{id}/confirm` | `SR-RF-49` | Confirmar recepción final de la donación (`COMPLETED`) por parte de la fundación aliada | `FOUNDATION` destinataria o `ADMIN` | `200`, `400`, `403`, `404`, `409` |
 
 <details>
-<summary><b>Click para ver Ejemplos Interactivos de Request y Response JSON (Payloads)</b></summary>
+<summary><b>Click para ver Ejemplos Interactivos de Request y Response JSON (Payloads Reales)</b></summary>
 
 <br>
 
-#### Ejemplo Request Health Check (`GET /api/v1/health`)
+#### 1. Ejemplo Health Check (`GET /api/v1/health`)
 
 ```bash
-curl -X GET "http://localhost:8520/api/v1/health" -H "Accept: application/json"
+curl -X GET "https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health" -H "Accept: application/json"
 ```
-
-#### Ejemplo Response Exitoso Health Check (`200 OK`)
 
 ```json
 {
   "service": "ms-segunda-vida-donaciones",
   "status": "UP",
+  "version": "0.0.1-SNAPSHOT",
   "port": 8520,
-  "timestamp": "2026-11-01T19:34:09.816875100"
+  "timestamp": "2026-11-09T22:30:00.000000"
 }
 ```
 
-#### Ejemplo Request Publicar Prenda Segunda Mano (`POST /api/v1/segunda-mano`)
+#### 2. Ejemplo Obtener Token Rápido en Swagger (`GET /api/v1/auth/quick-token?profile=NORA_VENDEDORA`)
 
 ```bash
-curl -X POST "http://localhost:8520/api/v1/segunda-mano" \
+curl -X GET "https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/auth/quick-token?profile=NORA_VENDEDORA"
+```
+
+#### 3. Ejemplo Publicar Prenda de Segunda Mano (`POST /api/v1/segunda-mano`)
+
+```bash
+curl -X POST "https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/segunda-mano" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -H "Authorization: Bearer <JWT_TOKEN_NORA>" \
   -d '{
-    "titulo": "Chaqueta Vintage Jean Oversized",
-    "descripcion": "Chaqueta en denim azul claro original de los 90, excelente caída.",
-    "marca": "Levi Strauss",
-    "talla": "M",
-    "estadoConservacion": "COMO_NUEVO",
-    "precioCop": 120000.00,
-    "fotosUrls": [
-      "https://storage.styleradar.co/prendas/segundamano/foto1.jpg",
-      "https://storage.styleradar.co/prendas/segundamano/foto2.jpg"
+    "userId": 101,
+    "name": "Chaqueta Denim Vintage 90s",
+    "description": "Chaqueta en denim azul clásico, sin desgaste en costuras.",
+    "type": "UPPER",
+    "brand": "Levi Strauss",
+    "color": "Azul",
+    "style": "VINTAGE",
+    "size": "M",
+    "conservationStatus": "LIKE_NEW",
+    "price": 95000.00,
+    "photoUrls": [
+      "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?w=800",
+      "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=800"
     ]
   }'
 ```
 
-#### Ejemplo Response Publicación Creada (`201 Created`)
+#### 4. Ejemplo Crear Solicitud de Donación (`POST /api/v1/donaciones`)
 
-```json
-{
-  "id": "018e3a2b-2222-7000-8000-000000000010",
-  "titulo": "Chaqueta Vintage Jean Oversized",
-  "precioCop": 120000.00,
-  "estadoConservacion": "COMO_NUEVO",
-  "estadoPublicacion": "DISPONIBLE",
-  "fechaPublicacion": "2026-11-01T15:00:00Z"
-}
+```bash
+curl -X POST "https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/donaciones" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN_NORA>" \
+  -d '{
+    "publicationId": 1,
+    "donorId": 101,
+    "foundationId": 501,
+    "message": "Prenda limpia y empacada lista para entrega en sede Chapinero."
+  }'
 ```
 
 </details>
@@ -404,44 +402,56 @@ curl -X POST "http://localhost:8520/api/v1/segunda-mano" \
 
 ## <img src="https://img.shields.io/badge/05-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 5. EVENTOS QUE PUBLICA Y CONSUME
 
-La orquestación asíncrona de eventos se gestiona a través de **RabbitMQ 3.12** con Topic Exchanges durables.
+La comunicación asíncrona e integración orientada a eventos se implementa con **RabbitMQ (Spring AMQP)** mediante el Topic Exchange durable **`donaciones.exchange`** (configurable en `app.rabbitmq.exchange.donations`), con confirmaciones de publicación (`publisher-confirm-type: correlated`), retornos habilitados (`publisher-returns: true`) e inyección automática del encabezado de trazabilidad `X-Correlation-Id`.
 
-* **Exchange de Donaciones:** `donaciones.exchange` (`topic`, durable; configurable con `app.rabbitmq.exchange.donations`)
-* **Exchange Alternativo / Alias:** `styleradar.donations.exchange`
-* **Exchange de Segunda Mano:** `styleradar.resale.exchange` (`topic`, durable)
-* **Exchange General de Estilo:** `styleradar.events` (`topic`, durable)
-* **Dead Letter Exchange (DLX):** `styleradar.dlx`
+### Matriz de Eventos AMQP (`RabbitMQConfig` & `DonationEventPublisherAdapter`)
 
-### Matriz de Eventos AMQP
-
-| Tipo | Routing Key | Cola (Queue) | Microservicio Emisor / Receptor | Cuándo se Dispara / Acción |
-| :---: | :--- | :--- | :--- | :--- |
-| **PUBLICA** | `donacion.solicitud.creada` | N/A (Exchange: `styleradar.donations.exchange`) | `ms-segunda-vida-donaciones` &rarr; `ms-notificaciones` | Disparado al registrar formalmente solicitud de donación (`SolicitudDonacionCreadaEvent`). |
-| **PUBLICA** | `donacion.estado.actualizado` | N/A (Exchange: `styleradar.donations.exchange`) | `ms-segunda-vida-donaciones` &rarr; `ms-notificaciones` | Notifica al donante cambios de estado (`EstadoDonacionActualizadoEvent` - Aceptada, Rechazada, Entregada). |
-| **PUBLICA** | `segundamano.prenda.vendida` | N/A (Exchange: `styleradar.resale.exchange`) | `ms-segunda-vida-donaciones` &rarr; `ms-chat` | Retira la prenda de disponibilidad y cierra el canal privado de chat (`PrendaSegundaManoVendidaEvent`). |
-| **CONSUME** | `usuario.cuenta.desactivada` | `q.donaciones.usuario-desactivado` | `ms-usuarios` &rarr; `ms-segunda-vida-donaciones` | Retira publicaciones activas y donaciones en trámite del usuario desactivado. |
-| **CONSUME** | `fundacion.aliada.desactivada` | `q.donaciones.fundacion-desactivada` | `ms-tiendas` &rarr; `ms-segunda-vida-donaciones` | Reasigna donaciones activas y notifica a los donantes afectados. |
+| Tipo | Evento / Clase Java | Routing Key | Exchange / Cola (Queue) | Emisor ➔ Receptor | Cuándo se Dispara / Acción |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **PUBLICA** | `SolicitudDonacionCreadaEvent` | `donacion.solicitud.creada` | Exchange: `donaciones.exchange`<br>Queue: `q.notificaciones.donacion-solicitud-creada` | `ms-segunda-vida-donaciones` ➔ `ms-notificaciones` | Disparado automáticamente al crear una solicitud de donación (`SR-RF-45`) o al marcar una prenda para donación con fundación destino (`SR-RF-42`). |
+| **PUBLICA** | `EstadoDonacionActualizadoEvent` | `donacion.estado.actualizado` | Exchange: `donaciones.exchange` | `ms-segunda-vida-donaciones` ➔ `ms-notificaciones` | Disparado cuando la fundación aprueba o rechaza una solicitud (`SR-RF-47`) o cuando confirma la recepción final de la donación (`SR-RF-49`). |
+| **CONSUME** | `SolicitudDonacionCreadaEvent` | `donacion.solicitud.creada` | Queue aislada: `q.donaciones.simulador-notificaciones` | `donaciones.exchange` ➔ `NotificationConsumerSimulator` | Consumidor de verificación e integración end-to-end (activable con `RABBITMQ_SIMULATOR_ENABLED=true`) que registra la recepción del evento sin drenar la cola real de `ms-notificaciones`. |
 
 <details>
-<summary><b>Click para ver Esquema JSON del Evento Publicado (con Idempotencia)</b></summary>
+<summary><b>Click para ver Esquema JSON de los Eventos Publicados en RabbitMQ</b></summary>
 
 <br>
 
+#### 1. Payload `SolicitudDonacionCreadaEvent` (`donacion.solicitud.creada`)
 ```json
 {
-  "eventId": "018e3a2b-3333-7000-8000-000000000020",
+  "eventId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
   "eventType": "SolicitudDonacionCreadaEvent",
-  "timestamp": "2026-11-01T15:30:00Z",
+  "timestamp": "2026-11-09T20:15:30Z",
   "producer": "ms-segunda-vida-donaciones",
-  "correlationId": "corr-uuid-8520-0001",
-  "data": {
-    "solicitudId": "018e3a2b-4444-7000-8000-000000000021",
-    "donanteId": "018e3a2b-1111-7000-8000-000000000005",
-    "fundacionId": "018e3a2b-5555-7000-8000-000000000012",
-    "cantidadPrendas": 3,
-    "estado": "PENDIENTE",
-    "version": 1
-  }
+  "correlationId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "donationRequestId": "dddddddd-1111-1111-1111-111111111111",
+  "donorId": "11111111-1111-1111-1111-111111111111",
+  "foundationId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "foundationName": "Fundación Abrigo Bogotá",
+  "clothingDescription": "Lote de 4 sacos de lana tejidos y 2 chaquetas impermeables talla M.",
+  "quantity": 6,
+  "status": "PENDING",
+  "version": 1
+}
+```
+
+#### 2. Payload `EstadoDonacionActualizadoEvent` (`donacion.estado.actualizado`)
+```json
+{
+  "eventId": "9c8b7a6f-5432-4100-9abc-def012345678",
+  "eventType": "EstadoDonacionActualizadoEvent",
+  "timestamp": "2026-11-09T20:20:00Z",
+  "producer": "ms-segunda-vida-donaciones",
+  "correlationId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "donationRequestId": "dddddddd-1111-1111-1111-111111111111",
+  "donorId": "11111111-1111-1111-1111-111111111111",
+  "foundationId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "foundationName": "Fundación Abrigo Bogotá",
+  "previousStatus": "PENDING",
+  "newStatus": "APPROVED",
+  "notes": "Aceptamos la donación. Podemos recibir las prendas en nuestra sede de Chapinero.",
+  "version": 1
 }
 ```
 
@@ -457,17 +467,16 @@ El stack del microservicio cumple con el estándar unificado de arquitectura de 
 
 | Capa / Componente | Tecnología | Versión Exacta | Justificación Técnica |
 | :--- | :--- | :--- | :--- |
-| **Lenguaje Core** | Java LTS (Eclipse Temurin / Oracle JDK) | `21.0.12` | Virtual Threads y Records inmutables para alta concurrencia y máxima eficiencia. |
-| **Framework Empresarial** | Spring Boot | `3.3.4` | Soporte nativo para WebMVC, Data JPA, AMQP RabbitMQ y SpringDoc OpenAPI 3. |
-| **Base de Datos Relacional** | PostgreSQL (Docker Alpine) | `16.4-alpine` | Integridad transaccional ACID, catálogo circular y persistencia aislada (driver JDBC `42.7.4`). |
-| **Migraciones de Base de Datos** | Flyway Core | `10.10.0` | Control versionado y reproducible del esquema SQL (`V1__init_schema.sql`). |
-| **Broker de Mensajería** | RabbitMQ Management (Docker Alpine) | `3.12.14-alpine` | Desacoplamiento temporal asíncrono con Topic Exchanges durables (spring-rabbit `3.1.7`). |
-| **Mapeo de Objetos** | MapStruct | `1.5.5.Final` | Generación de mappers en tiempo de compilación (`lombok-mapstruct-binding` `0.2.0`). |
-| **Procesador de Boilerplate** | Project Lombok | `1.18.38` | Reducción declarativa de código con soporte completo para compiladores Java 21+. |
-| **Documentación de API** | SpringDoc OpenAPI Starter | `2.5.0` | Generación dinámica de especificación Swagger UI interactiva y contrato OpenAPI 3. |
-| **Testing Unitario y Mocks** | JUnit Jupiter + Mockito Core | `5.10.3` / `5.11.0` | Pruebas unitarias de controladores, configuración y dominio sin levantar contexto pesado. |
-| **Testing de Integración** | Testcontainers | `1.19.8` | Instanciación automática de PostgreSQL y RabbitMQ en Docker durante pruebas de integración. |
-| **Métricas de Cobertura** | JaCoCo Maven Plugin | `0.8.12` | Verificación estricta de umbral de cobertura mínima obligatoria (≥ 85%) en fase `verify`. |
+| **Lenguaje Core** | Java LTS (Eclipse Temurin) | `21` | Virtual Threads, Pattern Matching y Records inmutables para alta eficiencia. |
+| **Framework Empresarial** | Spring Boot | `3.3.4` | Soporte nativo para WebMVC, Data JPA, Security, AMQP RabbitMQ y Actuator. |
+| **Seguridad y Autenticación** | Spring Security + JJWT (`jjwt-api`) | `6.3.x` / `0.13.0` | Validación stateless de tokens JWT firmados con HMAC-SHA256 (`HS256`) y control RBAC. |
+| **Base de Datos Relacional** | PostgreSQL (Azure Flexible Server & Docker) | `16` | Integridad transaccional ACID, índices compuestos y aislamiento *Database-per-Service*. |
+| **Migraciones de Esquema** | Flyway Core + PostgreSQL | `10.10.0` | Control versionado y reproducible del esquema SQL (`V1__init_schema.sql`, `V2__seed_initial_data.sql`). |
+| **Broker de Mensajería** | RabbitMQ (Spring Boot Starter AMQP) | `3.12` / `3.1.7` | Desacoplamiento asíncrono con Topic Exchanges durables y *Publisher Confirms*. |
+| **Mapeo y Boilerplate** | MapStruct + Project Lombok | `1.5.5.Final` / `1.18.38` | Reducción declarativa de código repetitivo compatible con JDK 21+. |
+| **Documentación de API** | SpringDoc OpenAPI Starter WebMVC UI | `2.5.0` | Generación dinámica de Swagger UI interactivo con esquema de seguridad Bearer JWT. |
+| **Testing Automatizado** | JUnit 5 + Mockito + Spring Security Test + H2 | `5.10.3` / `5.11.0` | 168 pruebas automatizadas (unitarias, de integración y seguridad RBAC/JWT). |
+| **Calidad y Cobertura** | JaCoCo + SonarQube Scanner Maven | `0.8.12` / `3.11.0.3922` | Verificación automática de cobertura (`99.37%` ≥ `85%`) y Quality Gate en calificación `A`. |
 
 ---
 
@@ -481,119 +490,35 @@ El stack del microservicio cumple con el estándar unificado de arquitectura de 
 * **Apache Maven:** Versión 3.9+ instalada (`mvn -version`).
 * **Docker Engine & Docker Compose:** Versión 24+ en ejecución (`docker --version`).
 
-### Ejecución Local con Maven (Perfil Dev)
+### Opción 1: Ejecución Completa Contenerizada con Docker Compose (Recomendada)
 
 ```bash
-# 1. Clonar el repositorio
+# 1. Clonar el repositorio y ubicarse en la raíz
 git clone https://github.com/StyleRadar1/PT8080-Donations-Service.git
 cd PT8080-Donations-Service
 
-# 2. Compilar el proyecto
-mvn clean compile
+# 2. Levantar PostgreSQL 16 (puerto 5434), RabbitMQ 3.12 (puertos 5674/15674) y el microservicio (puerto 8520)
+docker compose up -d --build
 
-# 3. Ejecutar el microservicio localmente
-mvn spring-boot:run
+# 3. Verificar estado saludable de los contenedores
+docker compose ps
 ```
 
-### Ejecución Contenerizada Completa con Docker
-
-<details>
-<summary><b>Click para ver Instrucciones de Docker y docker-compose.yml de Ejemplo</b></summary>
-
-<br>
+### Opción 2: Ejecución Local con Maven (Con BD y RabbitMQ en Docker)
 
 ```bash
-# Compilar y empaquetar el JAR ejecutable omitiendo tests
-mvn clean package -DskipTests
+# 1. Levantar únicamente las dependencias de infraestructura (PostgreSQL y RabbitMQ)
+docker compose up -d postgres-donaciones rabbitmq-donaciones
 
-# Construir la imagen OCI multi-stage
-docker build -t styleradar/ms-segunda-vida-donaciones:latest .
-
-# Ejecutar el contenedor conectado a la red compartida
-docker run -d \
-  --name ms-segunda-vida-donaciones \
-  --network styleradar-net \
-  -p 8520:8520 \
-  styleradar/ms-segunda-vida-donaciones:latest
+# 2. Compilar y ejecutar el microservicio con perfil dev
+mvn clean spring-boot:run
 ```
-
-#### Archivo `docker-compose.yml` de Soporte
-
-```yaml
-version: '3.8'
-
-networks:
-  styleradar-net:
-    driver: bridge
-
-services:
-  ms-segunda-vida-donaciones:
-    build: .
-    container_name: sr-ms-segunda-vida-donaciones
-    restart: always
-    ports:
-      - "8520:8520"
-    environment:
-      - SERVER_PORT=8520
-      - SPRING_PROFILES_ACTIVE=dev
-      - DB_HOST=postgres-donaciones
-      - DB_PORT=5432
-      - DB_NAME=styleradar_donations
-      - DB_USER=styleradar_user
-      - DB_PASSWORD=styleradar_secret
-      - RABBITMQ_HOST=rabbitmq-donaciones
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=guest
-      - RABBITMQ_PASSWORD=guest
-    depends_on:
-      postgres-donaciones:
-        condition: service_healthy
-      rabbitmq-donaciones:
-        condition: service_healthy
-    networks:
-      - styleradar-net
-
-  postgres-donaciones:
-    image: postgres:16-alpine
-    container_name: sr-postgres-donaciones
-    restart: always
-    environment:
-      POSTGRES_DB: styleradar_donations
-      POSTGRES_USER: styleradar_user
-      POSTGRES_PASSWORD: styleradar_secret
-    ports:
-      - "5434:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U styleradar_user -d styleradar_donations"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - styleradar-net
-
-  rabbitmq-donaciones:
-    image: rabbitmq:3.12-management-alpine
-    container_name: sr-rabbitmq-donaciones
-    restart: always
-    ports:
-      - "5674:5672"
-      - "15674:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - styleradar-net
-```
-
-</details>
 
 ### Comprobación de Salud (Health Check)
 
 ```bash
-curl -s http://localhost:8520/api/v1/health | jq .
-# Esperado: {"service":"ms-segunda-vida-donaciones","status":"UP","port":8520,"timestamp":"..."}
+curl -s http://localhost:8520/api/v1/health
+# Respuesta esperada: {"service":"ms-segunda-vida-donaciones","status":"UP","port":8520,"timestamp":"..."}
 ```
 
 <div align="center">
@@ -616,51 +541,28 @@ curl -s http://localhost:8520/api/v1/health | jq .
 
 ## <img src="https://img.shields.io/badge/08-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 8. VARIABLES DE ENTORNO
 
-Todas las configuraciones se externalizan mediante variables de entorno conformes al estándar **Twelve-Factor App**.
+Todas las configuraciones están externalizadas en `application.yml`, `application-qa.yml` y `application-prod.yml` siguiendo la metodología **Twelve-Factor App**:
 
-| Variable | Descripción | Valor por Defecto (`dev`) | Requerido en Prod |
+| Variable | Descripción | Valor por Defecto (`dev`) | Requerido en QA / PROD |
 | :--- | :--- | :--- | :---: |
-| `SERVER_PORT` | Puerto de escucha HTTP del microservicio | `8520` | Sí |
-| `SPRING_PROFILES_ACTIVE` | Perfil de configuración activo | `dev` | Sí |
-| `DB_HOST` | Hostname del servidor PostgreSQL (`localhost` local / `postgres-donaciones` en docker) | `localhost` | Sí |
-| `DB_PORT` | Puerto de conexión a PostgreSQL (`5434` host local / `5432` en contenedor) | `5434` | Sí |
-| `DB_NAME` | Nombre de la base de datos PostgreSQL | `styleradar_donations` | Sí |
-| `DB_USER` | Usuario de conexión a la base de datos | `styleradar_user` | Sí |
-| `DB_PASSWORD` | Contraseña del usuario de base de datos | `styleradar_secret` | Sí |
-| `RABBITMQ_HOST` | Hostname del broker RabbitMQ (`localhost` local / `rabbitmq-donaciones` en docker) | `localhost` | Sí |
-| `RABBITMQ_PORT` | Puerto AMQP de RabbitMQ (`5674` host local / `5672` en contenedor) | `5674` | Sí |
-| `RABBITMQ_USERNAME` | Usuario de autenticación RabbitMQ | `guest` | Sí |
-| `RABBITMQ_PASSWORD` | Contraseña de autenticación RabbitMQ | `guest` | Sí |
-| `JWT_ISSUER` | Emisor esperado del token de autenticación JWT | `styleradar-ms-auth` | Sí |
-
-<details>
-<summary><b>Click para copiar la Plantilla de Archivo .env.example</b></summary>
-
-<br>
-
-```dotenv
-# Configuración del Microservicio
-SERVER_PORT=8520
-SPRING_PROFILES_ACTIVE=dev
-
-# Persistencia PostgreSQL
-DB_HOST=localhost
-DB_PORT=5434
-DB_NAME=styleradar_donations
-DB_USER=styleradar_user
-DB_PASSWORD=styleradar_secret
-
-# Event Broker RabbitMQ
-RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5674
-RABBITMQ_USERNAME=guest
-RABBITMQ_PASSWORD=guest
-
-# Parámetros de Seguridad JWT
-JWT_ISSUER=styleradar-ms-auth
-```
-
-</details>
+| `PORT` / `SERVER_PORT` | Puerto HTTP de escucha del microservicio | `8520` | Sí |
+| `SPRING_PROFILES_ACTIVE` | Perfil de ejecución activo (`dev`, `qa`, `prod`, `test`) | `dev` | Sí (`qa` / `prod`) |
+| `SPRING_DATASOURCE_URL` | Cadena JDBC completa hacia Azure PostgreSQL (con `sslmode=require`) | Construida desde `DB_*` | Sí |
+| `DB_HOST` | Hostname del servidor PostgreSQL (`styleradar-db-qa-jmunar...` / `styleradar-db-prod-jmunar...`) | `localhost` | Sí |
+| `DB_PORT` | Puerto de conexión a PostgreSQL | `5434` (`5432` en Azure) | Sí |
+| `DB_NAME` | Nombre de la base de datos (`styleradar_donations_qa` / `styleradar_donations_prod`) | `styleradar_donations` | Sí |
+| `DB_USER` | Usuario de conexión a PostgreSQL | `styleradar_user` | Sí |
+| `DB_PASSWORD` | Contraseña de la base de datos PostgreSQL | `<configured_in_env>` | Sí |
+| `DB_SSLMODE` | Modo SSL para la conexión JDBC en la nube | `disable` (`require` en Cloud) | Sí (`require`) |
+| `SECURITY_JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 32 bytes / 256 bits; validación fail-fast al arranque) | Clave local de desarrollo | Sí (≥ 256 bits) |
+| `SECURITY_JWT_EXPIRATION_MS` | Tiempo de expiración del token JWT en milisegundos | `86400000` (24h) | Opcional |
+| `RABBITMQ_HOST` | Hostname del broker RabbitMQ / CloudAMQP | `localhost` | Sí |
+| `RABBITMQ_PORT` | Puerto AMQP (`5672` sin TLS / `5671` con TLS) | `5674` | Sí |
+| `RABBITMQ_USERNAME` | Usuario de conexión al broker RabbitMQ | `guest` | Sí |
+| `RABBITMQ_PASSWORD` | Contraseña de conexión al broker RabbitMQ | `guest` | Sí |
+| `RABBITMQ_VHOST` | Virtual Host de RabbitMQ | `/` | Sí |
+| `RABBITMQ_SSL_ENABLED` | Habilita cifrado TLS en tránsito hacia RabbitMQ | `false` (`true` en Cloud) | Sí |
+| `RABBITMQ_SIMULATOR_ENABLED` | Activa el consumidor de prueba `NotificationConsumerSimulator` | `false` | Opcional |
 
 ---
 
@@ -668,39 +570,43 @@ JWT_ISSUER=styleradar-ms-auth
 
 ## <img src="https://img.shields.io/badge/09-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 9. PRUEBAS Y COBERTURA (≥ 85%)
 
-El proyecto exige una cobertura de código mínima del **85%** verificada automáticamente mediante el plugin de **JaCoCo** durante la fase `verify`.
+El microservicio cuenta con una suite exhaustiva de **168 pruebas automatizadas** (0 fallos, 0 errores) que validan el modelo de dominio, los casos de uso, los controladores REST, los adaptadores de persistencia JPA, la publicación y consumo en RabbitMQ, la validación de tokens JWT (vigentes, expirados y sin claim `exp`) y la seguridad RBAC anti-IDOR, alcanzando una cobertura de código en **JaCoCo del 99.37%** (superando ampliamente el mínimo exigido del **85%**).
 
-> [!NOTE]
-> **Nota de Alcance para Sprint 1:** Conforme a la especificación de entregables de la asignatura, este primer corte se enfoca exclusivamente en el scaffolding estructural de arquitectura hexagonal, la contenedorización y la línea base operativa. La suite de pruebas actual verifica unitariamente la disponibilidad del endpoint de diagnóstico (`HealthControllerTest`), la especificación OpenAPI (`OpenApiConfigTest`) y el arranque base (`DonationsServiceApplicationTest`), alcanzando una cobertura de líneas del **100%** (superando holgadamente el umbral mínimo del **85%** exigido por JaCoCo en la compuerta de calidad).
+### Resumen de Métricas de Pruebas y Cobertura (Sprint 2)
 
-### Comandos de Ejecución de Pruebas
+| Métrica | Valor Alcanzado | Umbral Exigido | Estado |
+| :--- | :---: | :---: | :---: |
+| **Total de Pruebas Ejecutadas (`mvn clean verify`)** | **168 tests** | Suite unitaria + integración | ✅ **100% Passing** |
+| **Cobertura de Líneas (JaCoCo)** | **99.28%** (`1.105 / 1.113` líneas) | `≥ 85.00%` | ✅ **Aprobado (+14.28%)** |
+| **Cobertura de Instrucciones (JaCoCo)** | **99.37%** (`4.084 / 4.110` instr.) | `≥ 85.00%` | ✅ **Aprobado (+14.37%)** |
+| **Cobertura de Ramas / Branches (JaCoCo)** | **90.30%** (`214 / 237` ramas) | `≥ 85.00%` | ✅ **Aprobado (+5.30%)** |
+| **Cobertura Compuesta SonarQube v26.9.0** | **96.2%** | `≥ 85.00%` | ✅ **Quality Gate Passed** |
+
+### Pirámide de Pruebas Implementada (`src/test/java`)
+
+| Nivel de Prueba | Clases de Prueba | Alcance Verificado |
+| :--- | :--- | :--- |
+| **Dominio Puro (Unitarias)** | `SecondHandPublicationTest`, `DonationRequestTest` | Creación, validaciones de dominio, fechas UTC y máquinas de estado finitas. |
+| **Aplicación / Casos de Uso (Unitarias con Mockito)** | `SecondHandUseCasesTest`, `DonationUseCasesTest` | Los 10 `*UseCaseImpl`, reglas de negocio, manejo de errores y disparo de eventos. |
+| **Controladores Web y Excepciones (`MockMvc`)** | `SecondHandPublicationControllerTest`, `DonationRequestControllerTest`, `AuthControllerTest`, `HealthControllerTest`, `GlobalExceptionHandlerTest` | Contratos HTTP, serialización JSON, validaciones `@Valid` y respuestas RFC 7807 (`ProblemDetail`). |
+| **Persistencia, Mensajería y Mappers** | `SecondHandPublicationPersistenceAdapterTest`, `DonationRequestPersistenceAdapterTest`, `PublicationSpecificationsTest`, `DonationEventPublisherAdapterTest`, `NotificationConsumerSimulatorTest`, `PersistenceMapperTest`, `WebDtoMapperTest` | Consultas JPA dinámicas, callbacks de RabbitMQ (*Publisher Confirms & Returns*), encabezados `X-Correlation-Id` y mapeo bidireccional. |
+| **Seguridad RBAC, Propiedad y JWT (Integración)** | `SecurityRbacIntegrationTest`, `JwtTokenProviderTest`, `JwtAuthenticationFilterTest`, `ResourceOwnershipValidatorTest`, `SecurityErrorHandlerTest`, `DemoUserServiceTest` | Control de acceso por roles (`USER`, `FOUNDATION`, `ADMIN`), bloqueo de suplantación IDOR/BOLA (HTTP 403) y rechazo de tokens inválidos, expirados o sin claim `exp` (HTTP 401). |
+
+### Comandos de Ejecución
 
 ```bash
-# Ejecutar todas las pruebas unitarias y de integración
+# Ejecutar las 170 pruebas y validar el umbral de cobertura JaCoCo (≥ 85%)
 mvn clean verify
 
-# Generar reporte HTML de JaCoCo
-mvn jacoco:report
+# Abrir el reporte visual HTML de JaCoCo
+# Ruta generada: target/site/jacoco/index.html
 ```
-
-* **Ruta del Reporte HTML:** `target/site/jacoco/index.html`
 
 <div align="center">
   <img src="docs/evidencias/cobertura-jacoco.png" width="90%" alt="Evidencia Cobertura JaCoCo" />
   <br>
-  <sub>Reporte consolidado de cobertura de JaCoCo (target/site/jacoco/index.html) evidenciando el cumplimiento de la cobertura mínima obligatoria (≥ 85%).</sub>
+  <sub>Reporte consolidado de cobertura de JaCoCo evidenciando el cumplimiento del umbral mínimo obligatorio (≥ 85%).</sub>
 </div>
-
-### Pirámide de Pruebas Implementada
-
-| Nivel de Prueba | Alcance | Tecnologías Utilizadas | Ubicación en el Código | Cobertura Meta |
-| :--- | :--- | :--- | :--- | :---: |
-| **Pruebas Unitarias** | Lógica de Dominio y Casos de Uso aislados | JUnit 5, Mockito | `src/test/java/.../domain/`, `src/test/java/.../application/` | ≥ 90% |
-| **Pruebas de Integración** | Repositorios JPA y Broker RabbitMQ | Spring Boot Test, Testcontainers | `src/test/java/.../infrastructure/` | ≥ 85% |
-| **Pruebas de Contrato** | Verificación de especificación OpenAPI | MockMvc, JSONAssert | `src/test/java/.../rest/` | ≥ 85% |
-
-> [!IMPORTANT]
-> **Criterio de Fallo en CI:** El archivo `pom.xml` contiene la regla `<minimum>0.85</minimum>`. Si la cobertura total consolidada es inferior al 85%, el comando `mvn verify` fallará bloqueando la integración.
 
 ---
 
@@ -708,186 +614,107 @@ mvn jacoco:report
 
 ## <img src="https://img.shields.io/badge/10-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 10. CI/CD CON EL BADGE DEL PIPELINE
 
-El ciclo de vida del software implementa integración continua automatizada mediante **GitHub Actions** (el despliegue continuo hacia Azure App Service está programado para el próximo Sprint):
+El ciclo de vida de integración y despliegue continuo está automatizado en **GitHub Actions** (`.github/workflows/ci.yml`), integrando compilación con JDK 21, ejecución de las 168 pruebas, verificación estricta de cobertura JaCoCo (`≥ 85%`), empaquetado del artefacto JAR, construcción de imagen Docker OCI y despliegue automatizado hacia **Azure App Service**:
 
-### Matriz de Pipelines por Entorno (PROD y QA)
+* **`develop` ➔ Ambiente QA (`deploy-qa`):** Despliegue automático en cada push/merge a `develop` hacia `https://styleradar-donaciones-qa-jmunar.azurewebsites.net` con validación obligatoria de credenciales y *Smoke Test* (`/api/v1/health` status `UP` y versión `0.0.1-SNAPSHOT`). Si faltan credenciales o el health check no responde adecuadamente, el pipeline falla de inmediato (`exit 1`).
+* **`master` / `main` ➔ Ambiente PROD (`deploy-prod`):** Despliegue hacia `https://styleradar-donaciones-prod-jmunar.azurewebsites.net` protegido mediante entorno `production` (requiere CMV y aprobación del profesor), validación de credenciales y *Smoke Test* de salud y versión.
 
-| Pipeline | Entorno Destino | Desencadenador (Trigger) | Quality Gate Exigido | Badge de Estado |
+> [!NOTE]
+> **Aclaración sobre el Pipeline de CI/CD y SonarQube:**
+> El workflow de GitHub Actions (`ci.yml`) ejecuta de forma automatizada la compuerta de calidad de **cobertura con JaCoCo** (`mvn verify`), asegurando el umbral mínimo obligatorio (≥ 85%).
+> Por su parte, la auditoría estática de **SonarQube v26.9.0** se ejecuta de manera independiente y local (`mvn sonar:sonar`), certificando el Quality Gate en **Calificación A (0 issues)**, debidamente documentada con evidencias oficiales en [`docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md`](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md).
+
+### Matriz de Pipelines y Quality Gates
+
+| Pipeline / Compuerta | Entorno Destino | Trigger | Criterio de Aprobación | Estado |
 | :--- | :--- | :--- | :--- | :---: |
-| **CI - Staging / QA** | Calidad (`QA`) | Pull Request o Push a rama `develop` | Build OK + Tests Unitarios/Integración + JaCoCo ≥ 85% + SonarQube OK | [![QA Pipeline](https://img.shields.io/badge/Pipeline_QA-Passing-5600EF?style=for-the-badge&logo=azure-pipelines&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
-| **CD - Producción (Azure App Service)** | Producción (`PROD`) | Despliegue en Azure programado para el próximo Sprint | Configuración de infraestructura cloud | [![CD Azure](https://img.shields.io/badge/CD_Azure-Próximo_Sprint_(Sprint_2)-informational?style=for-the-badge&logo=azure-pipelines&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
-| **Quality Gate SonarQube** | Transversal | Ejecutado en cada build de CI | 0 Vulnerabilidades, 0 Bugs, Deuda Técnica &lt; 5% | [![Quality Gate](https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](https://sonarcloud.io) |
-
-### Diagrama del Flujo Automatizado (Pipeline Stages)
+| **CI - Build, Test & JaCoCo** | Transversal | Push / PR a `develop`, `master`, `feature/**` | 168 tests en verde + Cobertura JaCoCo ≥ 85% (`99.37%`) | [![CI Pipeline](https://img.shields.io/badge/CI_Build_%26_Tests-Passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
+| **CD - Despliegue Automático QA** | Azure QA (`rg-styleradar`) | Push / Merge a `develop` | CI en verde + Credenciales Azure + Smoke Test HTTP 200 en `/api/v1/health` (Status UP y versión esperada) | [![QA Pipeline](https://img.shields.io/badge/Deploy_QA-Azure_Active-5600EF?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
+| **CD - Despliegue a Producción** | Azure PROD (`rg-styleradar`) | Push / Merge a `master` (con CMV) | Aprobación CMV + Credenciales Azure + Smoke Test HTTP 200 en `/api/v1/health` (Status UP y versión esperada) | [![PROD Pipeline](https://img.shields.io/badge/Deploy_PROD-Azure_Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
+| **Auditoría SonarQube (Local/Audit)** | Transversal | Análisis Estático SonarQube v26.9.0 | **0 Bugs, 0 Vulnerabilidades, 0 Code Smells, 0 Hotspots (Rating A)** | [![Quality Gate](https://img.shields.io/badge/SonarQube-Passed_Rating_A-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md) |
 
 ```mermaid
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
-    B --> C["Tests & JaCoCo<br>(Coverage ≥ 85%)"]
-    C --> D["Análisis SonarQube<br>(0 Vulnerabilities)"]
-    D --> E["Build Docker OCI<br>(Multi-stage Build)"]
-    E --> F["Deploy Cloud Azure<br>(Próximo Sprint - Sprint 2)"]
+    B --> C["168 Tests & JaCoCo<br>(99.37% ≥ 85%)"]
+    C --> D["Empaquetado JAR &<br>Docker OCI Image"]
+    D -->|Rama develop| E["Deploy Automático QA<br>(Azure App Service QA)"]
+    D -->|Rama master + CMV| F["Deploy Producción PROD<br>(Azure App Service PROD)"]
 
     classDef step fill:#12063A,stroke:#5600EF,stroke-width:2px,color:#FFFFFF;
     classDef pass fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#0C0C12;
 
-    class A,B,E,F step;
-    class C,D pass;
+    class A,B,D step;
+    class C,E,F pass;
 ```
 
-### Paso a Paso para Ejecutar y Visualizar el Análisis Local de SonarQube
+### Calidad de Código (SonarQube) y Seguridad (OWASP Top 10:2025)
 
-Para auditar el microservicio localmente y visualizar la compuerta de calidad en el navegador:
+| Dimensión SonarQube (Pág. 15) | Calificación | Hallazgos Iniciales | Estado Final | Evidencia Documentada |
+| :--- | :---: | :---: | :---: | :--- |
+| **Confiabilidad (Reliability)** | **A** | 11 (`java:S6548` / `java:S6909`) | **0 Bugs** | Estandarización a `LocalDateTime.now(ZoneOffset.UTC)`. |
+| **Seguridad (Security)** | **A** | 0 Vulnerabilidades / 1 Hotspot CSRF | **0 Vulnerabilidades** | API JWT Stateless documentada y validada. |
+| **Mantenibilidad (Maintainability)** | **A** | 40 Code Smells | **0 Code Smells** | Complejidad cognitiva `≤ 3`, constantes extraídas, API `java.time.Instant`. |
+| **Cobertura y Duplicación** | **A** | — | **96.2% Cobertura / 0.0% Duplicación** | Supera el umbral del 85% con 0 líneas duplicadas. |
 
-1. **Iniciar el Servidor SonarQube:**
-   * **Opción A (Binario Local Windows - v26.9.0):**
-     ```powershell
-     $env:SONAR_JAVA_PATH = "C:\Program Files\Java\jdk-21.0.12\bin\java.exe"
-     & "C:\sonarqube\bin\windows-x86-64\StartSonar.bat"
-     ```
-   * **Opción B (Docker Container):**
-     ```powershell
-     docker start sonarqube-local
-     # O primera creación: docker run -d --name sonarqube-local -p 9000:9000 sonarqube:lts-community
-     ```
-   *(Esperar 30–45 segundos hasta que el servicio indique `SonarQube is operational` en `http://localhost:9000`).*
+#### Documentación Técnica en `docs/` (Arquitectura, Seguridad, OWASP y Despliegue)
 
-2. **Generar / Obtener el Token de Acceso:**
-   * Ingresar a `http://localhost:9000` (credenciales por defecto: `admin` / `admin`).
-   * Ir al menú de usuario (esquina superior derecha) ➔ **My Account** ➔ pestaña **Security**.
-   * En **Generate Token**, asignar un nombre (ej. `styleradar-scanner`), tipo `User Token`, hacer clic en **Generate** y copiar el token (`squ_...`).
+* 🏛️ **[Documento de Arquitectura Hexagonal, Clases y Base de Datos (Pág. 13)](docs/arquitectura/DOCUMENTO_ARQUITECTURA.md)**
+* 📊 **[Evidencia Técnica del Quality Gate SonarQube v26.9.0 (Pág. 15)](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md)** y **[Guía de Análisis SonarQube](docs/seguridad/ANALISIS_SONARQUBE.md)**
+* 🔐 **[Documento de Análisis de Seguridad: Autenticación, Autorización e Integridad (Pág. 16)](docs/seguridad/ANALISIS_SEGURIDAD.md)**
+* 🛡️ **[Matriz Completa de Evaluación OWASP Top 10:2025 (`A01` a `A10`) (Pág. 17)](docs/seguridad/OWASP_TOP_10_2025.md)**
+* ☁️ **[Guía Técnica de Despliegue en Azure (QA & PROD) y CI/CD (Págs. 8, 10 y 18)](docs/despliegue/CONFIGURACION_NUBE_QA_PROD.md)**
 
-3. **Ejecutar el Escaneo Maven desde la Raíz del Repositorio:**
+<details>
+<summary><b>Click para ver el Paso a Paso para Ejecutar SonarQube Localmente (localhost:9000)</b></summary>
+
+<br>
+
+1. **Iniciar el Servidor SonarQube (v26.9.0 o Docker):**
    ```powershell
-   mvn clean verify sonar:sonar "-Dsonar.login=<TU_TOKEN_SQU>"
+   $env:SONAR_JAVA_PATH = "C:\Program Files\Java\jdk-21.0.12\bin\java.exe"
+   & "C:\sonarqube\bin\windows-x86-64\StartSonar.bat"
    ```
-   > **Nota importante:** En PowerShell, entrecomillar el parámetro completo (`"-Dsonar.login=..."`) para evitar división de argumentos.
+2. **Ejecutar el Escaneo Maven desde la Raíz del Proyecto:**
+   ```powershell
+   mvn clean verify sonar:sonar "-Dsonar.token=<TU_TOKEN_SQU>"
+   ```
+3. **Visualizar el Dashboard:** `http://localhost:9000/dashboard?id=styleradar_ms-segunda-vida-donaciones`
 
-4. **Visualizar los Resultados en el Dashboard:**
-   * Abrir en el navegador: [http://localhost:9000/dashboard?id=styleradar_ms-segunda-vida-donaciones](http://localhost:9000/dashboard?id=styleradar_ms-segunda-vida-donaciones)
-
-### Reglas de Calidad en SonarQube (*Quality Gate Passed · Calificación A*)
-
-Conforme a la especificación del **Sprint 2 (Pág. 15)**, el análisis estático de SonarQube mantiene la máxima calificación (**A**) en todas sus dimensiones clave:
-
-| Dimensión de Calidad | Calificación | Estado Actual | Criterio de Aceptación |
-| :--- | :---: | :---: | :--- |
-| **Confiabilidad (Reliability)** | **A** | 0 Bugs | Sin errores de lógica ni posibles NullPointerExceptions. |
-| **Seguridad (Security)** | **A** | 0 Vulnerabilidades | 0 vulnerabilidades OWASP / CWE detectadas en el código. |
-| **Mantenibilidad (Maintainability)** | **A** | Deuda < 5% | 0 Code Smells críticos; arquitectura hexagonal limpia. |
-| **Revisión de Seguridad (Security Review)** | **A** | 100% Hotspots | Hotspots revisados y neutralizados con `@SuppressWarnings`. |
-| **Quality Gate Global** | **APROBADO** | Pasó | Cobertura de Líneas JaCoCo: **99.28%** (1.100/1.108 líneas) / SonarQube Compuesta: **96.1%** (meta: ≥ 85%). |
-
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px solid #16A34A; border-radius: 8px; background-color: #F0FDF4;">
-    <tr>
-      <td align="center" style="padding: 22px;">
-        <p>
-          <img src="https://img.shields.io/badge/PIPELINE_STATUS-AUTOMATED_QUALITY_GATES-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="Pipeline Status" /><br />
-          <strong><font color="#16A34A" size="3">INTEGRACIÓN CONTINUA Y QUALITY GATES VERIFICADOS</font></strong>
-        </p>
-        <p>
-          <sub>El flujo de automatización configurado en <code>.github/workflows/ci-cd.yml</code> orquesta la compilación con Java 21 LTS, la ejecución de la suite de pruebas unitarias y de integración con MockMvc y Testcontainers, la validación estricta de cobertura JaCoCo (≥ 85%), y el empaquetado del contenedor OCI multi-stage de Docker. En local, todos los quality gates han sido validados exitosamente mediante <code>mvn clean verify</code> con 100% de cobertura en clases activas.</sub>
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>
+</details>
 
 ---
 
-<a id="11-auditoria-seguridad-owasp"></a>
+<a id="11-ramas-y-cómo-contribuir"></a>
 
-## <img src="https://img.shields.io/badge/11-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 11. AUDITORÍA DE SEGURIDAD Y MATRIZ OWASP TOP 10:2025
+## <img src="https://img.shields.io/badge/11-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 11. RAMAS Y CÓMO CONTRIBUIR
 
-En cumplimiento con los requerimientos técnicos del **Sprint 2 (Págs. 16 y 17)**, se diseñó e implementó la estrategia integral de seguridad del microservicio, documentada en detalle en los siguientes informes técnicos:
-
-### Documentos Técnicos de Seguridad
-
-* 📑 **[Evidencia Técnica del Quality Gate SonarQube (Pág. 15)](docs/seguridad/EVIDENCIA_SONARQUBE_QUALITY_GATE.md):**  
-  Reporte de auditoría y certificación con datos de la API REST oficial de SonarQube v26.9.0 (0 bugs, 0 vulnerabilidades, 0 code smells, 0 hotspots), cálculo comparativo de cobertura JaCoCo (99.28%) vs SonarQube (96.1%) y extractos JSON de estado de la compuerta.
-
-* 📊 **[Guía Técnica de Calidad y Análisis SonarQube (Pág. 15)](docs/seguridad/ANALISIS_SONARQUBE.md):**  
-  Especificación de versiones (SonarQube 26.9.0 / LTS Community, Java 21 LTS, `sonar-maven-plugin:3.11.0.3922`), exclusiones de duplicación (`sonar.cpd.exclusions`), paso a paso para escaneo y certificación de Quality Gate en verde con calificación A en todas las dimensiones y 0.0% de duplicación.
-
-* 📄 **[Documento Técnico de Análisis de Seguridad (Pág. 16)](docs/seguridad/ANALISIS_SEGURIDAD.md):**  
-  Análisis exhaustivo del sistema bajo el formato estándar (*cómo está hoy, riesgos encontrados y qué se corrigió / mitigó*):
-  * **Autenticación:** Inspección stateless de tokens Bearer JWT emitidos por `ms-auth`, validación de firma HMAC-SHA256 (≥ 256 bits), vigencia temporal y protección fail-fast que impide el arranque con claves débiles en producción. Restricción de endpoints demo a `@Profile({"local", "test", "dev"})`.
-  * **Autorización:** Control de acceso basado en roles (RBAC: `USER`, `ADMIN`, `FUNDACION`) en `SecurityConfig`, complementado con el validador de propiedad `ResourceOwnershipValidator` para prevenir ataques de suplantación de identidad (IDOR / BOLA).
-  * **Integridad:** Validación declarativa con Jakarta Bean Validation (`@Valid`), inmutabilidad de eventos en `donaciones.exchange` con `correlationId`, confirmaciones de publicación y retorno de RabbitMQ (*Publisher Confirms & Returns*), transaccionalidad ACID y respuestas uniformes bajo la norma RFC 7807 (`ProblemDetail`).
-
-* 🛡️ **[Matriz de Evaluación OWASP Top 10:2025 (Pág. 17)](docs/seguridad/OWASP_TOP_10_2025.md):**  
-  Reporte formal evaluando las 10 categorías de riesgo aplicadas al microservicio `ms-segunda-vida-donaciones`:
-  * **A01: Broken Access Control** · *Mitigado* (RBAC + ResourceOwnershipValidator contra IDOR/BOLA).
-  * **A02: Security Misconfiguration** · *Mitigado* (Actuator mínimo, Flyway con validate-on-migrate, Docker user no-root).
-  * **A03: Software Supply Chain Failures** · *Mitigado* (Dependencias fijadas en pom.xml, imagen base oficial Temurin 21 JRE Alpine).
-  * **A04: Cryptographic Failures** · *Mitigado* (HMAC-SHA256 ≥ 256 bits, claves por variables de entorno, fail-fast).
-  * **A05: Injection** · *Mitigado* (Spring Data JPA con PreparedStatements parametrizados, Bean Validation).
-  * **A06: Insecure Design** · *Mitigado* (Arquitectura hexagonal estricta, máquina de estados finita de dominio).
-  * **A07: Authentication Failures** · *Mitigado* (JWT stateless con validación estricta de firma y expiración, RFC 7807 sin stack traces).
-  * **A08: Software or Data Integrity Failures** · *Mitigado* (RabbitMQ con Publisher Confirms/Returns, CorrelationId, checksums Flyway).
-  * **A09: Logging & Alerting Failures** · *Mitigado* (SLF4J estructurado, alerta explícita en accesos denegados, sin registrar PII ni tokens).
-  * **A10: Mishandling of Exceptional Conditions** · *Mitigado* (GlobalExceptionHandler centralizado con RFC 7807 ProblemDetail).
-
----
-
-<a id="12-ramas-y-cómo-contribuir"></a>
-
-## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. RAMAS Y CÓMO CONTRIBUIR
-
-El equipo sigue el modelo de trabajo **GitFlow adaptado para microservicios**. La rama `main` se encuentra protegida y solo recibe cambios mediante Pull Requests aprobados.
-
-### Estructura de Ramas Oficial
+El equipo sigue el modelo **GitFlow** con protección de ramas y revisión obligatoria por Pull Request:
 
 ```text
-main                    <-- Código en producción (Despliegue a Azure programado para el próximo Sprint)
-└── develop             <-- Rama de integración continua (Staging / QA)
-    ├── feature/SR-<ID>-<descripcion-corta>   <-- Nuevas funcionalidades
-    ├── bugfix/SR-<ID>-<descripcion-corta>    <-- Corrección de defectos
-    └── hotfix/<descripcion-corta>            <-- Parche urgente a main
+master / main                           <-- Producción (Azure PROD · Requiere CMV y aprobación del Profesor)
+└── develop                             <-- Integración y despliegue automático a Azure QA
+    ├── feature/domain-model-flyway     <-- Fase 1: Dominio, Puertos y Migraciones Flyway (Fusionada)
+    ├── feature/core-business-rabbitmq  <-- Fase 2: Casos de Uso, Controladores REST y RabbitMQ (Fusionada)
+    ├── feature/security-jwt-rbac       <-- Fase 3: Seguridad JWT, RBAC y Anti-IDOR (Fusionada)
+    ├── feature/quality-sonar-owasp     <-- Fase 4: SonarQube 0 Issues, Cobertura 99.37% y OWASP 2025 (Fusionada)
+    └── feature/deployment-qa-prod      <-- Fase 5: CI/CD, Despliegue en Azure (QA/PROD) y Documentación Final
 ```
 
-### Estándar de Mensajes de Confirmación (Conventional Commits v1.0.0)
+### Reglas de Contribución y Gobernanza
 
-Para garantizar la trazabilidad de los cambios, la claridad en el historial de Git y facilitar la revisión de Pull Requests, el equipo adopta de manera estricta la especificación de Conventional Commits.
-
-Formato canónico:
-`<tipo>(<alcance>): <descripción concisa en modo imperativo y minúsculas>`
-
-Tipos permitidos:
-- `feat`: Nuevas capacidades o endpoints de la API.
-- `fix`: Corrección de defectos o bugs en código existente.
-- `refactor`: Reestructuraciones internas sin alteración funcional (ej. adaptación hexagonal).
-- `test`: Incorporación o ajuste de pruebas unitarias y de integración.
-- `docs`: Modificaciones en documentación técnica (`README.md`, OpenAPI/Swagger).
-- `build`: Cambios en dependencias, herramientas o scripts de empaquetado (`pom.xml`).
-- `ci`: Configuración de flujos automatizados de integración continua (`.github/workflows`).
-- `chore`: Tareas de mantenimiento general y variables de entorno (`.gitignore`, `.env.example`).
-
-Reglas de gobernanza de ramas:
-1. Queda estrictamente prohibido realizar confirmaciones directas (`commit` o `push`) sobre las ramas `master` y `develop`.
-2. Todo desarrollo se realiza en ramas de trabajo aisladas (`feature/*`, `bugfix/*`).
-3. La integración de una rama `feature/*` hacia `develop` exige la apertura de un Pull Request y la revisión y aprobación formal del Líder de Equipo (Daniel Valero).
-4. La promoción de código desde `develop` hacia `master` es potestad exclusiva del equipo tras la validación y autorización del Profesor.
-
-### Checklist Obligatorio para Pull Requests
-
-- [ ] La rama parte de la versión más reciente de `develop`.
-- [ ] El código compila limpiamente con `mvn clean compile`.
-- [ ] Todas las pruebas unitarias e integración pasan (`mvn verify`).
-- [ ] La cobertura JaCoCo es mayor o igual al 85%.
-- [ ] No se introducen credenciales, contraseñas ni tokens en el código fuente.
-- [ ] El PR tiene asignado al menos 1 revisor del squad antes del merge.
+1. **Prohibido hacer push directo** a `master` o `develop`.
+2. Todo cambio ingresa desde una rama `feature/*` o `fix/*` mediante **Pull Request** revisado y aprobado por el líder técnico del squad (Daniel Valero) y con el pipeline de GitHub Actions en verde.
+3. Los mensajes de commit siguen **Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `ci:`, `chore:`)**.
+4. El paso de `develop` a `master` se realiza únicamente con **CMV** y autorización del profesor.
 
 ---
 
-<a id="13-enlace-a-la-épica-en-jira"></a>
+<a id="12-enlace-a-la-épica-en-jira"></a>
 
-## <img src="https://img.shields.io/badge/13-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 13. ENLACE A LA ÉPICA EN JIRA
+## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. ENLACE A LA ÉPICA EN JIRA
 
-El seguimiento de requerimientos, evidencias y artefactos de entrega se centraliza en los siguientes enlaces oficiales:
-
-### Enlaces de Gestión del Microservicio
+El seguimiento de historias de usuario, subtareas técnicas y las 9 evidencias de cierre se centraliza en el tablero oficial de Jira del **Squad Portal 8080 (`PT8080`)**:
 
 * **Épica Oficial del Microservicio (Jira):** [https://mail-team-nyjtgqcj.atlassian.net/browse/PT8080-2](https://mail-team-nyjtgqcj.atlassian.net/browse/PT8080-2)
 * **Tablero Scrum del Squad Portal 8080 (Jira):** [https://mail-team-nyjtgqcj.atlassian.net/jira/software/projects/PT8080/boards/74](https://mail-team-nyjtgqcj.atlassian.net/jira/software/projects/PT8080/boards/74)
@@ -896,24 +723,32 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 <div align="center">
   <img src="docs/evidencias/epic-jira.png" width="90%" alt="Evidencia Tablero Jira" />
   <br>
-  <sub>Seguimiento de la Épica y requerimientos funcionales asignados en el tablero Scrum de Jira.</sub>
+  <sub>Seguimiento de la Épica PT8080-2 y requerimientos funcionales asignados en el tablero Scrum de Jira.</sub>
 </div>
 
-### Requerimientos Funcionales Asignados
+### Matriz de los 14 Requerimientos Funcionales Implementados (`StyleRadar v4`)
 
-| Código RF | Nombre del Requerimiento | Actor Principal | Criterio de Aceptación Clave |
+| Código RF | Nombre del Requerimiento | Actor Principal | Implementación en `ms-segunda-vida-donaciones` | Estado |
+| :---: | :--- | :--- | :--- | :---: |
+| `SR-RF-33` | Publicar prenda de segunda mano | Usuario vendedor (`Nora`) | `POST /api/v1/segunda-mano` (`CreatePublicationUseCaseImpl`): hasta 4 fotos, descripción, tipo, marca, color, estilo y talla. | ✅ Completado |
+| `SR-RF-34` | Clasificar estado de conservación de prenda usada | Usuario vendedor (`Nora`) | Escala enum `ConservationStatus` (`BRAND_NEW_WITH_TAGS`, `LIKE_NEW`, `GOOD_CONDITION`, `ACCEPTABLE`) validada en creación y edición. | ✅ Completado |
+| `SR-RF-35` | Establecer precio de prenda usada | Usuario vendedor (`Nora`) | Atributo `price` (`BigDecimal >= 0` en COP) validado en `SecondHandPublication`. | ✅ Completado |
+| `SR-RF-36` | Buscar prendas publicadas por otros usuarios | Usuario comprador | `GET /api/v1/segunda-mano` (`GetPublicationsUseCaseImpl` + `PublicationSpecifications`) con filtros combinables. | ✅ Completado |
+| `SR-RF-37` | Editar publicación de segunda mano | Propietario de publicación | `PUT /api/v1/segunda-mano/{id}` (`ManagePublicationUseCaseImpl.edit`) restringido a estado `AVAILABLE` y dueño del recurso. | ✅ Completado |
+| `SR-RF-38` | Marcar prenda de segunda mano como vendida | Propietario de publicación | `PATCH /api/v1/segunda-mano/{id}/sell` (`ManagePublicationUseCaseImpl.markAsSold`): transición a `SOLD` y retiro de búsqueda pública. | ✅ Completado |
+| `SR-RF-39` | Retirar publicación de segunda mano | Propietario de publicación | `PATCH /api/v1/segunda-mano/{id}/retire` (`ManagePublicationUseCaseImpl.retire`): transición a `RETIRED`. | ✅ Completado |
+| `SR-RF-42` | Marcar prenda para donación | Usuario donante (`Nora`) | `PATCH /api/v1/segunda-mano/{id}/donate` (`ManagePublicationUseCaseImpl.markForDonation`): transición a `IN_DONATION`. | ✅ Completado |
+| `SR-RF-44` | Seleccionar fundación para donación | Usuario donante | Selección de `foundationId` validada al radicar la solicitud de donación en `CreateDonationRequestUseCaseImpl`. | ✅ Completado |
+| `SR-RF-45` | Enviar solicitud de donación | Usuario donante | `POST /api/v1/donaciones` (`CreateDonationRequestUseCaseImpl`): persiste en estado `PENDING` y publica `DonationRequestCreatedIntegrationEvent` en RabbitMQ. | ✅ Completado |
+| `SR-RF-46` | Consultar solicitudes de donación | Donante / Fundación (`Tomás`) | `GET /api/v1/donaciones/{id}`, `/donor/{donorId}` y `/foundation/{foundationId}` (`CreateDonationRequestUseCaseImpl`). | ✅ Completado |
+| `SR-RF-47` | Aceptar o rechazar solicitud de donación | Representante de fundación (`Tomás`) | `PATCH /api/v1/donaciones/{id}/decide` (`DecideDonationRequestUseCaseImpl`): transición a `APPROVED` o `REJECTED` con motivo obligatorio y evento en RabbitMQ. | ✅ Completado |
+| `SR-RF-48` | Coordinar recogida de donación | Donante / Fundación | `PATCH /api/v1/donaciones/{id}/pickup` (`ScheduleDonationPickupUseCaseImpl`): registra punto de entrega y franja horaria, transicionando a `IN_PICKUP`. | ✅ Completado |
+| `SR-RF-49` | Confirmar recepción de donación | Representante de fundación (`Tomás`) | `PATCH /api/v1/donaciones/{id}/confirm` (`ConfirmDonationReceiptUseCaseImpl`): transición final a `DELIVERED` y prenda a `DONATED` con evento en RabbitMQ. | ✅ Completado |
+
+### Requerimientos No Funcionales Gobernados (`StyleRadar v4`)
+
+| Código RNF | Categoría | Criterio de Aceptación | Implementación Verificada |
 | :---: | :--- | :--- | :--- |
-| `SR-RF-33` | Publicar prenda de segunda mano | Usuario vendedor | Publicación C2C de ropa de segunda mano con hasta 4 fotos, descripción, talla y marca. |
-| `SR-RF-34` | Clasificar estado de conservación de prenda usada | Usuario vendedor | Validación de escala enum estándar de estado (`NUEVO_CON_ETIQUETA`, `COMO_NUEVO`, `BUEN_ESTADO`, `USADO_ACEPTABLE`). |
-| `SR-RF-35` | Establecer precio de prenda usada | Usuario vendedor | Fijación de precio libre en pesos colombianos (COP) con validación de tipo `BigDecimal` positivo. |
-| `SR-RF-36` | Buscar prendas publicadas por otros usuarios | Usuario comprador | Motor de búsqueda independiente para mercado circular con filtros de estado de conservación, precio y talla. |
-| `SR-RF-37` | Editar publicación de segunda mano | Propietario de publicación | Edición de publicaciones de segunda mano mientras el artículo se mantenga en estado `DISPONIBLE`. |
-| `SR-RF-38` | Marcar prenda de segunda mano como vendida | Propietario de publicación | Transición de estado a `VENDIDO`: retira la prenda del catálogo público y emite evento para cerrar la sala de negociación del chat. |
-| `SR-RF-39` | Retirar publicación de segunda mano | Propietario de publicación | Retiro voluntario de publicación por parte del usuario propietario. |
-| `SR-RF-42` | Marcar prenda para donación | Usuario donante | Flujo de donación: permite marcar prendas no vendidas o del armario personal como disponibles para donar a fundaciones. |
-| `SR-RF-44` | Seleccionar fundación para donación | Usuario donante | Selector de fundación aliada receptora basado en cercanía física y categorías de prendas admitidas. |
-| `SR-RF-45` | Enviar solicitud de donación | Usuario donante | Envío formal de solicitud de donación con detalle cuantitativo y fotos; dispara evento `SolicitudDonacionCreadaEvent`. |
-| `SR-RF-46` | Consultar solicitudes de donación | Representante de fundación | Tablero de seguimiento con máquina de estados (`PENDIENTE`, `APROBADA`, `RECHAZADA`, `EN_RECOGIDA`, `ENTREGADA`). |
-| `SR-RF-47` | Aceptar o rechazar solicitud de donación | Representante de fundación | Decisión de la fundación con justificación obligatoria en caso de rechazo o aprobación. |
-| `SR-RF-48` | Coordinar recogida de donación | Donante / Fundación | El donante propone modo de entrega, día, franja horaria y punto; la fundación acepta o rechaza la propuesta completa. |
-| `SR-RF-49` | Confirmar recepción de donación | Representante de fundación | Confirmación final de entrega por parte de la fundación aliada, generación de comprobante simbólico y cierre de ciclo. |
+| `SR-RNF-01` | **Rendimiento** | Búsqueda y filtrado en `< 2 segundos` con hasta 500 usuarios concurrentes. | Índices en PostgreSQL (`idx_pub_estado`, `idx_pub_tipo`, `idx_sol_fundacion`, `idx_sol_estado`) y consultas parametrizadas con `JpaSpecificationExecutor`. |
+| `SR-RNF-04` | **Seguridad** | Contraseñas seguras, HTTPS obligatorio, JWT con expiración y autorización por rol. | HTTPS en Azure App Service, `JwtTokenProvider` con HMAC-SHA256 (`≥ 256 bits`) y validación obligatoria de claim `exp`, RBAC + `ResourceOwnershipValidator` (anti-IDOR). |
+| `SR-RNF-09` | **Mantenibilidad** | Arquitectura hexagonal por microservicio, cobertura `≥ 80%` (meta curso `≥ 85%`) y documentación OpenAPI. | Arquitectura hexagonal estricta (`*UseCase` + `*UseCaseImpl`), **99.37% de cobertura JaCoCo**, **0 issues en SonarQube (Calificación A)** y Swagger UI público en QA y PROD. |

@@ -10,13 +10,17 @@ COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
 # Copy project source tree and package application artifact
+ARG COMMIT_SHA=local-dev
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B -Dbuild.commit.sha=${COMMIT_SHA}
 
 # ==============================================================================
 # Stage 2: Minimal Production Runtime with Eclipse Temurin 21 JRE Alpine
 # ==============================================================================
 FROM eclipse-temurin:21-jre-alpine
+
+ARG COMMIT_SHA=local-dev
+ENV APP_COMMIT_SHA=${COMMIT_SHA}
 
 # Non-root unprivileged system user and group (UID/GID 10001)
 RUN addgroup -g 10001 -S appgroup && \
@@ -30,8 +34,12 @@ COPY --from=builder --chown=appuser:appgroup /build/target/*.jar app.jar
 # Switch to non-privileged user
 USER appuser:appgroup
 
+# Environment variables with sensible cloud defaults
+ENV PORT=8520 \
+    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+
 # Official microservice assigned port
 EXPOSE 8520
 
 # Microservice entrypoint
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

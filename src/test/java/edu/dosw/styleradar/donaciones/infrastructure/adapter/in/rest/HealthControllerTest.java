@@ -22,14 +22,31 @@ class HealthControllerTest {
     }
 
     @Test
-    @DisplayName("Debe retornar estado UP y puerto 8520 con código HTTP 200")
+    @DisplayName("Debe retornar estado UP, versión, commitSha y puerto 8520 con código HTTP 200")
     void shouldReturnHealthStatusUp() throws Exception {
         mockMvc.perform(get("/health")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.service").value("ms-segunda-vida-donaciones"))
+                .andExpect(jsonPath("$.version").value("0.0.1-SNAPSHOT"))
+                .andExpect(jsonPath("$.commitSha").value("local-dev"))
                 .andExpect(jsonPath("$.port").value(8520))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("Debe retornar commitSha y versión personalizados cuando son inyectados")
+    void shouldReturnCustomCommitShaAndVersion() throws Exception {
+        HealthController customController = new HealthController("1.0.0", "c3b9f4a123");
+        MockMvc customMvc = MockMvcBuilders.standaloneSetup(customController).build();
+
+        customMvc.perform(get("/health")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.service").value("ms-segunda-vida-donaciones"))
+                .andExpect(jsonPath("$.version").value("1.0.0"))
+                .andExpect(jsonPath("$.commitSha").value("c3b9f4a123"));
     }
 }
