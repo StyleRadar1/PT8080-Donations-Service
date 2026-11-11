@@ -1,0 +1,101 @@
+<mxfile host="app.diagrams.net" modified="2026-11-11T21:18:00.000Z" agent="StyleRadar-Architect" version="24.0.0" type="device">
+  <diagram id="sr-er-sprint3" name="Entity-Relationship Diagram (PostgreSQL 16)">
+    <mxGraphModel dx="1404" dy="777" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;fontSize=18;fontColor=#48119A;" value="StyleRadar - Entity-Relationship Database Diagram (PostgreSQL 16)" vertex="1">
+          <mxGeometry x="40" y="25" width="800" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=12;fontColor=#262626;" value="Database: styleradar_donaciones | Bounded Context: Second-Hand C2C Marketplace &amp; Charitable Donations" vertex="1">
+          <mxGeometry x="40" y="55" width="800" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Table: second_hand_publications -->
+        <mxCell id="t_pub" parent="1" style="shape=table;startSize=32;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;strokeWidth=2;strokeColor=#48119A;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;swimlaneFillColor=default;fillColor=#E4DBF0;" value="second_hand_publications (publicaciones_segunda_mano)" vertex="1">
+          <mxGeometry x="50" y="110" width="470" height="470" as="geometry" />
+        </mxCell>
+        <mxCell id="t_pub_row" parent="t_pub" style="shape=tableRow;horizontal=0;startSize=0;fillColor=none;collapsible=0;dropTarget=0;top=0;left=0;right=0;bottom=0;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;connectable=0;" value="" vertex="1">
+          <mxGeometry y="32" width="470" height="438" as="geometry" />
+        </mxCell>
+        <mxCell id="t_pub_pkcol" parent="t_pub_row" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;overflow=hidden;whiteSpace=wrap;html=1;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;fontSize=11;align=center;" value="&lt;b&gt;PK&lt;/b&gt;&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NULL&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NULL" vertex="1">
+          <mxGeometry width="55" height="438" as="geometry">
+            <mxRectangle width="55" height="438" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t_pub_datacol" parent="t_pub_row" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;align=left;spacingLeft=8;overflow=hidden;whiteSpace=wrap;html=1;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#262626;fontSize=11;" value="id : BigInt (GENERATED ALWAYS AS IDENTITY)&lt;br&gt;user_id : BigInt (usuario_id)&lt;br&gt;garment_name : VarChar(120) (nombre_prenda)&lt;br&gt;description : VarChar(1000) (descripcion)&lt;br&gt;garment_type : VarChar(30) (tipo_prenda: UPPER, LOWER, DRESS...)&lt;br&gt;brand : VarChar(80) (marca)&lt;br&gt;color : VarChar(50) (color)&lt;br&gt;style : VarChar(30) (estilo: CASUAL, FORMAL...)&lt;br&gt;size : VarChar(20) (talla: XS, S, M, L, XL, XXL, UNIQUE)&lt;br&gt;conservation_status : VarChar(30) (estado_conservacion)&lt;br&gt;price : Numeric(12, 2) (precio: CHECK &gt;= 0)&lt;br&gt;status : VarChar(30) DEFAULT &#39;AVAILABLE&#39; (estado)&lt;br&gt;published_at : Timestamp with time zone (fecha_publicacion)&lt;br&gt;updated_at : Timestamp with time zone (fecha_actualizacion)" vertex="1">
+          <mxGeometry x="55" width="415" height="438" as="geometry">
+            <mxRectangle width="415" height="438" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Table: publication_photos -->
+        <mxCell id="t_photos" parent="1" style="shape=table;startSize=32;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;strokeWidth=2;strokeColor=#48119A;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;swimlaneFillColor=default;fillColor=#E4DBF0;" value="publication_photos (fotos_publicacion)" vertex="1">
+          <mxGeometry x="690" y="110" width="440" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="t_photos_row" parent="t_photos" style="shape=tableRow;horizontal=0;startSize=0;fillColor=none;collapsible=0;dropTarget=0;top=0;left=0;right=0;bottom=0;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;connectable=0;" value="" vertex="1">
+          <mxGeometry y="32" width="440" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="t_photos_pkcol" parent="t_photos_row" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;overflow=hidden;whiteSpace=wrap;html=1;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;fontSize=11;align=center;" value="&lt;b&gt;PK&lt;/b&gt;&lt;br&gt;FK, NN&lt;br&gt;NN&lt;br&gt;NN" vertex="1">
+          <mxGeometry width="65" height="118" as="geometry">
+            <mxRectangle width="65" height="118" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t_photos_datacol" parent="t_photos_row" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;align=left;spacingLeft=8;overflow=hidden;whiteSpace=wrap;html=1;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#262626;fontSize=11;" value="id : BigInt (GENERATED ALWAYS AS IDENTITY)&lt;br&gt;publication_id : BigInt (FK -&amp;gt; second_hand_publications.id)&lt;br&gt;photo_url : VarChar(512) (url_foto: Azure Blob Storage)&lt;br&gt;order_index : SmallInt DEFAULT 0 (orden: 1..4)" vertex="1">
+          <mxGeometry x="65" width="375" height="118" as="geometry">
+            <mxRectangle width="375" height="118" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Table: donation_requests -->
+        <mxCell id="t_sol" parent="1" style="shape=table;startSize=32;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;strokeWidth=2;strokeColor=#48119A;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;swimlaneFillColor=default;fillColor=#E4DBF0;" value="donation_requests (solicitudes_donacion)" vertex="1">
+          <mxGeometry x="690" y="300" width="470" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="t_sol_row" parent="t_sol" style="shape=tableRow;horizontal=0;startSize=0;fillColor=none;collapsible=0;dropTarget=0;top=0;left=0;right=0;bottom=0;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;connectable=0;" value="" vertex="1">
+          <mxGeometry y="32" width="470" height="338" as="geometry" />
+        </mxCell>
+        <mxCell id="t_sol_pkcol" parent="t_sol_row" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;overflow=hidden;whiteSpace=wrap;html=1;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#48119A;fontSize=11;align=center;" value="&lt;b&gt;PK&lt;/b&gt;&lt;br&gt;FK, NN&lt;br&gt;NN&lt;br&gt;NN&lt;br&gt;NULL&lt;br&gt;NN&lt;br&gt;NULL&lt;br&gt;NULL&lt;br&gt;NULL&lt;br&gt;NULL&lt;br&gt;NN&lt;br&gt;NULL&lt;br&gt;NULL" vertex="1">
+          <mxGeometry width="65" height="338" as="geometry">
+            <mxRectangle width="65" height="338" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t_sol_datacol" parent="t_sol_row" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;align=left;spacingLeft=8;overflow=hidden;whiteSpace=wrap;html=1;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontColor=#262626;fontSize=11;" value="id : BigInt (GENERATED ALWAYS AS IDENTITY)&lt;br&gt;publication_id : BigInt (FK -&amp;gt; second_hand_publications.id)&lt;br&gt;donor_id : BigInt (donante_id)&lt;br&gt;foundation_id : BigInt (fundacion_id)&lt;br&gt;message : VarChar(500) (mensaje)&lt;br&gt;status : VarChar(30) DEFAULT &#39;PENDING&#39; (estado)&lt;br&gt;rejection_reason : VarChar(500) (motivo_rechazo)&lt;br&gt;delivery_point : VarChar(255) / GEOMETRY(Point, 4326)&lt;br&gt;pickup_start_time : Timestamp with time zone (franja_inicio)&lt;br&gt;pickup_end_time : Timestamp with time zone (franja_fin)&lt;br&gt;requested_at : Timestamp with time zone (fecha_solicitud)&lt;br&gt;decided_at : Timestamp with time zone (fecha_decision)&lt;br&gt;received_at : Timestamp with time zone (fecha_recepcion)" vertex="1">
+          <mxGeometry x="65" width="405" height="338" as="geometry">
+            <mxRectangle width="405" height="338" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Crow's Foot Relationships -->
+        <!-- second_hand_publications has (1..4) publication_photos -->
+        <mxCell id="rel_pub_photos" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#48119A;startArrow=ERmandOne;startFill=0;endArrow=ERmany;endFill=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.2;exitDx=0;exitDy=0;" edge="1" source="t_pub" target="t_photos">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="530" y="185" as="sourcePoint" />
+            <mxPoint x="680" y="185" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl_pub_photos" parent="rel_pub_photos" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[];fontFamily=Poppins;fontSize=10;fontColor=#48119A;" value="has (1..4)" vertex="1" connectable="0">
+          <mxGeometry x="-0.1" y="-2" relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- second_hand_publications generates (0..*) donation_requests -->
+        <mxCell id="rel_pub_sol" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#48119A;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;entryX=0;entryY=0.45;entryDx=0;entryDy=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;" edge="1" source="t_pub" target="t_sol">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="530" y="450" as="sourcePoint" />
+            <mxPoint x="680" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl_pub_sol" parent="rel_pub_sol" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[];fontFamily=Poppins;fontSize=10;fontColor=#48119A;" value="generates (0..*)" vertex="1" connectable="0">
+          <mxGeometry x="-0.1" y="-2" relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend / Notes -->
+        <mxCell id="legend_box" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Poppins;fontSize=11;fontColor=#262626;" value="&lt;b&gt;Legend / Conventions:&lt;/b&gt;&lt;br&gt;&lt;b&gt;PK&lt;/b&gt; = Primary Key (Identidad Autoincremental)&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; = Foreign Key (Clave Foránea)&lt;br&gt;&lt;b&gt;NN&lt;/b&gt; = Not Null (Campo Obligatorio)&lt;br&gt;&lt;b&gt;NULL&lt;/b&gt; = Nullable (Opcional o condicionado por el ciclo de vida)&lt;br&gt;&lt;i&gt;Crow&#39;s Foot Notation:&lt;/i&gt; Una publicación puede tener entre 1 y 4 fotos, y 0 a N solicitudes de donación asociadas." vertex="1">
+          <mxGeometry x="50" y="600" width="550" height="90" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

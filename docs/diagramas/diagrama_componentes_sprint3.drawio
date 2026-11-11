@@ -1,0 +1,278 @@
+<mxfile host="app.diagrams.net" modified="2026-11-11T22:20:00.000Z" agent="StyleRadar-Architect" version="24.0.0" type="device">
+  <diagram id="sr-componentes-sprint3-fidelidad" name="Diagrama de Componentes Especifico">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2100" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ========================================== -->
+        <!-- HEADER & LOGO BANNER                      -->
+        <!-- ========================================== -->
+        <mxCell id="logo_symbol" parent="1" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=none;imageAspect=1;aspect=fixed;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%2348119A%22%3E%3Cpath%20d%3D%22M12%202C6.48%202%202%206.48%202%2012s4.48%2010%2010%2010%2010-4.48%2010-10S17.52%202%2012%202zm-1%2017.93c-3.95-.49-7-3.85-7-7.93%200-.62.08-1.21.21-1.79L9%2015v1c0%201.1.9%202%202%202v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55%200%201-.45%201-1V7h2c1.1%200%202-.9%202-2v-.41c2.93%201.19%205%204.06%205%207.41%200%202.08-.8%203.97-2.1%205.39z%22%2F%3E%3C%2Fsvg%3E;" vertex="1">
+          <mxGeometry x="25" y="15" width="28" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="logo_text" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3Dpoppins;fontStyle=1;fontSize=18;fontColor=#48119A;" value="StyleRadar" vertex="1">
+          <mxGeometry x="58" y="15" width="120" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="header_title" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3Dpoppins;fontStyle=1;fontSize=15;fontColor=#48119A;" value="STYLERADAR — DIAGRAMA DE COMPONENTES ESPECÍFICO: MICROSERVICIO DE SEGUNDA VIDA Y DONACIONES (PT8080)" vertex="1">
+          <mxGeometry x="190" y="15" width="1350" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="header_sub" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3Dpoppins;fontSize=10;fontColor=#262626;" value="Microservicio segunda vida y donaciones (PT8080 - Puerto 8520) | Arquitectura Hexagonal (Puertos y Adaptadores) | Enfoque Domain-Driven Design (DDD)" vertex="1">
+          <mxGeometry x="190" y="36" width="1350" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CONTAINER 1: PERÍMETRO CLIENTES & GATEWAY -->
+        <!-- ========================================== -->
+        <mxCell id="box_c1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=2;fillColor=#F8F6FC;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=poppins;fontStyle=1;fontSize=10.5;fontColor=#48119A;" value="Perímetro Clientes &amp; API Gateway" vertex="1">
+          <mxGeometry x="20" y="65" width="230" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_frontend" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;Frontend&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8.5px;color:#262626;&quot;&gt;Web SPA y Móvil&lt;/span&gt;" vertex="1">
+          <mxGeometry x="35" y="200" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_gateway" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;APIGateway&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8.5px;color:#262626;&quot;&gt;Puerto 8080 (REST / HTTPS)&lt;br&gt;/api/v1/segunda-mano&lt;br&gt;/api/v1/donaciones&lt;/span&gt;" vertex="1">
+          <mxGeometry x="35" y="315" width="190" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CONTAINER 2: INFRASTRUCTURE.ADAPTER.IN     -->
+        <!-- ========================================== -->
+        <mxCell id="box_c2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=2;fillColor=#F8F6FC;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=poppins;fontStyle=1;fontSize=10.5;fontColor=#48119A;" value="infrastructure.adapter.in (Controladores y Seguridad)" vertex="1">
+          <mxGeometry x="275" y="65" width="265" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_ctrl_pub" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;SecondHandPublicationController&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Spring MVC - Swagger / OpenAPI&lt;br&gt;Vitrina, filtros Bogotá, venta C2C&lt;/span&gt;" vertex="1">
+          <mxGeometry x="290" y="95" width="235" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_ctrl_don" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;DonationRequestController&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Spring MVC - Swagger / OpenAPI&lt;br&gt;Reclamar vitrina, decidir, cita recogida&lt;/span&gt;" vertex="1">
+          <mxGeometry x="290" y="165" width="235" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_ctrl_photo" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;PhotoUploadController&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Carga de fotos (multipart/form-data)&lt;br&gt;Valida tipo (JPEG/PNG), tamaño y sube&lt;/span&gt;" vertex="1">
+          <mxGeometry x="290" y="235" width="235" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_mappers_in" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;MappersIn (MapStruct)&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;PublicationRestMapper &amp;amp; DonationRestMapper&lt;/span&gt;" vertex="1">
+          <mxGeometry x="290" y="305" width="235" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_sec_filter" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;JwtAuthenticationFilter &amp;amp; SecurityConfig&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Filtro JWT, RBAC &amp;amp; ResourceOwnershipValidator&lt;/span&gt;" vertex="1">
+          <mxGeometry x="290" y="365" width="235" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_exc_handler" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;GlobalExceptionHandler&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Manejo RFC 7807 ProblemDetail (400, 403, 404, 409)&lt;/span&gt;" vertex="1">
+          <mxGeometry x="290" y="430" width="235" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CONTAINER 3: APPLICATION & DOMAIN          -->
+        <!-- ========================================== -->
+        <mxCell id="box_c3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=2;fillColor=#F8F6FC;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=poppins;fontStyle=1;fontSize=10.5;fontColor=#48119A;" value="application &amp; domain (Puertos In, Servicios y Reglas del Dominio)" vertex="1">
+          <mxGeometry x="565" y="65" width="565" height="520" as="geometry" />
+        </mxCell>
+
+        <!-- Subcol 1: Ports In -->
+        <mxCell id="comp_ports_in" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«port in» Puertos Entrada&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;• CreatePublicationUseCase&lt;br&gt;• GetPublicationsUseCase&lt;br&gt;• ManagePublicationUseCase&lt;br&gt;• UploadGarmentPhotoUseCase&lt;br&gt;• ClaimDonationUseCase (Vitrina)&lt;br&gt;• CreateDonationRequestUseCase&lt;br&gt;• DecideDonationRequestUseCase&lt;br&gt;• ScheduleDonationPickupUseCase&lt;br&gt;• ConfirmDonationReceiptUseCase&lt;/span&gt;" vertex="1">
+          <mxGeometry x="580" y="95" width="180" height="210" as="geometry" />
+        </mxCell>
+
+        <!-- Subcol 2: Services -->
+        <mxCell id="comp_services" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component» Servicios Aplicación&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;• CreatePublicationUseCaseImpl&lt;br&gt;• GetPublicationsUseCaseImpl&lt;br&gt;• ManagePublicationUseCaseImpl&lt;br&gt;• UploadGarmentPhotoUseCaseImpl&lt;br&gt;• ClaimDonationUseCaseImpl&lt;br&gt;• CreateDonationRequestUseCaseImpl&lt;br&gt;• DecideDonationRequestUseCaseImpl&lt;br&gt;• SchedulePickupUseCaseImpl&lt;br&gt;• ConfirmDonationReceiptUseCaseImpl&lt;/span&gt;" vertex="1">
+          <mxGeometry x="770" y="95" width="185" height="210" as="geometry" />
+        </mxCell>
+
+        <!-- Subcol 3: Domain Rules -->
+        <mxCell id="comp_rules" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«domain» Reglas e Invariantes&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;• GarmentInvariantsValidator&lt;br&gt;• PublicationLifecycleValidator&lt;br&gt;• AntiSelfDonationValidator&lt;br&gt;&amp;nbsp;&amp;nbsp;(donorId != foundationId)&lt;br&gt;• BogotaLocalityBoundaryRule&lt;br&gt;• OptimisticLockingRule (@Version)&lt;br&gt;• PhotoCountAndSizeRule (1..4)&lt;/span&gt;" vertex="1">
+          <mxGeometry x="965" y="95" width="150" height="210" as="geometry" />
+        </mxCell>
+
+        <!-- Sub-box Domain Models -->
+        <mxCell id="comp_models_box" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«domain» Modelos y Entidades de Dominio Puro (Sin acoplamiento a frameworks)&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;&lt;b&gt;SecondHandPublication&lt;/b&gt; (Aggregate Root) &amp;nbsp;|&amp;nbsp; &lt;b&gt;DonationRequest&lt;/b&gt; (Entity) &amp;nbsp;|&amp;nbsp; &lt;b&gt;Garment&lt;/b&gt; (Value Object)&lt;br&gt;Enums: PublicationStatus, DonationRequestStatus, GarmentType, Style, Size, ConservationStatus, BogotaLocality&lt;br&gt;Eventos Dominio: PublicationSoldEvent, DonationRequestCreatedEvent, DonationRequestDecidedEvent, PickupScheduledEvent&lt;/span&gt;" vertex="1">
+          <mxGeometry x="580" y="320" width="535" height="95" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CONTAINER 4: INFRASTRUCTURE.ADAPTER.OUT    -->
+        <!-- ========================================== -->
+        <mxCell id="box_c4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=2;fillColor=#F8F6FC;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=poppins;fontStyle=1;fontSize=10.5;fontColor=#48119A;" value="infrastructure.adapter.out (Adaptadores Salida + MapperOut + JPA)" vertex="1">
+          <mxGeometry x="1155" y="65" width="320" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_ports_out" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«interface» Puertos de Salida&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;• SecondHandPublicationRepositoryPort&lt;br&gt;• DonationRequestRepositoryPort&lt;br&gt;• PhotoStoragePort&lt;br&gt;• DonationEventPublisherPort&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1170" y="95" width="290" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_adapters_out" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component» Adaptadores de Persistencia &amp;amp; Storage&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;• SecondHandPublicationRepositoryAdapter&lt;br&gt;• DonationRequestRepositoryAdapter&lt;br&gt;• AzureBlobStorageAdapter (Azure Blob SDK - URLs fotos)&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1170" y="180" width="290" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_mapper_out" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component» MapperOut (MapStruct)&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Modelo Dominio &amp;lt;---&amp;gt; Entidades JPA&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1170" y="265" width="290" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_jpa_repos" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component» Repositorios Spring Data JPA (PostgreSQL)&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;• SecondHandPublicationJpaRepository&lt;br&gt;• DonationRequestJpaRepository&lt;br&gt;• PublicationPhotoJpaRepository&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1170" y="325" width="290" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CONTAINER 5: PROVEEDORES CLOUD & BD        -->
+        <!-- ========================================== -->
+        <mxCell id="box_c5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=2;fillColor=#F8F6FC;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3Dpoppins;fontStyle=1;fontSize=10.5;fontColor=#48119A;" value="Proveedores Cloud &amp; Persistencia" vertex="1">
+          <mxGeometry x="1500" y="65" width="245" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_db_pg" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;align=center;verticalAlign=middle;fontFamily=poppins;fontColor=#48119A;fontSize=10;" value="&lt;b&gt;«database»&lt;br&gt;donaciones_db&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8.5px;color:#262626;&quot;&gt;PostgreSQL 16&lt;br&gt;Azure Database Staging&lt;br&gt;Puerto 5432&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1535" y="140" width="175" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_blob_storage" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«cloud storage»&lt;br&gt;Azure Blob Storage&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Contenedor &#39;donaciones-fotos&#39;&lt;br&gt;RG styleradar / CDN fotos&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1535" y="315" width="175" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- LOLLIPOP INTERFACE CONNECTORS (TOP ROW)    -->
+        <!-- ========================================== -->
+        <!-- Between APIGateway and In-Adapters -->
+        <mxCell id="lol_gw_in" parent="1" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;" vertex="1">
+          <mxGeometry x="250" y="348" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_fe_gw" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="comp_frontend" target="comp_gateway">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_gw_lol" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="comp_gateway" target="lol_gw_in">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_lol_ctrls" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lol_gw_in" target="comp_ctrl_don">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Between In-Adapters and In-Ports (Lollipop) -->
+        <mxCell id="lol_in_port1" parent="1" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;" vertex="1">
+          <mxGeometry x="545" y="195" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_ctrls_lolin" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="comp_ctrl_don" target="lol_in_port1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_lolin_ports" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lol_in_port1" target="comp_ports_in">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Between App-Services and Out-Ports (Lollipop) -->
+        <mxCell id="lol_out_port1" parent="1" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;" vertex="1">
+          <mxGeometry x="1135" y="125" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_svc_lolout" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="comp_rules" target="lol_out_port1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_lolout_ports" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lol_out_port1" target="comp_ports_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Between Out-Adapters and Cloud Persistence (Lollipop) -->
+        <mxCell id="lol_jpa_db" parent="1" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;" vertex="1">
+          <mxGeometry x="1480" y="190" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_adapt_loldb" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="comp_adapters_out" target="lol_jpa_db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_loldb_pg" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lol_jpa_db" target="comp_db_pg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lol_blob_store" parent="1" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;" vertex="1">
+          <mxGeometry x="1480" y="355" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_adapt_lolblob" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="comp_jpa_repos" target="lol_blob_store">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_lolblob_az" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lol_blob_store" target="comp_blob_storage">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CONTAINER 6: ASYNCHRONOUS RABBITMQ BROKER  -->
+        <!-- ========================================== -->
+        <mxCell id="box_async_broker" parent="1" style="rounded=0;dashed=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=2;fillColor=#F8F6FC;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fontFamily=poppins;fontStyle=1;fontSize=11;fontColor=#48119A;" value="Arquitectura Orientada a Eventos Asíncronos (RabbitMQ Broker &amp; Microservicios Suscriptores StyleRadar)" vertex="1">
+          <mxGeometry x="20" y="605" width="1725" height="260" as="geometry" />
+        </mxCell>
+
+        <!-- Inner Dashed Box: Broker Subsystem -->
+        <mxCell id="inner_broker_box" parent="1" style="rounded=1;dashed=1;dashPattern=4 4;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#EFEBF7;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontFamily=poppins;fontStyle=1;fontSize=9.5;fontColor=#48119A;" value="«broker &amp; suscriptores»" vertex="1">
+          <mxGeometry x="720" y="625" width="1005" height="225" as="geometry" />
+        </mxCell>
+
+        <!-- Publisher Component -->
+        <mxCell id="comp_pub_adapter" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=center;verticalAlign=middle;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component»&lt;br&gt;DonationEventPublisherAdapter&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Publica eventos AMQPS TLS 5671 con ConfirmCallback (ACK)&lt;br&gt;Enruta con correlationId trazable y version = 1&lt;/span&gt;" vertex="1">
+          <mxGeometry x="275" y="685" width="370" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Horizontal 3D Pipe Cylinder (Tubo Broker) -->
+        <mxCell id="pipe_broker" parent="1" style="shape=cylinder3;rotation=90;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;align=center;verticalAlign=middle;fontFamily=poppins;fontColor=#48119A;fontSize=9.5;" value="&lt;div style=&quot;transform: rotate(-90deg);&quot;&gt;&lt;b&gt;RabbitMQ Broker (AMQPS 5671)&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:7.5px;color:#262626;&quot;&gt;Exchange: styleradar.exchange (topic)&lt;br&gt;Exchange: styleradar.events (chat)&lt;br&gt;DLX: styleradar.dlx (direct)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry x="805" y="650" width="110" height="175" as="geometry" />
+        </mxCell>
+
+        <!-- Subscriber 1: ms-chat -->
+        <mxCell id="sub_chat" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component» ms-chat&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Routing Key: &lt;b&gt;segunda-mano.prenda.vendida&lt;/b&gt;&lt;br&gt;Conserva conversación de compradorId y archiva las demás.&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1170" y="645" width="340" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Subscriber 2: ms-notificaciones -->
+        <mxCell id="sub_notif" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component» ms-notificaciones&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Routing Key: &lt;b&gt;styleradar.donaciones.estado.cambiado&lt;/b&gt;&lt;br&gt;Dispara alertas push/email a donante y fundación con donacionId.&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1170" y="715" width="340" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Subscriber 3: ms-estadisticas -->
+        <mxCell id="sub_stats" parent="1" style="shape=module;jettyWidth=8;jettyHeight=4;rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=poppins;fontSize=9.5;fontColor=#48119A;" value="&lt;b&gt;«component» ms-estadisticas&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:8px;color:#262626;&quot;&gt;Routing Key: &lt;b&gt;styleradar.segundavida-donaciones.#&lt;/b&gt;&lt;br&gt;Métricas de prendas reutilizadas y kg textiles reciclados en Bogotá.&lt;/span&gt;" vertex="1">
+          <mxGeometry x="1170" y="785" width="340" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Piping Connections to Subscribers with Lollipop "Consumo" -->
+        <mxCell id="edge_pub_pipe" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=2;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="comp_pub_adapter" target="pipe_broker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Consumo Sockets with labels -->
+        <mxCell id="lol_sub_chat" parent="1" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;" vertex="1">
+          <mxGeometry x="1090" y="665" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_pipe_chat" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="pipe_broker" target="lol_sub_chat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_cons1" parent="edge_pipe_chat" style="edgeLabel;html=1;align=center;verticalAlign=bottom;fontFamily=poppins;fontSize=8;fontColor=#48119A;" value="Consumo" vertex="1" connectable="0">
+          <mxGeometry x="0.1" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_lol_chat" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lol_sub_chat" target="sub_chat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lol_sub_notif" parent="1" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;" vertex="1">
+          <mxGeometry x="1090" y="735" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_pipe_notif" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="pipe_broker" target="lol_sub_notif">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_cons2" parent="edge_pipe_notif" style="edgeLabel;html=1;align=center;verticalAlign=bottom;fontFamily=poppins;fontSize=8;fontColor=#48119A;" value="Consumo" vertex="1" connectable="0">
+          <mxGeometry x="0.1" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_lol_notif" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lol_sub_notif" target="sub_notif">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lol_sub_stats" parent="1" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#E4DBF0;strokeColor=#48119A;strokeWidth=2;" vertex="1">
+          <mxGeometry x="1090" y="805" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_pipe_stats" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="pipe_broker" target="lol_sub_stats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_cons3" parent="edge_pipe_stats" style="edgeLabel;html=1;align=center;verticalAlign=bottom;fontFamily=poppins;fontSize=8;fontColor=#48119A;" value="Consumo" vertex="1" connectable="0">
+          <mxGeometry x="0.1" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_lol_stats" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lol_sub_stats" target="sub_stats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Downward edge from Domain to Publisher Adapter -->
+        <mxCell id="edge_domain_pub" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=1.5;strokeColor=#48119A;exitX=0.2;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="comp_models_box" target="comp_pub_adapter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- FOOTER LEGEND / CONVENTIONS               -->
+        <!-- ========================================== -->
+        <mxCell id="footer_legend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#48119A;strokeWidth=1.5;fillColor=#E4DBF0;align=left;verticalAlign=middle;spacingLeft=12;fontFamily=poppins;fontSize=8.5;fontColor=#262626;" value="&lt;b&gt;CONVENCIONES DE ARQUITECTURA HEXAGONAL (PUERTOS Y ADAPTADORES - DDD) — MICROSERVICIO SEGUNDA VIDA Y DONACIONES (PT8080 - Puerto 8520)&lt;/b&gt;&lt;br&gt;Flujo Hexagonal de Dependencias: Inverso (Adaptadores In/Out -&amp;gt; Puertos In/Out -&amp;gt; Dominio Puro) &amp;nbsp;|&amp;nbsp; Los casos de uso orquestan el negocio sin acoplamiento a infraestructura JPA ni RabbitMQ.&lt;br&gt;Notación Lollipop (&amp;bull;&amp;mdash;o&amp;mdash;): Interfaces provistas y requeridas (desacoplamiento total). &amp;nbsp;|&amp;nbsp; Código e identificadores técnicos en inglés conforme a estándares Clean Architecture y DDD.&lt;br&gt;Colores oficiales StyleRadar: Violeta #48119A, Fondo lavanda #E4DBF0 y #F8F6FC, Texto neutro #262626." vertex="1">
+          <mxGeometry x="20" y="880" width="1725" height="65" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
