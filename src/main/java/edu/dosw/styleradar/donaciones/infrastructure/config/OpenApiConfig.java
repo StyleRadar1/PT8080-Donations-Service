@@ -53,6 +53,7 @@ public class OpenApiConfig {
                 .tags(List.of(
                         new Tag().name("Autenticación & Usuarios Demo").description("Inicio de sesión y generación instantánea de tokens JWT para los roles del sistema"),
                         new Tag().name("Publicaciones - Economía Circular").description("Catálogo unificado C2C (Segunda Mano) y Vitrina Abierta (Donaciones Benéficas) en las 20 localidades de Bogotá D.C. (SR-RF-33 a SR-RF-42)"),
+                        new Tag().name("Carga de Fotografías (Azure Blob Storage)").description("Subida binaria de fotos hacia Azure Blob Storage y obtención de URLs públicas CDN para asociar a prendas"),
                         new Tag().name("Donaciones - Vitrina Benéfica y Logística").description("Reclamos de vitrina por fundaciones, aprobación y citas logísticas de recogida (SR-RF-44 a SR-RF-49)"),
                         new Tag().name("Health Check").description("Monitoreo de disponibilidad y estado operativo del microservicio")
                 ))

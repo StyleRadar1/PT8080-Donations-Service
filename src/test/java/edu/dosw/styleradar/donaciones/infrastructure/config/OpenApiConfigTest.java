@@ -29,6 +29,6 @@ class OpenApiConfigTest {
         assertEquals("JWT", openAPI.getComponents().getSecuritySchemes().get("bearerAuth").getBearerFormat());
         assertEquals(1, openAPI.getSecurity().size());
         assertEquals(true, openAPI.getSecurity().get(0).containsKey("bearerAuth"));
-        assertEquals(4, openAPI.getTags().size());
+        assertEquals(5, openAPI.getTags().size());
     }
 }
