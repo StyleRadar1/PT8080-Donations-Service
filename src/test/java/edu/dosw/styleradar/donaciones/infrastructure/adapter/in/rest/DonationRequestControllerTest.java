@@ -14,14 +14,17 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import edu.dosw.styleradar.donaciones.application.dto.request.ClaimDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.ConfirmReceiptRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.CreateDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.DecideDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
+import edu.dosw.styleradar.donaciones.domain.exception.ConcurrentDonationClaimException;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
+import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ConfirmDonationReceiptUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.DecideDonationRequestUseCase;
@@ -71,6 +74,9 @@ class DonationRequestControllerTest {
     private CreateDonationRequestUseCase createDonationRequestUseCase;
 
     @MockBean
+    private ClaimDonationUseCase claimDonationUseCase;
+
+    @MockBean
     private DecideDonationRequestUseCase decideDonationRequestUseCase;
 
     @MockBean
@@ -113,6 +119,40 @@ class DonationRequestControllerTest {
                 .andExpect(header().string("Location", "/api/v1/donaciones/1"))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    @DisplayName("POST /donaciones/claim - Debe permitir a una fundación reclamar una donación de la vitrina con éxito")
+    void shouldClaimDonationSuccessfully() throws Exception {
+        ClaimDonationRequestDTO request = new ClaimDonationRequestDTO(10L, 501L, "Reclamo vitrina");
+        DonationRequest claimed = buildSampleRequest(1L, DonationRequestStatus.APPROVED);
+
+        when(claimDonationUseCase.claimDonation(any())).thenReturn(claimed);
+
+        mockMvc.perform(post("/donaciones/claim")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.publicationId").value(10L))
+                .andExpect(jsonPath("$.foundationId").value(501L))
+                .andExpect(jsonPath("$.status").value("APPROVED"));
+    }
+
+    @Test
+    @DisplayName("POST /donaciones/claim - Debe responder 409 Conflict ante reclamos concurrentes")
+    void shouldReturnConflictOnConcurrentClaim() throws Exception {
+        ClaimDonationRequestDTO request = new ClaimDonationRequestDTO(10L, 501L, "Reclamo concurrente");
+
+        when(claimDonationUseCase.claimDonation(any()))
+                .thenThrow(new ConcurrentDonationClaimException("Prenda ya reclamada por otra fundación"));
+
+        mockMvc.perform(post("/donaciones/claim")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.title").value("Conflicto de dominio"));
     }
 
     @Test

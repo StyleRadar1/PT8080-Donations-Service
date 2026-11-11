@@ -7,24 +7,27 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import edu.dosw.styleradar.donaciones.domain.exception.ConcurrentDonationClaimException;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidStateTransitionException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Controlador de excepciones global que implementa la especificación RFC 7807 (Problem Details for HTTP APIs).
+ * Mapea excepciones de dominio, seguridad, validación y concurrencia optimista a respuestas HTTP normalizadas.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -70,7 +73,12 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler({DomainConflictException.class, InvalidStateTransitionException.class})
+    @ExceptionHandler({
+            DomainConflictException.class,
+            InvalidStateTransitionException.class,
+            ConcurrentDonationClaimException.class,
+            OptimisticLockingFailureException.class
+    })
     public ProblemDetail handleConflict(RuntimeException ex, HttpServletRequest request) {
         log.warn("Conflicto en estado o regla de negocio: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
@@ -100,8 +108,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneralException(Exception ex, HttpServletRequest request) {
-        log.error("Error no controlado en el servidor: ", ex);
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Ha ocurrido un error inesperado en el servidor");
+        return handleUnhandledException(ex, request);
+    }
+
+    public ProblemDetail handleUnhandledException(Exception ex, HttpServletRequest request) {
+        log.error("Excepción no controlada detectada en el servidor: ", ex);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Ha ocurrido un error inesperado en el servidor");
         problem.setTitle("Error interno del servidor");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/internal-server-error"));
         problem.setInstance(URI.create(request.getRequestURI()));

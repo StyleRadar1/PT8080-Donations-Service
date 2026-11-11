@@ -36,6 +36,7 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
                 command.size(),
                 command.conservationStatus(),
                 command.price(),
+                command.localidad(),
                 command.photos()
         );
 

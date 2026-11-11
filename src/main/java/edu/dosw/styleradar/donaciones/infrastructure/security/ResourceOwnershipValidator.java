@@ -19,6 +19,10 @@ public class ResourceOwnershipValidator {
         validateOwnerOrAdmin(authentication, targetUserId);
     }
 
+    public void validateUserOrFoundationOwnership(Long targetUserId) {
+        validateOwnerOrAdmin(targetUserId);
+    }
+
     public void validateOwnerOrAdmin(Authentication authentication, Long targetUserId) {
         if (isAdmin(authentication)) {
             return;

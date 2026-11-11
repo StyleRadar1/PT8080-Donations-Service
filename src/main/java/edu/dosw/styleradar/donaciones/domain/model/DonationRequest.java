@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Entidad de dominio que gestiona la solicitud de donación benéfica y la cita logística de entrega a una fundación.
+ * Soporta radicación tradicional y reclamo directo desde la Vitrina Abierta de Donaciones.
  */
 @Data
 @Builder
@@ -29,6 +30,7 @@ public class DonationRequest {
     private String deliveryPoint;
     private LocalDateTime pickupStartTime;
     private LocalDateTime pickupEndTime;
+    private Long version;
     private LocalDateTime requestedAt;
     private LocalDateTime decidedAt;
     private LocalDateTime receivedAt;
@@ -62,6 +64,22 @@ public class DonationRequest {
      */
     public void create() {
         initiate();
+    }
+
+    /**
+     * Reclama directamente una donación disponible en la Vitrina Abierta por parte de una fundación.
+     * La solicitud queda aprobada de inmediato para coordinar la logística.
+     */
+    public void claim(Long pubId, Long donId, Long foundId, String msg) {
+        this.publicationId = pubId;
+        this.donorId = donId;
+        this.foundationId = foundId;
+        this.message = msg;
+        validateInitialInvariants();
+        this.status = DonationRequestStatus.APPROVED;
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        this.requestedAt = now;
+        this.decidedAt = now;
     }
 
     /**

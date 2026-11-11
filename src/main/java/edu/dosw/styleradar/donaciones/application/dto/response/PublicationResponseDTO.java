@@ -6,21 +6,22 @@ import java.util.List;
 
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
+import edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * DTO de respuesta que representa los datos de una publicación de segunda mano.
+ * DTO de respuesta que representa los datos de una publicación de economía circular (Segunda Mano C2C o Donación).
  */
-@Schema(description = "Respuesta detallada con información de una publicación de segunda mano")
+@Schema(description = "Respuesta detallada con información de una publicación de economía circular en Bogotá D.C.")
 public record PublicationResponseDTO(
 
         @Schema(description = "Identificador único de la publicación", example = "1")
         Long id,
 
-        @Schema(description = "ID del usuario propietario", example = "101")
+        @Schema(description = "ID del usuario o entidad propietaria", example = "101")
         Long userId,
 
         @Schema(description = "Nombre o título de la prenda", example = "Chaqueta Denim Vintage")
@@ -47,11 +48,20 @@ public record PublicationResponseDTO(
         @Schema(description = "Estado de conservación de la prenda", example = "LIKE_NEW")
         ConservationStatus conservationStatus,
 
-        @Schema(description = "Precio asignado para reventa", example = "75000.00")
+        @Schema(description = "Precio asignado (0 COP si es donación, > 0 COP si es segunda mano)", example = "75000.00")
         BigDecimal price,
+
+        @Schema(description = "Indica si la publicación es para donación benéfica (true) o segunda mano C2C (false)", example = "false")
+        Boolean esDonacion,
+
+        @Schema(description = "Localidad de Bogotá D.C. donde se ubica la prenda", example = "CHAPINERO")
+        LocalidadBogota localidad,
 
         @Schema(description = "Estado actual de la publicación en el ciclo de vida", example = "AVAILABLE")
         PublicationStatus status,
+
+        @Schema(description = "Número de versión para control de concurrencia optimista", example = "0")
+        Long version,
 
         @Schema(description = "Fecha y hora de publicación", example = "2026-11-01T10:00:00")
         LocalDateTime publicationDate,
@@ -59,7 +69,7 @@ public record PublicationResponseDTO(
         @Schema(description = "Fecha y hora de última actualización", example = "2026-11-05T14:30:00")
         LocalDateTime updateDate,
 
-        @Schema(description = "Lista de URLs de fotografías", example = "[\"https://cdn.style.com/foto1.jpg\"]")
+        @Schema(description = "Lista de URLs de fotografías (máximo 4)", example = "[\"https://cdn.styleradar.com/garments/chaqueta1.jpg\"]")
         List<String> photos
 ) {
 }

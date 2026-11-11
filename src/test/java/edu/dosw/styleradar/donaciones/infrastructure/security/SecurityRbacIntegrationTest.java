@@ -16,6 +16,7 @@ import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
+import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ConfirmDonationReceiptUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreatePublicationUseCase;
@@ -82,6 +83,9 @@ class SecurityRbacIntegrationTest {
 
     @MockBean
     private CreateDonationRequestUseCase createDonationRequestUseCase;
+
+    @MockBean
+    private ClaimDonationUseCase claimDonationUseCase;
 
     @MockBean
     private DecideDonationRequestUseCase decideDonationRequestUseCase;
