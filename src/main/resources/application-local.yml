@@ -1,0 +1,48 @@
+server:
+  port: 8520
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: ms-segunda-vida-donaciones
+
+  datasource:
+    url: jdbc:h2:mem:styleradar_donations;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+  packages-to-scan: edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info

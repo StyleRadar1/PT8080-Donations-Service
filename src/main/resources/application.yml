@@ -1,0 +1,91 @@
+server:
+  port: ${PORT:8520}
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: ms-segunda-vida-donaciones
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:styleradar_donations}${DB_SSLMODE:}}
+    username: ${DB_USER:styleradar_user}
+    password: ${DB_PASSWORD:styleradar_secret}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  # Conexión al broker RabbitMQ (puerto estándar 5672 o TLS 5671) con confirmaciones y reintentos
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    ssl:
+      enabled: ${RABBITMQ_SSL_ENABLED:false}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+      retry:
+        enabled: true
+        max-attempts: 3
+        initial-interval: 1000ms
+        multiplier: 2.0
+        max-interval: 5000ms
+    listener:
+      simple:
+        auto-startup: ${RABBITMQ_LISTENER_AUTO_STARTUP:true}
+
+# Configuración de la aplicación y mensajería asíncrona RabbitMQ (Fase 3 - El Plus)
+app:
+  version: "@project.version@"
+  commit-sha: "${APP_COMMIT_SHA:@build.commit.sha@}"
+  rabbitmq:
+    exchange:
+      donations: ${RABBITMQ_DONATIONS_EXCHANGE:donaciones.exchange}
+    routing-keys:
+      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONATION_REQUEST_CREATED:donacion.solicitud.creada}
+      donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONATION_STATUS_UPDATED:donacion.estado.actualizado}
+    queues:
+      notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
+      simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
+    simulator:
+      enabled: ${RABBITMQ_SIMULATOR_ENABLED:false}
+
+# Configuración de Seguridad y JWT
+styleradar:
+  security:
+    jwt:
+      secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:}}
+      duration: ${JWT_DURATION:PT24H}
+
+# Configuración explícita de Springdoc OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+  packages-to-scan: edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
