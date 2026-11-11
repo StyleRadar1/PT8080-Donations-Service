@@ -57,11 +57,19 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
     @Builder.Default
     private String modulo = "DONACIONES";
 
+    @Builder.Default
+    private Integer version = 1;
+
+    @Builder.Default
+    private String correlationId = UUID.randomUUID().toString();
+
+    private Long donacionId;
     private Long solicitudId;
     private Long requestId;
     private Long publicacionId;
     private Long publicationId;
     private Long donanteId;
+    private Long donorId;
     private Long foundationId;
     private Long fundacionId;
     private String estado;
@@ -74,9 +82,42 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
     private String deliveryPoint;
     private String fechaProgramada;
 
+    private EstadoCambiadoData data;
+
     @Builder.Default
     private String timestamp = Instant.now().toString();
 
     @Builder.Default
     private String fechaEvento = Instant.now().toString();
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class EstadoCambiadoData implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        @Builder.Default
+        private Integer version = 1;
+
+        private Long donacionId;
+        private Long solicitudId;
+        private Long requestId;
+        private Long donanteId;
+        private Long donorId;
+        private Long fundacionId;
+        private Long foundationId;
+        private Long publicacionId;
+        private Long publicationId;
+        private String estado;
+        private String status;
+        private String nuevoEstado;
+        private String estadoAnterior;
+        private String motivo;
+        private String mensaje;
+        private String puntoEntrega;
+        private String deliveryPoint;
+        private String fechaProgramada;
+    }
 }

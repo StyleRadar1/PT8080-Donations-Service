@@ -35,13 +35,13 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
     private String eventId = UUID.randomUUID().toString();
 
     @Builder.Default
-    private String tipoEvento = "styleradar.segundavida.prenda.vendida";
+    private String tipoEvento = "segunda-mano.prenda.vendida";
 
     @Builder.Default
     private String tipoEventoUnificado = "styleradar.segundavida-donaciones.prenda.vendida";
 
     @Builder.Default
-    private String eventType = "styleradar.segundavida.prenda.vendida";
+    private String eventType = "segunda-mano.prenda.vendida";
 
     @Builder.Default
     private String emisor = "ms-segunda-vida-donaciones";
@@ -61,6 +61,12 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
     @Builder.Default
     private String canal = "C2C";
 
+    @Builder.Default
+    private Integer version = 1;
+
+    @Builder.Default
+    private String correlationId = UUID.randomUUID().toString();
+
     private Long publicacionId;
     private Long prendaId;
     private Long vendedorId;
@@ -70,20 +76,59 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
     private String estado;
     private String fechaVenta;
 
+    private PrendaVendidaData data;
+
     @Builder.Default
     private String timestamp = Instant.now().toString();
 
     @Builder.Default
     private String fechaEvento = Instant.now().toString();
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class PrendaVendidaData implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        @Builder.Default
+        private Integer version = 1;
+
+        private Long publicacionId;
+        private Long prendaId;
+        private Long vendedorId;
+        private Long compradorId;
+        private Double precioFinal;
+        private String moneda;
+        private String estado;
+        private String fechaVenta;
+    }
+
     public static SegundaVidaDonacionPrendaVendidaIntegrationEvent from(PublicationSoldEvent domainEvent) {
         String now = domainEvent.occurredOn() != null ? domainEvent.occurredOn().toString() : Instant.now().toString();
+        String corrId = UUID.randomUUID().toString();
+        String evtId = UUID.randomUUID().toString();
+
+        PrendaVendidaData dataEnvelope = PrendaVendidaData.builder()
+                .version(1)
+                .publicacionId(domainEvent.publicationId())
+                .prendaId(domainEvent.publicationId())
+                .vendedorId(domainEvent.userId())
+                .compradorId(domainEvent.compradorId())
+                .estado("VENDIDA")
+                .moneda("COP")
+                .fechaVenta(now)
+                .build();
+
         return SegundaVidaDonacionPrendaVendidaIntegrationEvent.builder()
-                .eventoId(UUID.randomUUID().toString())
-                .eventId(UUID.randomUUID().toString())
-                .tipoEvento("styleradar.segundavida.prenda.vendida")
+                .eventoId(evtId)
+                .eventId(evtId)
+                .correlationId(corrId)
+                .version(1)
+                .tipoEvento("segunda-mano.prenda.vendida")
                 .tipoEventoUnificado("styleradar.segundavida-donaciones.prenda.vendida")
-                .eventType("styleradar.segundavida.prenda.vendida")
+                .eventType("segunda-mano.prenda.vendida")
                 .emisor("ms-segunda-vida-donaciones")
                 .servicio("ms-segunda-vida-donaciones")
                 .microservicio("ms-segunda-vida-donaciones")
@@ -93,11 +138,13 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
                 .publicacionId(domainEvent.publicationId())
                 .prendaId(domainEvent.publicationId())
                 .vendedorId(domainEvent.userId())
+                .compradorId(domainEvent.compradorId())
                 .estado("VENDIDA")
                 .moneda("COP")
                 .fechaVenta(now)
                 .timestamp(now)
                 .fechaEvento(now)
+                .data(dataEnvelope)
                 .build();
     }
 }

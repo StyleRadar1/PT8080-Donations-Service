@@ -11,6 +11,10 @@ public interface ManagePublicationUseCase {
 
     SecondHandPublication markAsSold(Long userId, Long publicationId);
 
+    default SecondHandPublication markAsSold(Long userId, Long publicationId, Long compradorId) {
+        return markAsSold(userId, publicationId);
+    }
+
     void retire(Long userId, Long publicationId);
 
     SecondHandPublication markForDonation(Long userId, Long publicationId);

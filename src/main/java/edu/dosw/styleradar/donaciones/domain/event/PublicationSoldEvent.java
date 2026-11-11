@@ -8,9 +8,18 @@ import java.time.Instant;
 public record PublicationSoldEvent(
         Long publicationId,
         Long userId,
+        Long compradorId,
         Instant occurredOn
 ) {
     public PublicationSoldEvent(Long publicationId, Long userId) {
-        this(publicationId, userId, Instant.now());
+        this(publicationId, userId, null, Instant.now());
+    }
+
+    public PublicationSoldEvent(Long publicationId, Long userId, Long compradorId) {
+        this(publicationId, userId, compradorId, Instant.now());
+    }
+
+    public PublicationSoldEvent(Long publicationId, Long userId, Instant occurredOn) {
+        this(publicationId, userId, null, occurredOn);
     }
 }

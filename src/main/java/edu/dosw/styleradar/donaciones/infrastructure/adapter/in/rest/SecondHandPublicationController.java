@@ -485,7 +485,7 @@ public class SecondHandPublicationController {
 
     @Operation(
             summary = "Marcar prenda de segunda mano como VENDIDA (C2C)",
-            description = "Transiciona el estado de la publicación a SOLD al concretarse la venta pactada por chat. Publica el evento de integración RabbitMQ 'styleradar.segundavida.prenda.vendida' hacia ms-chat (cola q.chat.segunda-mano) para archivar conversaciones activas de negociación. Requiere ser el vendedor propietario.",
+            description = "Transiciona el estado de la publicación a SOLD al concretarse la venta pactada por chat. Publica el evento de integración RabbitMQ hacia ms-chat (exchange styleradar.events, routing key segunda-mano.prenda.vendida) con compradorId para preservar la conversación con el comprador y cerrar las demás. Requiere ser el vendedor propietario.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
@@ -523,8 +523,18 @@ public class SecondHandPublicationController {
                     )
             ),
             @ApiResponse(
+                    responseCode = "400",
+                    description = "Parámetro obligatorio faltante (compradorId)",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "No autenticado o token JWT inválido",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
                     responseCode = "403",
-                    description = "No es el vendedor propietario",
+                    description = "Acceso denegado: no es el vendedor propietario",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
@@ -534,7 +544,7 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "La publicación ya fue vendida, retirada o está en canal de donación",
+                    description = "Conflicto: la publicación ya fue vendida, retirada o está en canal de donación",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
@@ -552,6 +562,11 @@ public class SecondHandPublicationController {
                                     """
                             )
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     @PatchMapping({"/{id}/sell", "/{id}/sold"})
@@ -560,10 +575,12 @@ public class SecondHandPublicationController {
             @Parameter(description = "ID de la publicación vendida", example = "10")
             @PathVariable Long id,
             @Parameter(description = "ID del usuario vendedor autenticado", example = "101")
-            @RequestParam Long userId) {
+            @RequestParam Long userId,
+            @Parameter(description = "ID del comprador en el chat C2C (obligatorio para preservar la conversación en ms-chat)", example = "102", required = true)
+            @RequestParam Long compradorId) {
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
-        SecondHandPublication updated = managePublicationUseCase.markAsSold(userId, id);
-        return ResponseEntity.ok(publicationRestMapper.toResponse(updated));
+        SecondHandPublication sold = managePublicationUseCase.markAsSold(userId, id, compradorId);
+        return ResponseEntity.ok(publicationRestMapper.toResponse(sold));
     }
 
     @Operation(
