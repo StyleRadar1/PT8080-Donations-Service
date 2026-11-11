@@ -49,6 +49,7 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
         eventPublisherPort.publishEvent(
                 new PickupScheduledEvent(
                         saved.getId(),
+                        saved.getDonorId(),
                         saved.getDeliveryPoint(),
                         saved.getPickupStartTime(),
                         saved.getPickupEndTime()

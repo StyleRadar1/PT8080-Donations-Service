@@ -55,7 +55,8 @@ public class ConfirmDonationReceiptUseCaseImpl implements ConfirmDonationReceipt
                 new DonationDeliveredEvent(
                         saved.getId(),
                         saved.getPublicationId(),
-                        saved.getFoundationId()
+                        saved.getFoundationId(),
+                        saved.getDonorId()
                 )
         );
 

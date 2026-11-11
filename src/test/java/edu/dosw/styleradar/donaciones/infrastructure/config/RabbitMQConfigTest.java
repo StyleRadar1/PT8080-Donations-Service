@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.ReturnedMessage;
@@ -23,14 +24,33 @@ class RabbitMQConfigTest {
     private final RabbitMQConfig rabbitMQConfig = new RabbitMQConfig();
 
     @Test
-    @DisplayName("Debe crear TopicExchange durable donaciones.exchange con configuración correcta")
+    @DisplayName("Debe crear TopicExchange durable styleradar.exchange con configuración correcta")
     void shouldCreateDonationsTopicExchange() {
-        TopicExchange exchange = rabbitMQConfig.donationsTopicExchange(RabbitMQConfig.DONATIONS_EXCHANGE_DEFAULT);
+        TopicExchange exchange = rabbitMQConfig.donationsTopicExchange(RabbitMQConfig.STYLERADAR_EXCHANGE_DEFAULT);
 
         assertThat(exchange).isNotNull();
-        assertThat(exchange.getName()).isEqualTo("donaciones.exchange");
+        assertThat(exchange.getName()).isEqualTo("styleradar.exchange");
         assertThat(exchange.isDurable()).isTrue();
         assertThat(exchange.isAutoDelete()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Debe crear DirectExchange durable styleradar.dlx y cola styleradar.donaciones.dlq")
+    void shouldCreateDeadLetterExchangeAndQueue() {
+        DirectExchange dlx = rabbitMQConfig.deadLetterExchange(RabbitMQConfig.STYLERADAR_DLX_DEFAULT);
+        assertThat(dlx).isNotNull();
+        assertThat(dlx.getName()).isEqualTo("styleradar.dlx");
+        assertThat(dlx.isDurable()).isTrue();
+
+        Queue dlq = rabbitMQConfig.deadLetterQueue(RabbitMQConfig.DONACIONES_DLQ_DEFAULT);
+        assertThat(dlq).isNotNull();
+        assertThat(dlq.getName()).isEqualTo("styleradar.donaciones.dlq");
+        assertThat(dlq.isDurable()).isTrue();
+
+        Binding binding = rabbitMQConfig.deadLetterBinding(dlq, dlx);
+        assertThat(binding).isNotNull();
+        assertThat(binding.getDestination()).isEqualTo("styleradar.donaciones.dlq");
+        assertThat(binding.getExchange()).isEqualTo("styleradar.dlx");
     }
 
     @Test
@@ -44,20 +64,20 @@ class RabbitMQConfigTest {
     }
 
     @Test
-    @DisplayName("Debe crear binding entre la cola de notificaciones y donaciones.exchange con routing key esperada")
+    @DisplayName("Debe crear binding entre la cola de notificaciones y styleradar.exchange con routing key esperada")
     void shouldCreateNotificationsBinding() {
-        TopicExchange exchange = rabbitMQConfig.donationsTopicExchange("donaciones.exchange");
+        TopicExchange exchange = rabbitMQConfig.donationsTopicExchange("styleradar.exchange");
         Queue queue = rabbitMQConfig.notificationsDonationCreatedQueue("q.notificaciones.donacion-solicitud-creada");
 
         Binding binding = rabbitMQConfig.notificationsDonationCreatedBinding(
                 queue,
                 exchange,
-                "donacion.solicitud.creada");
+                "styleradar.donaciones.estado.cambiado");
 
         assertThat(binding).isNotNull();
         assertThat(binding.getDestination()).isEqualTo("q.notificaciones.donacion-solicitud-creada");
-        assertThat(binding.getExchange()).isEqualTo("donaciones.exchange");
-        assertThat(binding.getRoutingKey()).isEqualTo("donacion.solicitud.creada");
+        assertThat(binding.getExchange()).isEqualTo("styleradar.exchange");
+        assertThat(binding.getRoutingKey()).isEqualTo("styleradar.donaciones.estado.cambiado");
         assertThat(binding.getDestinationType()).isEqualTo(Binding.DestinationType.QUEUE);
     }
 
@@ -68,16 +88,26 @@ class RabbitMQConfigTest {
         assertThat(queue).isNotNull();
         assertThat(queue.getName()).isEqualTo("q.donaciones.simulador-notificaciones");
 
-        TopicExchange exchange = rabbitMQConfig.donationsTopicExchange("donaciones.exchange");
-        Binding binding = rabbitMQConfig.simulatorNotificationsBinding(queue, exchange, "donacion.solicitud.creada");
+        TopicExchange exchange = rabbitMQConfig.donationsTopicExchange("styleradar.exchange");
+        Binding binding = rabbitMQConfig.simulatorNotificationsBinding(queue, exchange, "styleradar.donaciones.estado.cambiado");
 
         assertThat(binding).isNotNull();
         assertThat(binding.getDestination()).isEqualTo("q.donaciones.simulador-notificaciones");
-        assertThat(binding.getRoutingKey()).isEqualTo("donacion.solicitud.creada");
+        assertThat(binding.getRoutingKey()).isEqualTo("styleradar.donaciones.estado.cambiado");
     }
 
     @Test
-    @DisplayName("Debe configurar Jackson2JsonMessageConverter con ObjectMapper")
+    @DisplayName("Debe crear TopicExchange durable styleradar.events para ms-chat")
+    void shouldCreateChatEventsTopicExchange() {
+        TopicExchange exchange = rabbitMQConfig.chatEventsExchange(RabbitMQConfig.STYLERADAR_CHAT_EXCHANGE_DEFAULT);
+
+        assertThat(exchange).isNotNull();
+        assertThat(exchange.getName()).isEqualTo("styleradar.events");
+        assertThat(exchange.isDurable()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Debe configurar Jackson2JsonMessageConverter con paquetes confiables restringidos a styleradar")
     void shouldCreateJackson2JsonMessageConverter() {
         ObjectMapper objectMapper = new ObjectMapper();
         Jackson2JsonMessageConverter converter = rabbitMQConfig.jackson2JsonMessageConverter(objectMapper);
@@ -97,7 +127,6 @@ class RabbitMQConfigTest {
         assertThat(rabbitTemplate.getConnectionFactory()).isSameAs(connectionFactory);
         assertThat(rabbitTemplate.getMessageConverter()).isSameAs(converter);
 
-        // Invocar callbacks para validar robustez de registro de confirms y returns
         assertDoesNotThrow(() -> {
             CorrelationData correlationData = new CorrelationData("event-ack-1");
             rabbitMQConfig.confirmCallback().confirm(correlationData, true, null);
@@ -108,8 +137,8 @@ class RabbitMQConfigTest {
                     new Message("{}".getBytes()),
                     312,
                     "NO_ROUTE",
-                    "donaciones.exchange",
-                    "donacion.solicitud.creada");
+                    "styleradar.exchange",
+                    "styleradar.donaciones.estado.cambiado");
             rabbitMQConfig.returnsCallback().returnedMessage(returned);
         });
     }

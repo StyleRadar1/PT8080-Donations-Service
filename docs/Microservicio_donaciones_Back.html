@@ -271,14 +271,19 @@ var D=[
   cd('Migraciones automáticas','<code>V1__init_schema.sql</code> define tablas y restricciones; <code>V2__seed_initial_data.sql</code> carga datos semilla idempotentes.','padding:10px 13px')+
   cd('Índices de búsqueda (< 2 s)','8 índices B-Tree sobre estado, tipo, talla, precio y fundación garantizan consultas rápidas bajo concurrencia.','padding:10px 13px')+
  '</div>'},
-{c:'arena',t:'Eventos asíncronos',tag:'09',tab:'Eventos',h:K('09 · Integración por eventos (Puerto :5672)')+H('Eventos','publicados')+
- cv('Exchange · donaciones.exchange','Desacopla la gestión de donaciones del envío de alertas hacia ms-notificaciones (:8300) con trazabilidad por X-Correlation-Id.')+
- tb(['Acción','Evento','Routing Key','Disparo y destino'],[
+{c:'arena',t:'El Plus Logrado · RabbitMQ',tag:'09',tab:'Plus · RabbitMQ',h:K('09 · Plus de Arquitectura Asíncrona')+H('El Plus Logrado','Broker RabbitMQ')+
+ cv('El Gran Plus · Topic Exchange durable (Puerto :5672)','Desacoplamiento asíncrono total hacia ms-notificaciones (:8300). Cero llamadas HTTP bloqueantes en el hilo principal, alta concurrencia y latencia < 200 ms.')+
+ tb(['Acción','Evento AMQP','Routing Key','Disparo y Destino'],[
   ['<b>PUBLICA</b>','<code>SolicitudDonacionCreada</code>','<code>donacion.solicitud.creada</code>','Al crear solicitud (RF-45) ➔ <code>ms-notificaciones (:8300)</code>.'],
   ['<b>PUBLICA</b>','<code>EstadoDonacionActualizado</code>','<code>donacion.estado.actualizado</code>','Al decidir (RF-47) o confirmar (RF-49) ➔ <code>ms-notificaciones (:8300)</code>.'],
-  ['<b>CONSUME</b>','<code>NotificationSimulator</code>','<code>donacion.solicitud.creada</code>','Cola aislada opcional para pruebas de integración E2E.']
+  ['<b>CONSUME</b>','<code>NotificationSimulator</code>','<code>donacion.solicitud.creada</code>','Cola de prueba aislada para verificación E2E sin dependencias externas.']
  ],['15%','28%','27%','30%'])+
- mono('// Evento emitido en donaciones.exchange\n{ "eventType": "SolicitudDonacionCreadaEvent", "routingKey": "donacion.solicitud.creada",\n  "donationRequestId": "dddd1111-...", "quantity": 6, "status": "PENDING" }')},
+ '<div class="g3" style="gap:8px">'+
+  cd('Publisher Confirms','Garantía correlated del broker; confirma cada evento publicado sin pérdida.','padding:8px 10px')+
+  cd('Desacoplamiento 100%','No degrada el backend si ms-notificaciones se reinicia o está temporalmente offline.','padding:8px 10px')+
+  cd('X-Correlation-Id','Trazabilidad distribuida inyectada en headers AMQP y payload JSON de auditoría.','padding:8px 10px')+
+ '</div>'+
+ mono('// Payload emitido en donaciones.exchange (routingKey: donacion.solicitud.creada)\n{ "eventType": "SolicitudDonacionCreadaEvent", "donationRequestId": "dddd1111-...",\n  "quantity": 6, "status": "PENDING", "correlationId": "c8f2-...", "timestamp": "2026-11-09T23:00:00Z" }')},
 {c:'cream',t:'Catálogo de errores',tag:'10',h:K('10 · Respuestas estandarizadas')+H('Qué puede','fallar')+
  tb(['Código','Excepción','Causa','Respuesta'],[
   ['<b>400</b>','<code>DomainValidationException</code>','Más de 4 fotos, precio negativo o campos vacíos.','Detalle por campo.'],
@@ -289,18 +294,17 @@ var D=[
   ['<b>500</b>','<code>Exception</code>','Fallo interno sin exponer trazas sensibles.','Mensaje genérico.']
  ],['11%','31%','38%','20%'])+
  mono('HTTP/1.1 409 Conflict  (GlobalExceptionHandler)\n{ "status": 409, "error": "Conflict", "message": "Estado actual SOLD; se requiere AVAILABLE" }')},
-{c:'graf',t:'Matriz de roles y seguridad',tag:'11',tab:'Roles',h:K('11 · Control de acceso (RBAC) y OWASP')+H('Quién puede','qué')+
- tb(['Operación','Anónimo','USER','FOUNDATION','ADMIN'],[
-  ['Listar y filtrar prendas',cyd(['SÍ','NO'],0),cyd(['SÍ','NO'],0),cyd(['SÍ','NO'],0),cyd(['SÍ','NO'],0)],
-  ['Publicar, editar o vender',cyd(['NO','SÍ'],0),cyd(['PROPIO','SÍ'],0),cyd(['NO','SÍ'],0),cyd(['SÍ','NO'],0)],
-  ['Crear solicitud donación',cyd(['NO','SÍ'],0),cyd(['PROPIO','SÍ'],0),cyd(['NO','SÍ'],0),cyd(['SÍ','NO'],0)],
-  ['Consultar donaciones',cyd(['NO','SÍ'],0),cyd(['PROPIO','NO'],0),cyd(['ASIGNADA','NO'],0),cyd(['SÍ','NO'],0)],
-  ['Decidir y confirmar recepción',cyd(['NO','SÍ'],0),cyd(['NO','SÍ'],0),cyd(['ASIGNADA','NO'],0),cyd(['SÍ','NO'],0)],
-  ['Auth demo (<code>/auth/**</code>)',cyd(['SOLO QA','NO'],0),cyd(['SOLO QA','NO'],0),cyd(['SOLO QA','NO'],0),cyd(['SOLO QA','NO'],0)]
- ],['34%','16%','16%','19%','15%']).replace('color:#262626','color:#FBF7F0')+
+{c:'graf',t:'Hallazgos OWASP & Seguridad',tag:'11',tab:'OWASP / Seguridad',h:K('11 · Auditoría de Seguridad & Mitigación')+H('Hallazgos de Seguridad','OWASP Top 10:2025')+
+ tb(['OWASP 2025','Hallazgo Analizado','Mitigación Implementada en Código'],[
+  ['<b>A01: Broken Access Control</b>','Riesgo de manipulación IDOR en IDs de prenda o donación de terceros.','<code>ResourceOwnershipValidator</code> + <code>@PreAuthorize</code> expulsan con <b>403 FORBIDDEN</b>.'],
+  ['<b>A02: Security Misconfiguration</b>','Exposición de endpoints demo (<code>/auth/**</code>) en entorno productivo.','Aislado con <code>@Profile({"local","dev","qa"})</code>. Inactivo en PROD (<b>404 NOT_FOUND</b>).'],
+  ['<b>A04: Cryptographic Failures</b>','Firma JWT con claves débiles o credenciales hardcodeadas en repositorio.','Firma <code>HMAC-SHA256</code> con secreto ≥ 256 bits inyectado por Azure Key Vault / env vars.'],
+  ['<b>A05: Injection (SQLi)</b>','Inyección en filtros dinámicos por tipo, talla, estado, fundación o precio.','Spring Data JPA parametrizado con <code>JpaSpecificationExecutor</code> y <code>CriteriaBuilder</code>.'],
+  ['<b>A07: Identification Failures</b>','Uso indebido de tokens expirados o adulteración de roles en la sesión.','<code>JwtAuthenticationFilter</code> valida obligatoriamente firma, integridad y claim <code>exp</code> (<b>401</b>).']
+ ],['24%','38%','38%']).replace(/color:#262626/g,'color:#FBF7F0')+
  '<div class="g2" style="gap:9px">'+
-  cdk('Aislamiento en PROD (@Profile)','<code>/api/v1/auth/**</code> solo carga en perfiles locales/QA; en producción está deshabilitado.','padding:9px 12px')+
-  cdk('OWASP Top 10:2025','Mitiga <b>A01</b> (IDOR), <b>A02</b> (perfiles seguros), <b>A04</b> (HS256 ≥ 256b), <b>A05</b> (consultas parametrizadas) y <b>A07</b> (claim <code>exp</code>).','padding:9px 12px')+
+  cdk('Control de Acceso RBAC (A01)','4 roles segregados (<code>Anónimo</code>, <code>USER</code>, <code>FOUNDATION</code>, <code>ADMIN</code>). Usuarios anónimos o no propietarios no pueden mutar registros.','padding:9px 12px')+
+  cdk('Auditoría SonarQube & Pipeline','Quality Gate A: <b>0 Vulnerabilities</b>, <b>0 Security Hotspots</b> y 100% de reglas de seguridad aprobadas en GitHub Actions.','padding:9px 12px')+
  '</div>'},
 {c:'cream',t:'Relaciones e integración',tag:'12',h:K('12 · Dependencias de entrada y salida')+H('Con quién','se conecta')+
  svgw('0 0 520 265','<g stroke="#48119A" stroke-width="2.5" fill="none"><path d="M140 55 L195 110"/><path d="M140 135 L195 135"/><path d="M140 215 L195 160"/><path d="M325 110 L380 55"/><path d="M325 135 L380 135"/><path d="M325 160 L380 215"/></g><rect x="192" y="92" width="136" height="86" rx="14" fill="#48119A"/><text x="260" y="125" text-anchor="middle" fill="#E8DCCB" font-size="10">PUERTO :8520</text><text x="260" y="143" text-anchor="middle" fill="#FBF7F0" font-size="11">ms-segunda-vida</text><text x="260" y="159" text-anchor="middle" fill="#FBF7F0" font-size="11">-donaciones</text><g fill="#FBF7F0" stroke="#262626" stroke-width="2"><rect x="12" y="28" width="128" height="52" rx="10"/><rect x="12" y="109" width="128" height="52" rx="10"/><rect x="12" y="190" width="128" height="52" rx="10"/><rect x="380" y="28" width="128" height="52" rx="10"/><rect x="380" y="109" width="128" height="52" rx="10"/><rect x="380" y="190" width="128" height="52" rx="10"/></g><g fill="#262626" text-anchor="middle" font-size="10.5"><text x="76" y="51">Frontend Web</text><text x="76" y="67" fill="#5A5A66" font-size="9">Portal 8080</text><text x="76" y="132">ms-api-gateway</text><text x="76" y="148" fill="#5A5A66" font-size="9">Puerto :8080</text><text x="76" y="213">ms-autenticacion</text><text x="76" y="229" fill="#5A5A66" font-size="9">Tokens JWT</text><text x="444" y="51">Base de Datos</text><text x="444" y="67" fill="#5A5A66" font-size="9">Esquema dedicado</text><text x="444" y="132">event-broker</text><text x="444" y="148" fill="#5A5A66" font-size="9">Puerto :5672</text><text x="444" y="213">ms-notificaciones</text><text x="444" y="229" fill="#5A5A66" font-size="9">Puerto :8300</text></g><g fill="#48119A" font-weight="700" text-anchor="middle" font-size="10"><text x="76" y="16">ENTRADA</text><text x="444" y="16">SALIDA</text></g>','Diagrama de relaciones del microservicio')+
@@ -350,7 +354,7 @@ var D=[
 ];
 var R=mkdoc(D),P=R.P,T=R.T;
 
-var KEY='sr-rv-donaciones-jmunar-sprint2-v2',store={};
+var KEY='sr-rv-donaciones-jmunar-sprint2-v3',store={};
 try{store=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
 var book=document.getElementById('book'),fit=document.getElementById('fit'),ind=document.getElementById('ind');

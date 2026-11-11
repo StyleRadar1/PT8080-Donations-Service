@@ -50,6 +50,7 @@ public class DecideDonationRequestUseCaseImpl implements DecideDonationRequestUs
                 new DonationRequestDecidedEvent(
                         saved.getId(),
                         saved.getFoundationId(),
+                        saved.getDonorId(),
                         approve,
                         saved.getRejectionReason()
                 )

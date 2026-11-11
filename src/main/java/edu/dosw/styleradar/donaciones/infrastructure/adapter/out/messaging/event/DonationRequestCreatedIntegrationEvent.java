@@ -29,17 +29,37 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
     private String eventId = UUID.randomUUID().toString();
 
     @Builder.Default
-    private String eventType = "donacion.solicitud.creada";
+    private String eventoId = UUID.randomUUID().toString();
+
+    @Builder.Default
+    private String eventType = "styleradar.donaciones.estado.cambiado";
+
+    @Builder.Default
+    private String tipoEvento = "styleradar.donaciones.estado.cambiado";
 
     @Builder.Default
     private String timestamp = Instant.now().toString();
 
     @Builder.Default
+    private String fechaHora = Instant.now().toString();
+
+    @Builder.Default
     private String producer = "ms-segunda-vida-donaciones";
+
+    @Builder.Default
+    private String emisor = "ms-segunda-vida-donaciones";
+
+    @Builder.Default
+    private String servicio = "ms-segunda-vida-donaciones";
+
+    @Builder.Default
+    private String modulo = "DONACIONES";
 
     @Builder.Default
     private String correlationId = UUID.randomUUID().toString();
 
+    private Long donacionId;
+    private Long donanteId;
     private Long requestId;
     private Long publicationId;
     private Long donorId;
@@ -55,12 +75,13 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
     public static class DonationRequestData implements Serializable {
         private static final long serialVersionUID = 1L;
 
+        private Long donacionId;
+        private Long donanteId;
         private Long requestId;
         private Long solicitudId;
         private Long publicationId;
         private Long publicacionId;
         private Long donorId;
-        private Long donanteId;
         private Long foundationId;
         private Long fundacionId;
         private String status;
@@ -75,12 +96,13 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
         String corrUuid = UUID.randomUUID().toString();
 
         DonationRequestData requestData = DonationRequestData.builder()
+                .donacionId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
                 .requestId(domainEvent.requestId())
                 .solicitudId(domainEvent.requestId())
                 .publicationId(domainEvent.publicationId())
                 .publicacionId(domainEvent.publicationId())
                 .donorId(domainEvent.donorId())
-                .donanteId(domainEvent.donorId())
                 .foundationId(domainEvent.foundationId())
                 .fundacionId(domainEvent.foundationId())
                 .status("PENDING")
@@ -95,6 +117,8 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
                 .timestamp(nowStr)
                 .producer("ms-segunda-vida-donaciones")
                 .correlationId(corrUuid)
+                .donacionId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
                 .requestId(domainEvent.requestId())
                 .publicationId(domainEvent.publicationId())
                 .donorId(domainEvent.donorId())
