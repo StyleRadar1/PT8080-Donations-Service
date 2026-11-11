@@ -60,6 +60,9 @@ public class SecurityConfig {
                         // Endpoints de autenticación y tokens demo
                         .requestMatchers("/auth/**").permitAll()
 
+                        // Carga de fotografías a Azure Blob Storage
+                        .requestMatchers(HttpMethod.POST, "/segunda-mano/fotos/**", "/donaciones/fotos/**", "/fotos/**").hasAnyRole(ROLE_USER, ROLE_FOUNDATION, ROLE_ADMIN)
+
                         // Catálogo público de segunda mano (lectura)
                         .requestMatchers(HttpMethod.GET, "/segunda-mano", "/segunda-mano/{id}").permitAll()
 
