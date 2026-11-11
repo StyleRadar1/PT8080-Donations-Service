@@ -37,28 +37,39 @@ spring:
     locations: classpath:db/migration
 
   rabbitmq:
-    host: ${RABBITMQ_HOST:}
+    host: ${RABBITMQ_HOST:styleradar-rabbitmq-qa.northcentralus.cloudapp.azure.com}
     port: ${RABBITMQ_PORT:5671}
-    username: ${RABBITMQ_USERNAME:}
+    username: ${RABBITMQ_USER:${RABBITMQ_USERNAME:ms_donaciones}}
     password: ${RABBITMQ_PASSWORD:}
     virtual-host: ${RABBITMQ_VHOST:/}
     ssl:
       enabled: ${RABBITMQ_SSL_ENABLED:true}
+      trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
+      trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
+      trust-store-type: JKS
+      verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
     publisher-confirm-type: correlated
     publisher-returns: true
 
-# Configuración de mensajería asíncrona en QA
+# Configuración de mensajería asíncrona en QA (styleradar.exchange)
 app:
   rabbitmq:
     exchange:
-      donations: ${RABBITMQ_DONATIONS_EXCHANGE:donaciones.exchange}
+      main: ${RABBITMQ_EXCHANGE:styleradar.exchange}
+      dlx: ${RABBITMQ_DLX:styleradar.dlx}
+      donations: ${RABBITMQ_EXCHANGE:styleradar.exchange}
+    routing-keys:
+      donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
+      second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:styleradar.segundavida.prenda.vendida}
+      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
     queues:
+      dlq: ${RABBITMQ_DLQ:styleradar.donaciones.dlq}
       notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
       simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
     simulator:
       enabled: false
 
-# Swagger OpenAPI Público para QA (Pág. 10)
+# Swagger OpenAPI Público para QA
 springdoc:
   api-docs:
     path: /v3/api-docs

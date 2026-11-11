@@ -26,15 +26,19 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
-  # Conexión al broker RabbitMQ (puerto estándar 5672 o TLS 5671) con confirmaciones y reintentos
+  # Conexión al broker RabbitMQ (puerto local 5672 o TLS 5671 en la nube) con confirmaciones y reintentos
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
+    username: ${RABBITMQ_USER:${RABBITMQ_USERNAME:guest}}
     password: ${RABBITMQ_PASSWORD:guest}
     virtual-host: ${RABBITMQ_VHOST:/}
     ssl:
       enabled: ${RABBITMQ_SSL_ENABLED:false}
+      trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
+      trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
+      trust-store-type: JKS
+      verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
     publisher-confirm-type: correlated
     publisher-returns: true
     template:
@@ -49,17 +53,21 @@ spring:
       simple:
         auto-startup: ${RABBITMQ_LISTENER_AUTO_STARTUP:true}
 
-# Configuración de la aplicación y mensajería asíncrona RabbitMQ (Fase 3 - El Plus)
+# Configuración de la aplicación y mensajería asíncrona RabbitMQ (styleradar.exchange)
 app:
   version: "@project.version@"
   commit-sha: "${APP_COMMIT_SHA:@build.commit.sha@}"
   rabbitmq:
     exchange:
-      donations: ${RABBITMQ_DONATIONS_EXCHANGE:donaciones.exchange}
+      main: ${RABBITMQ_EXCHANGE:styleradar.exchange}
+      dlx: ${RABBITMQ_DLX:styleradar.dlx}
+      donations: ${RABBITMQ_EXCHANGE:styleradar.exchange}
     routing-keys:
-      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONATION_REQUEST_CREATED:donacion.solicitud.creada}
-      donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONATION_STATUS_UPDATED:donacion.estado.actualizado}
+      donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
+      second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:styleradar.segundavida.prenda.vendida}
+      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
     queues:
+      dlq: ${RABBITMQ_DLQ:styleradar.donaciones.dlq}
       notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
       simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
     simulator:

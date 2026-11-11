@@ -29,13 +29,31 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
     private String eventId = UUID.randomUUID().toString();
 
     @Builder.Default
-    private String eventType = "donacion.solicitud.creada";
+    private String eventoId = UUID.randomUUID().toString();
+
+    @Builder.Default
+    private String eventType = "styleradar.donaciones.estado.cambiado";
+
+    @Builder.Default
+    private String tipoEvento = "styleradar.donaciones.estado.cambiado";
 
     @Builder.Default
     private String timestamp = Instant.now().toString();
 
     @Builder.Default
+    private String fechaHora = Instant.now().toString();
+
+    @Builder.Default
     private String producer = "ms-segunda-vida-donaciones";
+
+    @Builder.Default
+    private String emisor = "ms-segunda-vida-donaciones";
+
+    @Builder.Default
+    private String servicio = "ms-segunda-vida-donaciones";
+
+    @Builder.Default
+    private String modulo = "DONACIONES";
 
     @Builder.Default
     private String correlationId = UUID.randomUUID().toString();
