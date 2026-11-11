@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * Implementa el adaptador de entrada en la arquitectura hexagonal para Azure Blob Storage.
  */
 @RestController
-@RequestMapping({"/segunda-mano/fotos", "/donaciones/fotos", "/fotos"})
+@RequestMapping("/segunda-mano/fotos")
 @Tag(
         name = "Carga de Fotografías (Azure Blob Storage)",
         description = "Endpoints para la subida de imágenes de prendas hacia Azure Blob Storage y obtención de URLs públicas CDN para el catálogo de Economía Circular"
@@ -83,7 +83,7 @@ public class PhotoUploadController {
                                       "status": 400,
                                       "detail": "Tipo de archivo no permitido: text/plain. Solo se admiten formatos JPEG, PNG y WEBP.",
                                       "instance": "/api/v1/segunda-mano/fotos/upload",
-                                      "timestamp": "2026-11-11T22:30:00Z"
+                                      "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
                             )
@@ -92,17 +92,65 @@ public class PhotoUploadController {
             @ApiResponse(
                     responseCode = "401",
                     description = "No autenticado o token JWT ausente/inválido",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ProblemDetail.class),
+                            examples = @ExampleObject(
+                                    name = "NoAutenticado",
+                                    value = """
+                                    {
+                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "title": "No autenticado",
+                                      "status": 401,
+                                      "detail": "Token Bearer JWT ausente, expirado o con firma no válida.",
+                                      "instance": "/api/v1/segunda-mano/fotos/upload",
+                                      "timestamp": "2026-11-11T23:20:00Z"
+                                    }
+                                    """
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Acceso denegado: rol insuficiente",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ProblemDetail.class),
+                            examples = @ExampleObject(
+                                    name = "AccesoDenegado",
+                                    value = """
+                                    {
+                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "title": "Acceso denegado",
+                                      "status": 403,
+                                      "detail": "Acceso denegado: Se requiere rol USER, STORE, FOUNDATION o ADMIN para subir fotos.",
+                                      "instance": "/api/v1/segunda-mano/fotos/upload",
+                                      "timestamp": "2026-11-11T23:20:00Z"
+                                    }
+                                    """
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Error interno al procesar el flujo binario",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ProblemDetail.class),
+                            examples = @ExampleObject(
+                                    name = "ErrorServidor",
+                                    value = """
+                                    {
+                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "title": "Error interno del servidor",
+                                      "status": 500,
+                                      "detail": "Error de entrada/salida al transferir el flujo binario de la imagen hacia Azure Blob Storage.",
+                                      "instance": "/api/v1/segunda-mano/fotos/upload",
+                                      "timestamp": "2026-11-11T23:20:00Z"
+                                    }
+                                    """
+                            )
+                    )
             )
     })
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

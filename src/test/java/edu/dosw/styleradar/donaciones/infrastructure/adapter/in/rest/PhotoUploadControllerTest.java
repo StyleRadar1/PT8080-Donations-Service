@@ -67,7 +67,7 @@ class PhotoUploadControllerTest {
 
     @Test
     @WithMockUser(roles = "FOUNDATION")
-    @DisplayName("POST /api/v1/donaciones/fotos/upload - Debe permitir carga bajo alias donaciones y responder 201")
+    @DisplayName("POST /api/v1/segunda-mano/fotos/upload - Debe permitir carga para rol FOUNDATION y responder 201")
     void shouldUploadPhotoUnderDonationsAlias() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -80,7 +80,7 @@ class PhotoUploadControllerTest {
         when(uploadGarmentPhotoUseCase.uploadPhoto(any(), eq("pantalon.png"), eq("image/png")))
                 .thenReturn(expectedUrl);
 
-        mockMvc.perform(multipart("/donaciones/fotos/upload").file(file))
+        mockMvc.perform(multipart("/segunda-mano/fotos/upload").file(file))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.photoUrl").value(expectedUrl));
     }
