@@ -57,6 +57,12 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
     @Builder.Default
     private String modulo = "DONACIONES";
 
+    @Builder.Default
+    private Integer version = 1;
+
+    @Builder.Default
+    private String correlationId = UUID.randomUUID().toString();
+
     private Long donacionId;
     private Long solicitudId;
     private Long requestId;
@@ -91,6 +97,9 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class EstadoCambiadoData implements Serializable {
         private static final long serialVersionUID = 1L;
+
+        @Builder.Default
+        private Integer version = 1;
 
         private Long donacionId;
         private Long solicitudId;

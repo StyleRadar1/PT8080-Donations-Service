@@ -216,40 +216,36 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /segunda-mano/{id}/sell - Debe marcar como vendida y responder 200 OK")
+    @DisplayName("PATCH /segunda-mano/{id}/sell - Debe marcar como vendida con compradorId obligatorio y responder 200 OK")
     void shouldMarkAsSold() throws Exception {
         SecondHandPublication sold = buildSamplePublication(1L, 101L);
         sold.setStatus(PublicationStatus.SOLD);
-        when(managePublicationUseCase.markAsSold(101L, 1L)).thenReturn(sold);
+        when(managePublicationUseCase.markAsSold(101L, 1L, 102L)).thenReturn(sold);
 
         mockMvc.perform(patch("/segunda-mano/1/sell")
-                        .param("userId", "101"))
+                        .param("userId", "101")
+                        .param("compradorId", "102"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SOLD"));
     }
 
     @Test
-    @DisplayName("PATCH /segunda-mano/{id}/sell con compradorId - Debe marcar como vendida e incluir compradorId")
-    void shouldMarkAsSoldWithCompradorId() throws Exception {
-        SecondHandPublication sold = buildSamplePublication(1L, 101L);
-        sold.setStatus(PublicationStatus.SOLD);
-        when(managePublicationUseCase.markAsSold(101L, 1L, 202L)).thenReturn(sold);
-
+    @DisplayName("PATCH /segunda-mano/{id}/sell - Debe responder 400 Bad Request cuando falta compradorId")
+    void shouldFailWhenCompradorIdIsMissing() throws Exception {
         mockMvc.perform(patch("/segunda-mano/1/sell")
-                        .param("userId", "101")
-                        .param("compradorId", "202"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("SOLD"));
+                        .param("userId", "101"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("PATCH /segunda-mano/{id}/sell - Debe responder 409 Conflict si el usuario no es el propietario")
     void shouldReturnConflictWhenUserIsNotOwner() throws Exception {
-        when(managePublicationUseCase.markAsSold(999L, 1L))
+        when(managePublicationUseCase.markAsSold(999L, 1L, 102L))
                 .thenThrow(new DomainConflictException("Solo el propietario puede modificar el estado de la publicación"));
 
         mockMvc.perform(patch("/segunda-mano/1/sell")
-                        .param("userId", "999"))
+                        .param("userId", "999")
+                        .param("compradorId", "102"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.title").value("Conflicto de dominio"));
     }

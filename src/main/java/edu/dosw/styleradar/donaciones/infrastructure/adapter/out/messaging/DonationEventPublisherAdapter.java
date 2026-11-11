@@ -108,7 +108,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private void publishPublicationSold(PublicationSoldEvent domainEvent) {
         SegundaVidaDonacionPrendaVendidaIntegrationEvent event = SegundaVidaDonacionPrendaVendidaIntegrationEvent.from(domainEvent);
-        CorrelationData correlationData = new CorrelationData(event.getEventoId());
+        CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
 
         log.info(">>> [RabbitMQ PUBLISH] Publicando venta C2C '{}' desde ms-segunda-vida-donaciones hacia Exchange '{}' con Routing Key '{}' para ms-chat",
                 event.getEventType(), chatExchangeName, secondHandSoldRoutingKey);
@@ -151,7 +151,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .mensaje(domainEvent.rejectionReason())
                 .data(data)
                 .build();
-        CorrelationData correlationData = new CorrelationData(event.getEventoId());
+        CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
 
         log.info(">>> [RabbitMQ PUBLISH] Publicando decisión donación '{}' desde ms-segunda-vida-donaciones hacia Exchange '{}' con Routing Key '{}'",
                 event.getTipoEvento(), exchangeName, donationStatusUpdatedRoutingKey);
@@ -193,7 +193,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .mensaje("Recogida programada en: " + domainEvent.deliveryPoint())
                 .data(data)
                 .build();
-        CorrelationData correlationData = new CorrelationData(event.getEventoId());
+        CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
 
         rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
     }
@@ -232,7 +232,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .status("COMPLETED")
                 .data(data)
                 .build();
-        CorrelationData correlationData = new CorrelationData(event.getEventoId());
+        CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
 
         rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
     }

@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -58,9 +60,11 @@ public class GlobalExceptionHandler {
             InvalidPublicationException.class,
             InvalidDonationRequestException.class,
             IllegalArgumentException.class,
-            BadCredentialsException.class
+            BadCredentialsException.class,
+            MissingServletRequestParameterException.class,
+            MethodArgumentTypeMismatchException.class
     })
-    public ProblemDetail handleBadRequest(RuntimeException ex, HttpServletRequest request) {
+    public ProblemDetail handleBadRequest(Exception ex, HttpServletRequest request) {
         log.warn("Solicitud inválida de dominio: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Solicitud inválida");

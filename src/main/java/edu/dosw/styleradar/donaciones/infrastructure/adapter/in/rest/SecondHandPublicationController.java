@@ -228,12 +228,14 @@ public class SecondHandPublicationController {
 
     @Operation(
             summary = "Marcar publicación como vendida (SR-RF-38)",
-            description = "Transiciona el estado de la prenda a VENDIDA (SOLD), retirándola del catálogo de compraventa. Requiere rol USER o ADMIN.",
+            description = "Transiciona el estado de la prenda a VENDIDA (SOLD), retirándola del catálogo de compraventa y notificando a ms-chat con el compradorId para preservar la conversación del comprador y cerrar las demás. Requiere rol USER o ADMIN.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Publicación marcada como vendida exitosamente",
                     content = @Content(schema = @Schema(implementation = PublicationResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Parámetro obligatorio faltante (compradorId)",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "403", description = "Acceso denegado: rol insuficiente",
@@ -252,12 +254,10 @@ public class SecondHandPublicationController {
             @PathVariable Long id,
             @Parameter(description = "ID del usuario propietario", example = "101")
             @RequestParam Long userId,
-            @Parameter(description = "ID opcional del comprador en el chat C2C", example = "102")
-            @RequestParam(required = false) Long compradorId) {
+            @Parameter(description = "ID del comprador en el chat C2C (obligatorio para preservar la conversación en ms-chat)", example = "102", required = true)
+            @RequestParam Long compradorId) {
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
-        SecondHandPublication sold = compradorId != null
-                ? managePublicationUseCase.markAsSold(userId, id, compradorId)
-                : managePublicationUseCase.markAsSold(userId, id);
+        SecondHandPublication sold = managePublicationUseCase.markAsSold(userId, id, compradorId);
         return ResponseEntity.ok(publicationRestMapper.toResponse(sold));
     }
 
