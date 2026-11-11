@@ -251,9 +251,13 @@ public class SecondHandPublicationController {
             @Parameter(description = "ID de la publicación vendida", example = "1")
             @PathVariable Long id,
             @Parameter(description = "ID del usuario propietario", example = "101")
-            @RequestParam Long userId) {
+            @RequestParam Long userId,
+            @Parameter(description = "ID opcional del comprador en el chat C2C", example = "102")
+            @RequestParam(required = false) Long compradorId) {
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
-        SecondHandPublication sold = managePublicationUseCase.markAsSold(userId, id);
+        SecondHandPublication sold = compradorId != null
+                ? managePublicationUseCase.markAsSold(userId, id, compradorId)
+                : managePublicationUseCase.markAsSold(userId, id);
         return ResponseEntity.ok(publicationRestMapper.toResponse(sold));
     }
 

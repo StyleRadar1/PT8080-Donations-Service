@@ -58,6 +58,8 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
     @Builder.Default
     private String correlationId = UUID.randomUUID().toString();
 
+    private Long donacionId;
+    private Long donanteId;
     private Long requestId;
     private Long publicationId;
     private Long donorId;
@@ -73,12 +75,13 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
     public static class DonationRequestData implements Serializable {
         private static final long serialVersionUID = 1L;
 
+        private Long donacionId;
+        private Long donanteId;
         private Long requestId;
         private Long solicitudId;
         private Long publicationId;
         private Long publicacionId;
         private Long donorId;
-        private Long donanteId;
         private Long foundationId;
         private Long fundacionId;
         private String status;
@@ -93,12 +96,13 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
         String corrUuid = UUID.randomUUID().toString();
 
         DonationRequestData requestData = DonationRequestData.builder()
+                .donacionId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
                 .requestId(domainEvent.requestId())
                 .solicitudId(domainEvent.requestId())
                 .publicationId(domainEvent.publicationId())
                 .publicacionId(domainEvent.publicationId())
                 .donorId(domainEvent.donorId())
-                .donanteId(domainEvent.donorId())
                 .foundationId(domainEvent.foundationId())
                 .fundacionId(domainEvent.foundationId())
                 .status("PENDING")
@@ -113,6 +117,8 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
                 .timestamp(nowStr)
                 .producer("ms-segunda-vida-donaciones")
                 .correlationId(corrUuid)
+                .donacionId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
                 .requestId(domainEvent.requestId())
                 .publicationId(domainEvent.publicationId())
                 .donorId(domainEvent.donorId())

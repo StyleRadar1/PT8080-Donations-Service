@@ -32,9 +32,10 @@ class DonationEventPublisherAdapterTest {
     private DonationEventPublisherAdapter adapter;
 
     private static final String EXCHANGE = "styleradar.exchange";
+    private static final String CHAT_EXCHANGE = "styleradar.events";
     private static final String ROUTING_KEY_CREATED = "styleradar.donaciones.estado.cambiado";
     private static final String ROUTING_KEY_UPDATED = "styleradar.donaciones.estado.cambiado";
-    private static final String ROUTING_KEY_SOLD = "styleradar.segundavida.prenda.vendida";
+    private static final String ROUTING_KEY_SOLD = "segunda-mano.prenda.vendida";
 
     @BeforeEach
     void setUp() {
@@ -42,13 +43,14 @@ class DonationEventPublisherAdapterTest {
         adapter = new DonationEventPublisherAdapter(
                 rabbitTemplate,
                 EXCHANGE,
+                CHAT_EXCHANGE,
                 ROUTING_KEY_UPDATED,
                 ROUTING_KEY_SOLD,
                 ROUTING_KEY_CREATED);
     }
 
     @Test
-    @DisplayName("Debe publicar evento donacion.solicitud.creada con payload de integración y CorrelationData a styleradar.exchange")
+    @DisplayName("Debe publicar evento donacion.solicitud.creada con donacionId y donanteId para ms-notificaciones")
     void shouldPublishDonationRequestCreatedEvent() {
         Instant now = Instant.parse("2026-11-08T18:00:00Z");
         DonationRequestCreatedEvent domainEvent = new DonationRequestCreatedEvent(10L, 20L, 30L, 40L, now);
@@ -68,9 +70,14 @@ class DonationEventPublisherAdapterTest {
         assertThat(published.getServicio()).isEqualTo("ms-segunda-vida-donaciones");
         assertThat(published.getModulo()).isEqualTo("DONACIONES");
         assertThat(published.getRequestId()).isEqualTo(10L);
+        assertThat(published.getDonacionId()).isEqualTo(10L);
+        assertThat(published.getDonanteId()).isEqualTo(30L);
         assertThat(published.getPublicationId()).isEqualTo(20L);
         assertThat(published.getDonorId()).isEqualTo(30L);
         assertThat(published.getFoundationId()).isEqualTo(40L);
+        assertThat(published.getData()).isNotNull();
+        assertThat(published.getData().getDonacionId()).isEqualTo(10L);
+        assertThat(published.getData().getDonanteId()).isEqualTo(30L);
 
         CorrelationData correlationData = correlationCaptor.getValue();
         assertThat(correlationData).isNotNull();
@@ -78,9 +85,9 @@ class DonationEventPublisherAdapterTest {
     }
 
     @Test
-    @DisplayName("Debe publicar evento de prenda vendida hacia ms-chat con routing key styleradar.segundavida.prenda.vendida")
+    @DisplayName("Debe publicar evento de prenda vendida hacia ms-chat en styleradar.events con routing key segunda-mano.prenda.vendida y envelope data con compradorId")
     void shouldPublishPublicationSoldEvent() {
-        PublicationSoldEvent event = new PublicationSoldEvent(50L, 101L);
+        PublicationSoldEvent event = new PublicationSoldEvent(50L, 101L, 102L);
 
         adapter.publishEvent(event);
 
@@ -89,53 +96,89 @@ class DonationEventPublisherAdapterTest {
         ArgumentCaptor<CorrelationData> correlationCaptor =
                 ArgumentCaptor.forClass(CorrelationData.class);
 
-        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_SOLD), captor.capture(), correlationCaptor.capture());
+        verify(rabbitTemplate).convertAndSend(eq(CHAT_EXCHANGE), eq(ROUTING_KEY_SOLD), captor.capture(), correlationCaptor.capture());
 
         SegundaVidaDonacionPrendaVendidaIntegrationEvent published = captor.getValue();
         assertThat(published).isNotNull();
+        assertThat(published.getEventType()).isEqualTo("segunda-mano.prenda.vendida");
         assertThat(published.getEmisor()).isEqualTo("ms-segunda-vida-donaciones");
         assertThat(published.getServicio()).isEqualTo("ms-segunda-vida-donaciones");
         assertThat(published.getModulo()).isEqualTo("SEGUNDA_VIDA");
         assertThat(published.getPublicacionId()).isEqualTo(50L);
         assertThat(published.getVendedorId()).isEqualTo(101L);
+        assertThat(published.getCompradorId()).isEqualTo(102L);
         assertThat(published.getEstado()).isEqualTo("VENDIDA");
+
+        // Envelope data para ms-chat
+        assertThat(published.getData()).isNotNull();
+        assertThat(published.getData().getPublicacionId()).isEqualTo(50L);
+        assertThat(published.getData().getVendedorId()).isEqualTo(101L);
+        assertThat(published.getData().getCompradorId()).isEqualTo(102L);
+        assertThat(published.getData().getEstado()).isEqualTo("VENDIDA");
 
         CorrelationData correlationData = correlationCaptor.getValue();
         assertThat(correlationData).isNotNull();
     }
 
     @Test
-    @DisplayName("Debe publicar evento de decisión de solicitud con routing key styleradar.donaciones.estado.cambiado")
+    @DisplayName("Debe publicar evento de decisión de solicitud con donacionId y donanteId para ms-notificaciones")
     void shouldPublishDonationRequestDecidedEvent() {
-        DonationRequestDecidedEvent event = new DonationRequestDecidedEvent(10L, 20L, true, null);
+        DonationRequestDecidedEvent event = new DonationRequestDecidedEvent(10L, 20L, 30L, true, null);
 
         adapter.publishEvent(event);
 
-        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), any(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class), any(CorrelationData.class));
+        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> captor =
+                ArgumentCaptor.forClass(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class);
+
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), captor.capture(), any(CorrelationData.class));
+
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
+        assertThat(published.getDonacionId()).isEqualTo(10L);
+        assertThat(published.getDonanteId()).isEqualTo(30L);
+        assertThat(published.getData()).isNotNull();
+        assertThat(published.getData().getDonacionId()).isEqualTo(10L);
+        assertThat(published.getData().getDonanteId()).isEqualTo(30L);
     }
 
     @Test
-    @DisplayName("Debe publicar evento de agendamiento de recogida con routing key styleradar.donaciones.estado.cambiado")
+    @DisplayName("Debe publicar evento de agendamiento de recogida con donacionId y donanteId para ms-notificaciones")
     void shouldPublishPickupScheduledEvent() {
         PickupScheduledEvent event = new PickupScheduledEvent(
                 10L,
+                99L,
                 "Punto Central",
                 LocalDateTime.of(2026, 11, 10, 10, 0),
                 LocalDateTime.of(2026, 11, 10, 12, 0));
 
         adapter.publishEvent(event);
 
-        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), any(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class), any(CorrelationData.class));
+        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> captor =
+                ArgumentCaptor.forClass(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class);
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), captor.capture(), any(CorrelationData.class));
+
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
+        assertThat(published.getDonacionId()).isEqualTo(10L);
+        assertThat(published.getDonanteId()).isEqualTo(99L);
+        assertThat(published.getData().getDonacionId()).isEqualTo(10L);
+        assertThat(published.getData().getDonanteId()).isEqualTo(99L);
     }
 
     @Test
-    @DisplayName("Debe publicar evento de donación entregada con routing key styleradar.donaciones.estado.cambiado")
+    @DisplayName("Debe publicar evento de donación entregada con donacionId y donanteId para ms-notificaciones")
     void shouldPublishDonationDeliveredEvent() {
-        DonationDeliveredEvent event = new DonationDeliveredEvent(10L, 20L, 30L);
+        DonationDeliveredEvent event = new DonationDeliveredEvent(10L, 20L, 30L, 99L);
 
         adapter.publishEvent(event);
 
-        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), any(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class), any(CorrelationData.class));
+        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> captor =
+                ArgumentCaptor.forClass(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class);
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), captor.capture(), any(CorrelationData.class));
+
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
+        assertThat(published.getDonacionId()).isEqualTo(10L);
+        assertThat(published.getDonanteId()).isEqualTo(99L);
+        assertThat(published.getData().getDonacionId()).isEqualTo(10L);
+        assertThat(published.getData().getDonanteId()).isEqualTo(99L);
     }
 
     @Test

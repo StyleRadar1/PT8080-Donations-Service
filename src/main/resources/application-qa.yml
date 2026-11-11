@@ -56,11 +56,12 @@ app:
   rabbitmq:
     exchange:
       main: ${RABBITMQ_EXCHANGE:styleradar.exchange}
+      chat: ${RABBITMQ_CHAT_EXCHANGE:styleradar.events}
       dlx: ${RABBITMQ_DLX:styleradar.dlx}
       donations: ${RABBITMQ_EXCHANGE:styleradar.exchange}
     routing-keys:
       donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
-      second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:styleradar.segundavida.prenda.vendida}
+      second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:segunda-mano.prenda.vendida}
       donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
     queues:
       dlq: ${RABBITMQ_DLQ:styleradar.donaciones.dlq}

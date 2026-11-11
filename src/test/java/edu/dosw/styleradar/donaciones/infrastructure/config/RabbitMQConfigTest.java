@@ -97,7 +97,17 @@ class RabbitMQConfigTest {
     }
 
     @Test
-    @DisplayName("Debe configurar Jackson2JsonMessageConverter con ObjectMapper sin cabecera TypeId restrictiva")
+    @DisplayName("Debe crear TopicExchange durable styleradar.events para ms-chat")
+    void shouldCreateChatEventsTopicExchange() {
+        TopicExchange exchange = rabbitMQConfig.chatEventsExchange(RabbitMQConfig.STYLERADAR_CHAT_EXCHANGE_DEFAULT);
+
+        assertThat(exchange).isNotNull();
+        assertThat(exchange.getName()).isEqualTo("styleradar.events");
+        assertThat(exchange.isDurable()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Debe configurar Jackson2JsonMessageConverter con paquetes confiables restringidos a styleradar")
     void shouldCreateJackson2JsonMessageConverter() {
         ObjectMapper objectMapper = new ObjectMapper();
         Jackson2JsonMessageConverter converter = rabbitMQConfig.jackson2JsonMessageConverter(objectMapper);

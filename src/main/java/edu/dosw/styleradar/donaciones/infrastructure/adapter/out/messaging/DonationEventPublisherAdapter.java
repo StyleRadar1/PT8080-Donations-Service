@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -32,18 +33,22 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private final RabbitTemplate rabbitTemplate;
     private final String exchangeName;
+    private final String chatExchangeName;
     private final String donationStatusUpdatedRoutingKey;
     private final String secondHandSoldRoutingKey;
     private final String donationRequestCreatedRoutingKey;
 
+    @Autowired
     public DonationEventPublisherAdapter(
             RabbitTemplate rabbitTemplate,
             @Value("${app.rabbitmq.exchange.main:${app.rabbitmq.exchange.donations:styleradar.exchange}}") String exchangeName,
+            @Value("${app.rabbitmq.exchange.chat:styleradar.events}") String chatExchangeName,
             @Value("${app.rabbitmq.routing-keys.donation-status-updated:styleradar.donaciones.estado.cambiado}") String donationStatusUpdatedRoutingKey,
-            @Value("${app.rabbitmq.routing-keys.second-hand-sold:styleradar.segundavida.prenda.vendida}") String secondHandSoldRoutingKey,
+            @Value("${app.rabbitmq.routing-keys.second-hand-sold:segunda-mano.prenda.vendida}") String secondHandSoldRoutingKey,
             @Value("${app.rabbitmq.routing-keys.donation-request-created:styleradar.donaciones.estado.cambiado}") String donationRequestCreatedRoutingKey) {
         this.rabbitTemplate = rabbitTemplate;
         this.exchangeName = exchangeName;
+        this.chatExchangeName = chatExchangeName;
         this.donationStatusUpdatedRoutingKey = donationStatusUpdatedRoutingKey;
         this.secondHandSoldRoutingKey = secondHandSoldRoutingKey;
         this.donationRequestCreatedRoutingKey = donationRequestCreatedRoutingKey;
@@ -52,9 +57,18 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     public DonationEventPublisherAdapter(
             RabbitTemplate rabbitTemplate,
             String exchangeName,
+            String donationStatusUpdatedRoutingKey,
+            String secondHandSoldRoutingKey,
+            String donationRequestCreatedRoutingKey) {
+        this(rabbitTemplate, exchangeName, "styleradar.events", donationStatusUpdatedRoutingKey, secondHandSoldRoutingKey, donationRequestCreatedRoutingKey);
+    }
+
+    public DonationEventPublisherAdapter(
+            RabbitTemplate rabbitTemplate,
+            String exchangeName,
             String donationRequestCreatedRoutingKey,
             String donationStatusUpdatedRoutingKey) {
-        this(rabbitTemplate, exchangeName, donationStatusUpdatedRoutingKey, "styleradar.segundavida.prenda.vendida", donationRequestCreatedRoutingKey);
+        this(rabbitTemplate, exchangeName, "styleradar.events", donationStatusUpdatedRoutingKey, "segunda-mano.prenda.vendida", donationRequestCreatedRoutingKey);
     }
 
     @Override
@@ -97,16 +111,36 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
         CorrelationData correlationData = new CorrelationData(event.getEventoId());
 
         log.info(">>> [RabbitMQ PUBLISH] Publicando venta C2C '{}' desde ms-segunda-vida-donaciones hacia Exchange '{}' con Routing Key '{}' para ms-chat",
-                event.getTipoEvento(), exchangeName, secondHandSoldRoutingKey);
+                event.getEventType(), chatExchangeName, secondHandSoldRoutingKey);
 
-        rabbitTemplate.convertAndSend(exchangeName, secondHandSoldRoutingKey, event, correlationData);
+        rabbitTemplate.convertAndSend(chatExchangeName, secondHandSoldRoutingKey, event, correlationData);
     }
 
     private void publishDonationDecided(DonationRequestDecidedEvent domainEvent) {
         String nuevoEstado = domainEvent.approved() ? "APROBADA" : "RECHAZADA";
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
+                SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
+                        .donacionId(domainEvent.requestId())
+                        .solicitudId(domainEvent.requestId())
+                        .requestId(domainEvent.requestId())
+                        .donanteId(domainEvent.donorId())
+                        .donorId(domainEvent.donorId())
+                        .fundacionId(domainEvent.foundationId())
+                        .foundationId(domainEvent.foundationId())
+                        .estadoAnterior("PENDIENTE")
+                        .nuevoEstado(nuevoEstado)
+                        .estado(nuevoEstado)
+                        .status(nuevoEstado)
+                        .motivo(domainEvent.rejectionReason())
+                        .mensaje(domainEvent.rejectionReason())
+                        .build();
+
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent event = SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
+                .donacionId(domainEvent.requestId())
                 .solicitudId(domainEvent.requestId())
                 .requestId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
+                .donorId(domainEvent.donorId())
                 .fundacionId(domainEvent.foundationId())
                 .foundationId(domainEvent.foundationId())
                 .estadoAnterior("PENDIENTE")
@@ -115,6 +149,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .status(nuevoEstado)
                 .motivo(domainEvent.rejectionReason())
                 .mensaje(domainEvent.rejectionReason())
+                .data(data)
                 .build();
         CorrelationData correlationData = new CorrelationData(event.getEventoId());
 
@@ -125,9 +160,29 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     }
 
     private void publishPickupScheduled(PickupScheduledEvent domainEvent) {
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
+                SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
+                        .donacionId(domainEvent.requestId())
+                        .solicitudId(domainEvent.requestId())
+                        .requestId(domainEvent.requestId())
+                        .donanteId(domainEvent.donorId())
+                        .donorId(domainEvent.donorId())
+                        .estadoAnterior("ACEPTADA")
+                        .nuevoEstado("EN_RECOGIDA")
+                        .estado("EN_RECOGIDA")
+                        .status("SCHEDULED")
+                        .puntoEntrega(domainEvent.deliveryPoint())
+                        .deliveryPoint(domainEvent.deliveryPoint())
+                        .fechaProgramada(domainEvent.startTime() != null ? domainEvent.startTime().toString() : null)
+                        .mensaje("Recogida programada en: " + domainEvent.deliveryPoint())
+                        .build();
+
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent event = SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
+                .donacionId(domainEvent.requestId())
                 .solicitudId(domainEvent.requestId())
                 .requestId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
+                .donorId(domainEvent.donorId())
                 .estadoAnterior("ACEPTADA")
                 .nuevoEstado("EN_RECOGIDA")
                 .estado("EN_RECOGIDA")
@@ -136,6 +191,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .deliveryPoint(domainEvent.deliveryPoint())
                 .fechaProgramada(domainEvent.startTime() != null ? domainEvent.startTime().toString() : null)
                 .mensaje("Recogida programada en: " + domainEvent.deliveryPoint())
+                .data(data)
                 .build();
         CorrelationData correlationData = new CorrelationData(event.getEventoId());
 
@@ -143,9 +199,29 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     }
 
     private void publishDonationDelivered(DonationDeliveredEvent domainEvent) {
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
+                SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
+                        .donacionId(domainEvent.requestId())
+                        .solicitudId(domainEvent.requestId())
+                        .requestId(domainEvent.requestId())
+                        .donanteId(domainEvent.donorId())
+                        .donorId(domainEvent.donorId())
+                        .publicacionId(domainEvent.publicationId())
+                        .publicationId(domainEvent.publicationId())
+                        .fundacionId(domainEvent.foundationId())
+                        .foundationId(domainEvent.foundationId())
+                        .estadoAnterior("EN_RECOGIDA")
+                        .nuevoEstado("ENTREGADA")
+                        .estado("ENTREGADA")
+                        .status("COMPLETED")
+                        .build();
+
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent event = SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
+                .donacionId(domainEvent.requestId())
                 .solicitudId(domainEvent.requestId())
                 .requestId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
+                .donorId(domainEvent.donorId())
                 .publicacionId(domainEvent.publicationId())
                 .publicationId(domainEvent.publicationId())
                 .fundacionId(domainEvent.foundationId())
@@ -154,6 +230,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .nuevoEstado("ENTREGADA")
                 .estado("ENTREGADA")
                 .status("COMPLETED")
+                .data(data)
                 .build();
         CorrelationData correlationData = new CorrelationData(event.getEventoId());
 
@@ -162,6 +239,10 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     public String getExchangeName() {
         return exchangeName;
+    }
+
+    public String getChatExchangeName() {
+        return chatExchangeName;
     }
 
     public String getDonationRequestCreatedRoutingKey() {

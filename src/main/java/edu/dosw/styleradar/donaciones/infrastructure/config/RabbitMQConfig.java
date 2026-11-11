@@ -33,10 +33,11 @@ public class RabbitMQConfig {
     private static final Logger log = LoggerFactory.getLogger(RabbitMQConfig.class);
 
     public static final String STYLERADAR_EXCHANGE_DEFAULT = "styleradar.exchange";
+    public static final String STYLERADAR_CHAT_EXCHANGE_DEFAULT = "styleradar.events";
     public static final String STYLERADAR_DLX_DEFAULT = "styleradar.dlx";
     public static final String DONACIONES_DLQ_DEFAULT = "styleradar.donaciones.dlq";
     public static final String DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT = "styleradar.donaciones.estado.cambiado";
-    public static final String SEGUNDA_VIDA_PRENDA_VENDIDA_ROUTING_KEY_DEFAULT = "styleradar.segundavida.prenda.vendida";
+    public static final String SEGUNDA_VIDA_PRENDA_VENDIDA_ROUTING_KEY_DEFAULT = "segunda-mano.prenda.vendida";
 
     // Retrocompatibilidad con nombres previos de Sprint 2
     public static final String DONATIONS_EXCHANGE_DEFAULT = STYLERADAR_EXCHANGE_DEFAULT;
@@ -48,6 +49,14 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange donationsTopicExchange(
             @Value("${app.rabbitmq.exchange.main:${app.rabbitmq.exchange.donations:" + STYLERADAR_EXCHANGE_DEFAULT + "}}") String exchangeName) {
+        return ExchangeBuilder.topicExchange(exchangeName)
+                .durable(true)
+                .build();
+    }
+
+    @Bean
+    public TopicExchange chatEventsExchange(
+            @Value("${app.rabbitmq.exchange.chat:" + STYLERADAR_CHAT_EXCHANGE_DEFAULT + "}") String exchangeName) {
         return ExchangeBuilder.topicExchange(exchangeName)
                 .durable(true)
                 .build();
@@ -121,7 +130,12 @@ public class RabbitMQConfig {
     public Jackson2JsonMessageConverter jackson2JsonMessageConverter(ObjectMapper objectMapper) {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
         DefaultClassMapper classMapper = new DefaultClassMapper();
-        classMapper.setTrustedPackages("*");
+        classMapper.setTrustedPackages(
+                "edu.dosw.styleradar.*",
+                "java.util.*",
+                "java.lang.*",
+                "java.time.*"
+        );
         converter.setClassMapper(classMapper);
         converter.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.INFERRED);
         return converter;

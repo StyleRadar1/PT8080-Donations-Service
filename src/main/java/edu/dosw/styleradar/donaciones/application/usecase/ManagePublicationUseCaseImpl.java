@@ -46,13 +46,19 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
 
     @Override
     public SecondHandPublication markAsSold(Long userId, Long publicationId) {
-        log.info("Marcando como vendida publicación ID: {} por usuario ID: {}", publicationId, userId);
+        return markAsSold(userId, publicationId, null);
+    }
+
+    @Override
+    public SecondHandPublication markAsSold(Long userId, Long publicationId, Long compradorId) {
+        log.info("Marcando como vendida publicación ID: {} por usuario ID: {} (compradorId: {})",
+                publicationId, userId, compradorId);
         SecondHandPublication publication = getAndValidateOwner(publicationId, userId);
 
         publication.markAsSold();
         SecondHandPublication saved = publicationRepositoryPort.save(publication);
 
-        eventPublisherPort.publishEvent(new PublicationSoldEvent(saved.getId(), saved.getUserId()));
+        eventPublisherPort.publishEvent(new PublicationSoldEvent(saved.getId(), saved.getUserId(), compradorId));
         log.info("Publicación ID: {} marcada como VENDIDA exitosamente", saved.getId());
         return saved;
     }

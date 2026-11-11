@@ -229,6 +229,20 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
+    @DisplayName("PATCH /segunda-mano/{id}/sell con compradorId - Debe marcar como vendida e incluir compradorId")
+    void shouldMarkAsSoldWithCompradorId() throws Exception {
+        SecondHandPublication sold = buildSamplePublication(1L, 101L);
+        sold.setStatus(PublicationStatus.SOLD);
+        when(managePublicationUseCase.markAsSold(101L, 1L, 202L)).thenReturn(sold);
+
+        mockMvc.perform(patch("/segunda-mano/1/sell")
+                        .param("userId", "101")
+                        .param("compradorId", "202"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SOLD"));
+    }
+
+    @Test
     @DisplayName("PATCH /segunda-mano/{id}/sell - Debe responder 409 Conflict si el usuario no es el propietario")
     void shouldReturnConflictWhenUserIsNotOwner() throws Exception {
         when(managePublicationUseCase.markAsSold(999L, 1L))
