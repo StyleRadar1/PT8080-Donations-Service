@@ -50,7 +50,43 @@ class AzureBlobStorageAdapterTest {
 
         assertThatThrownBy(() -> adapter.storePhoto(content, "foto.png", "image/png"))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("AZURE_STORAGE_CONNECTION_STRING es obligatoria en entornos QA y Producción");
+                .hasMessageContaining("AZURE_STORAGE_CONNECTION_STRING es obligatoria");
+    }
+
+    @Test
+    @DisplayName("Cuando no hay perfiles activos configurados, no debe permitir fallback y debe lanzar excepción")
+    void shouldThrowExceptionWhenNoActiveProfilesConfigured() {
+        MockEnvironment env = new MockEnvironment(); // Sin perfiles activos
+
+        AzureBlobStorageAdapter adapter = new AzureBlobStorageAdapter(
+                "",
+                "donaciones-fotos",
+                "https://srdonacionesjmunar.blob.core.windows.net",
+                env
+        );
+
+        byte[] content = "test".getBytes();
+
+        assertThatThrownBy(() -> adapter.storePhoto(content, "foto.png", "image/png"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("AZURE_STORAGE_CONNECTION_STRING es obligatoria. El fallback local solo está permitido en perfiles local, dev y test.");
+    }
+
+    @Test
+    @DisplayName("Cuando environment es nulo, no debe permitir fallback y debe lanzar excepción")
+    void shouldThrowExceptionWhenEnvIsNull() {
+        AzureBlobStorageAdapter adapter = new AzureBlobStorageAdapter(
+                "",
+                "donaciones-fotos",
+                "https://srdonacionesjmunar.blob.core.windows.net",
+                null
+        );
+
+        byte[] content = "test".getBytes();
+
+        assertThatThrownBy(() -> adapter.storePhoto(content, "foto.png", "image/png"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("AZURE_STORAGE_CONNECTION_STRING es obligatoria. El fallback local solo está permitido en perfiles local, dev y test.");
     }
 
     @Test

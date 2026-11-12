@@ -94,8 +94,8 @@ public class AzureBlobStorageAdapter implements PhotoStoragePort {
             }
         } else {
             if (!isLocalOrTest) {
-                log.error("AZURE_STORAGE_CONNECTION_STRING no configurada en entorno de despliegue QA/PROD.");
-                throw new IllegalStateException("La variable de entorno AZURE_STORAGE_CONNECTION_STRING es obligatoria en entornos QA y Producción.");
+                log.error("AZURE_STORAGE_CONNECTION_STRING no configurada fuera de perfiles permitidos (local, dev, test).");
+                throw new IllegalStateException("La variable de entorno AZURE_STORAGE_CONNECTION_STRING es obligatoria. El fallback local solo está permitido en perfiles local, dev y test.");
             }
             log.info("Sin connection string de Azure configurada. Operando en modo local/pruebas para '{}'", filename);
         }
@@ -109,12 +109,9 @@ public class AzureBlobStorageAdapter implements PhotoStoragePort {
 
     private boolean isLocalOrTestProfile() {
         if (env == null) {
-            return true; // Predeterminado a local/test en pruebas unitarias aisladas sin Spring Context
+            return false;
         }
         List<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
-        if (activeProfiles.isEmpty()) {
-            return true;
-        }
         return activeProfiles.contains("local")
                 || activeProfiles.contains("test")
                 || activeProfiles.contains("dev");

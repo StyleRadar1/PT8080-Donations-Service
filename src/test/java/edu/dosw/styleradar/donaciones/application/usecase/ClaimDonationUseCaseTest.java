@@ -35,8 +35,11 @@ import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimDonationUseCaseTest {
@@ -171,5 +174,65 @@ class ClaimDonationUseCaseTest {
         assertThatThrownBy(() -> claimDonationUseCase.claimDonation(command))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("No existe publicación");
+    }
+
+    @Test
+    @DisplayName("Debe publicar evento solo tras afterCommit cuando hay sincronización transaccional activa")
+    void shouldPublishEventOnlyAfterCommitWhenTransactionActive() {
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            ClaimDonationCommand command = new ClaimDonationCommand(10L, 501L, "Reclamo para niños");
+
+            when(publicationRepositoryPort.findById(10L)).thenReturn(Optional.of(donationPublication));
+            when(donationRequestRepositoryPort.existsActiveRequestForPublication(10L)).thenReturn(false);
+            when(publicationRepositoryPort.save(any(SecondHandPublication.class))).thenAnswer(i -> i.getArgument(0));
+            when(donationRequestRepositoryPort.save(any(DonationRequest.class))).thenAnswer(i -> {
+                DonationRequest req = i.getArgument(0);
+                req.setId(1L);
+                return req;
+            });
+
+            DonationRequest result = claimDonationUseCase.claimDonation(command);
+
+            assertThat(result).isNotNull();
+            // Antes de ejecutar el commit: NO debe haberse publicado el evento en RabbitMQ
+            verify(eventPublisherPort, never()).publishEvent(any(DonationRequestCreatedEvent.class));
+
+            // Simular commit exitoso de la transacción en Spring
+            for (TransactionSynchronization sync : TransactionSynchronizationManager.getSynchronizations()) {
+                sync.afterCommit();
+            }
+
+            // Tras el commit: Se publicó el evento con éxito
+            verify(eventPublisherPort).publishEvent(any(DonationRequestCreatedEvent.class));
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    @DisplayName("No debe publicar evento si ocurre rollback y nunca se ejecuta afterCommit")
+    void shouldNotPublishEventIfTransactionRollsBack() {
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            ClaimDonationCommand command = new ClaimDonationCommand(10L, 501L, "Reclamo para niños");
+
+            when(publicationRepositoryPort.findById(10L)).thenReturn(Optional.of(donationPublication));
+            when(donationRequestRepositoryPort.existsActiveRequestForPublication(10L)).thenReturn(false);
+            when(publicationRepositoryPort.save(any(SecondHandPublication.class))).thenAnswer(i -> i.getArgument(0));
+            when(donationRequestRepositoryPort.save(any(DonationRequest.class))).thenAnswer(i -> {
+                DonationRequest req = i.getArgument(0);
+                req.setId(1L);
+                return req;
+            });
+
+            claimDonationUseCase.claimDonation(command);
+
+            // Simular rollback (no se invoca afterCommit)
+            // No se debe haber publicado ningún evento
+            verify(eventPublisherPort, never()).publishEvent(any());
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 }
