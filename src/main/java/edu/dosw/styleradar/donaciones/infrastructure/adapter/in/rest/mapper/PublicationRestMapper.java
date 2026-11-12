@@ -9,12 +9,14 @@ import edu.dosw.styleradar.donaciones.application.dto.request.CreatePublicationR
 import edu.dosw.styleradar.donaciones.application.dto.request.EditPublicationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.response.PublicationResponseDTO;
 import edu.dosw.styleradar.donaciones.domain.model.Garment;
+import edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota;
 import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreatePublicationCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.EditPublicationCommand;
 
 /**
  * Mapper para transformar entre los DTOs de la API REST y los comandos/agregados del dominio para publicaciones.
+ * Mapea discriminador 'esDonacion', 'localidad' oficial de Bogotá D.C. y control de concurrencia optimista.
  */
 @Component
 public class PublicationRestMapper {
@@ -33,12 +35,17 @@ public class PublicationRestMapper {
                 .style(dto.style())
                 .build();
 
+        boolean esDonacion = Boolean.TRUE.equals(dto.esDonacion());
+        LocalidadBogota localidad = dto.localidad() != null ? dto.localidad() : LocalidadBogota.CHAPINERO;
+
         return new CreatePublicationCommand(
                 dto.userId(),
                 garment,
                 dto.size(),
                 dto.conservationStatus(),
                 dto.price(),
+                esDonacion,
+                localidad,
                 dto.photos() != null ? dto.photos() : Collections.emptyList()
         );
     }
@@ -64,6 +71,7 @@ public class PublicationRestMapper {
                 dto.size(),
                 dto.conservationStatus(),
                 dto.price(),
+                dto.localidad(),
                 dto.photos() != null ? dto.photos() : Collections.emptyList()
         );
     }
@@ -85,7 +93,10 @@ public class PublicationRestMapper {
                 domain.getSize(),
                 domain.getConservationStatus(),
                 domain.getPrice(),
+                domain.isEsDonacion(),
+                domain.getLocalidad(),
                 domain.getStatus(),
+                domain.getVersion(),
                 domain.getPublishedAt(),
                 domain.getUpdatedAt(),
                 domain.getPhotos() != null ? domain.getPhotos() : Collections.emptyList()

@@ -12,7 +12,8 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 /**
- * Especificaciones JPA dinámicas para la búsqueda y filtrado de publicaciones de segunda mano.
+ * Especificaciones JPA dinámicas para la búsqueda y filtrado de publicaciones de economía circular.
+ * Soporta filtros por texto, atributos de prenda, discriminador 'esDonacion', localidad de Bogotá y precios.
  */
 public final class PublicationSpecifications {
 
@@ -29,15 +30,16 @@ public final class PublicationSpecifications {
             addSearchTermPredicate(criteria, root, cb, predicates);
             addGarmentAttributePredicates(criteria, root, cb, predicates);
             addPriceAndStylePredicates(criteria, root, cb, predicates);
+            addCircularEconomyPredicates(criteria, root, cb, predicates);
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
     private static void addSearchTermPredicate(PublicationSearchCriteria criteria,
-                                               Root<SecondHandPublicationEntity> root,
-                                               CriteriaBuilder cb,
-                                               List<Predicate> predicates) {
+                                                Root<SecondHandPublicationEntity> root,
+                                                CriteriaBuilder cb,
+                                                List<Predicate> predicates) {
         if (criteria.getSearchTerm() != null && !criteria.getSearchTerm().trim().isEmpty()) {
             String pattern = "%" + criteria.getSearchTerm().trim().toLowerCase() + "%";
             Predicate nameLike = cb.like(cb.lower(root.get("garmentName")), pattern);
@@ -48,9 +50,9 @@ public final class PublicationSpecifications {
     }
 
     private static void addGarmentAttributePredicates(PublicationSearchCriteria criteria,
-                                                     Root<SecondHandPublicationEntity> root,
-                                                     CriteriaBuilder cb,
-                                                     List<Predicate> predicates) {
+                                                      Root<SecondHandPublicationEntity> root,
+                                                      CriteriaBuilder cb,
+                                                      List<Predicate> predicates) {
         if (criteria.getType() != null) {
             predicates.add(cb.equal(root.get("garmentType"), criteria.getType()));
         }
@@ -83,6 +85,18 @@ public final class PublicationSpecifications {
         }
         if (criteria.getStatus() != null) {
             predicates.add(cb.equal(root.get("status"), criteria.getStatus()));
+        }
+    }
+
+    private static void addCircularEconomyPredicates(PublicationSearchCriteria criteria,
+                                                     Root<SecondHandPublicationEntity> root,
+                                                     CriteriaBuilder cb,
+                                                     List<Predicate> predicates) {
+        if (criteria.getEsDonacion() != null) {
+            predicates.add(cb.equal(root.get("esDonacion"), criteria.getEsDonacion()));
+        }
+        if (criteria.getLocalidad() != null) {
+            predicates.add(cb.equal(root.get("localidad"), criteria.getLocalidad()));
         }
     }
 }

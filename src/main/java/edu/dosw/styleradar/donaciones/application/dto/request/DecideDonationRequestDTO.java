@@ -22,4 +22,11 @@ public record DecideDonationRequestDTO(
         @Size(max = 500, message = "El motivo de rechazo no puede exceder 500 caracteres")
         String reason
 ) {
+    public Boolean approved() {
+        return approve;
+    }
+
+    public String rejectionReason() {
+        return reason;
+    }
 }

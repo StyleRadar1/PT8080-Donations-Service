@@ -70,6 +70,13 @@ app:
     simulator:
       enabled: false
 
+# Azure Blob Storage para QA en la Nube
+azure:
+  storage:
+    connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
+    container-name: ${AZURE_STORAGE_CONTAINER_NAME:donaciones-fotos}
+    blob-endpoint: ${AZURE_STORAGE_BLOB_ENDPOINT:https://srdonacionesjmunar.blob.core.windows.net}
+
 # Swagger OpenAPI Público para QA
 springdoc:
   api-docs:

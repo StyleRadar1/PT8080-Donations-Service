@@ -42,54 +42,57 @@ public class JwtTokenProvider {
             @Value("${styleradar.security.jwt.duration:PT24H}") Duration duration,
             Environment env) {
 
-        boolean isLocalOrTestProfile = isLocalOrTestProfile(env);
-        String effectiveSecret = secretBase64;
-
-        if ((effectiveSecret == null || effectiveSecret.isBlank()) && env != null) {
-            effectiveSecret = env.getProperty("JWT_SECRET_BASE64");
-            if (effectiveSecret == null || effectiveSecret.isBlank()) {
-                effectiveSecret = env.getProperty("SECURITY_JWT_SECRET");
-            }
-        }
-
-        if (effectiveSecret == null || effectiveSecret.isBlank()) {
-            if (isLocalOrTestProfile) {
-                log.warn("ADVERTENCIA DE SEGURIDAD: Usando clave secreta JWT predeterminada para entorno local/pruebas.");
-                effectiveSecret = DEFAULT_DEV_SECRET_BASE64;
-            } else {
-                throw new IllegalStateException(
-                        "La variable de entorno JWT_SECRET_BASE64 es obligatoria y debe contener al menos 256 bits (32 bytes en Base64) en cualquier perfil distinto a local, test o dev."
-                );
-            }
-        }
-
-        byte[] decodedKey;
-        try {
-            decodedKey = Base64.getDecoder().decode(effectiveSecret);
-            if (decodedKey.length < 32) {
-                if (isLocalOrTestProfile) {
-                    decodedKey = padTo256Bits(effectiveSecret.getBytes(StandardCharsets.UTF_8));
-                } else {
-                    throw new IllegalStateException(
-                            "JWT_SECRET_BASE64 es requerida y debe contener al menos 256 bits (32 bytes)."
-                    );
-                }
-            }
-        } catch (IllegalArgumentException e) {
-            if (isLocalOrTestProfile) {
-                decodedKey = padTo256Bits(effectiveSecret.getBytes(StandardCharsets.UTF_8));
-            } else {
-                throw new IllegalStateException(
-                        "JWT_SECRET_BASE64 debe ser una cadena Base64 válida con al menos 256 bits.", e
-                );
-            }
-        }
+        boolean isLocalOrTest = isLocalOrTestProfile(env);
+        String effectiveSecret = resolveEffectiveSecret(secretBase64, env, isLocalOrTest);
+        byte[] decodedKey = resolveKeyBytes(effectiveSecret, isLocalOrTest);
 
         this.key = new SecretKeySpec(decodedKey, "HmacSHA256");
-        this.duration = (duration == null || duration.isNegative() || duration.isZero())
+        this.duration = resolveDuration(duration);
+        this.parser = Jwts.parser().verifyWith(this.key).build();
+    }
+
+    private static String resolveEffectiveSecret(String secretBase64, Environment env, boolean isLocalOrTest) {
+        String secret = secretBase64;
+        if ((secret == null || secret.isBlank()) && env != null) {
+            secret = env.getProperty("JWT_SECRET_BASE64");
+            if (secret == null || secret.isBlank()) {
+                secret = env.getProperty("SECURITY_JWT_SECRET");
+            }
+        }
+        if (secret == null || secret.isBlank()) {
+            if (isLocalOrTest) {
+                log.warn("ADVERTENCIA DE SEGURIDAD: Usando clave secreta JWT predeterminada para entorno local/pruebas.");
+                return DEFAULT_DEV_SECRET_BASE64;
+            }
+            throw new IllegalStateException(
+                    "La variable de entorno JWT_SECRET_BASE64 es obligatoria y debe contener al menos 256 bits (32 bytes en Base64) en cualquier perfil distinto a local, test o dev."
+            );
+        }
+        return secret;
+    }
+
+    private static byte[] resolveKeyBytes(String effectiveSecret, boolean isLocalOrTest) {
+        try {
+            byte[] decodedKey = Base64.getDecoder().decode(effectiveSecret);
+            if (decodedKey.length >= 32) {
+                return decodedKey;
+            }
+            if (isLocalOrTest) {
+                return padTo256Bits(effectiveSecret.getBytes(StandardCharsets.UTF_8));
+            }
+            throw new IllegalStateException("JWT_SECRET_BASE64 es requerida y debe contener al menos 256 bits (32 bytes).");
+        } catch (IllegalArgumentException e) {
+            if (isLocalOrTest) {
+                return padTo256Bits(effectiveSecret.getBytes(StandardCharsets.UTF_8));
+            }
+            throw new IllegalStateException("JWT_SECRET_BASE64 debe ser una cadena Base64 válida con al menos 256 bits.", e);
+        }
+    }
+
+    private static Duration resolveDuration(Duration duration) {
+        return (duration == null || duration.isNegative() || duration.isZero())
                 ? Duration.ofHours(24)
                 : duration;
-        this.parser = Jwts.parser().verifyWith(this.key).build();
     }
 
     private static boolean isLocalOrTestProfile(Environment env) {

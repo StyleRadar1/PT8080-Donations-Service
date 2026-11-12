@@ -8,7 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Objeto de valor que encapsula los filtros de búsqueda para las publicaciones de segunda mano.
+ * Objeto de valor que encapsula los filtros de búsqueda para las publicaciones de economía circular.
+ * Permite filtrar por discriminador 'esDonacion' y por localidad oficial de Bogotá D.C.
  */
 @Data
 @Builder
@@ -26,4 +27,6 @@ public class PublicationSearchCriteria {
     private String brand;
     private Style style;
     private PublicationStatus status;
+    private Boolean esDonacion;
+    private LocalidadBogota localidad;
 }

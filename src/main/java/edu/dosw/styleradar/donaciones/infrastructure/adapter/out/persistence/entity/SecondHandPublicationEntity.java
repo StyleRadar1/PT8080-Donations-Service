@@ -7,6 +7,7 @@ import java.util.List;
 
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
+import edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
@@ -22,6 +23,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,6 +32,7 @@ import lombok.Setter;
 
 /**
  * Entidad JPA para la tabla publicaciones_segunda_mano.
+ * Representa publicaciones de donaciones (esDonacion = true) y segunda mano (esDonacion = false).
  */
 @Entity
 @Table(name = "publicaciones_segunda_mano")
@@ -78,9 +81,22 @@ public class SecondHandPublicationEntity {
     @Column(name = "precio", nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "es_donacion", nullable = false)
+    @Builder.Default
+    private boolean esDonacion = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "localidad", nullable = false, length = 50)
+    @Builder.Default
+    private LocalidadBogota localidad = LocalidadBogota.CHAPINERO;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 30)
     private PublicationStatus status;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 
     @Column(name = "fecha_publicacion", nullable = false)
     private LocalDateTime publishedAt;

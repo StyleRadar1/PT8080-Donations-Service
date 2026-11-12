@@ -68,16 +68,20 @@ class SecondHandPublicationTest {
     }
 
     @Test
-    @DisplayName("Debe rechazar publicación con precio negativo o nulo")
-    void shouldFailWhenPriceIsNegativeOrNull() {
+    @DisplayName("Debe rechazar publicación con precio negativo, cero o nulo en segunda mano C2C")
+    void shouldFailWhenPriceIsNegativeZeroOrNullInSecondHand() {
         SecondHandPublication pub = SecondHandPublication.builder()
                 .userId(1L)
                 .garment(validGarment)
                 .size(Size.L)
                 .conservationStatus(ConservationStatus.ACCEPTABLE)
                 .price(BigDecimal.valueOf(-100.0))
+                .esDonacion(false)
                 .build();
 
+        assertThrows(InvalidPublicationException.class, pub::publish);
+
+        pub.setPrice(BigDecimal.ZERO);
         assertThrows(InvalidPublicationException.class, pub::publish);
 
         pub.setPrice(null);
@@ -212,6 +216,7 @@ class SecondHandPublicationTest {
                 .size(Size.M)
                 .conservationStatus(ConservationStatus.GOOD_CONDITION)
                 .price(BigDecimal.ZERO)
+                .esDonacion(true)
                 .build();
         pub.publish();
 

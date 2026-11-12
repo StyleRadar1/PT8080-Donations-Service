@@ -1,18 +1,14 @@
-name: CI/CD Pipeline - ms-segunda-vida-donaciones
+name: CI/CD QA Pipeline - ms-segunda-vida-donaciones
 
 on:
   push:
     branches:
       - develop
-      - master
-      - main
       - 'feature/**'
       - 'bugfix/**'
   pull_request:
     branches:
       - develop
-      - master
-      - main
 
 permissions:
   contents: read
@@ -24,7 +20,7 @@ jobs:
   # Fase 1 & 2: Compilación, Pruebas Automatizadas y Compuerta de Calidad (JaCoCo)
   # ==============================================================================
   build-and-test:
-    name: Build, Test, Coverage & Docker Packaging
+    name: Build, Test, Coverage & Docker Packaging (QA)
     runs-on: ubuntu-latest
 
     steps:
@@ -83,7 +79,7 @@ jobs:
           retention-days: 7
 
   # ==============================================================================
-  # Fase 5: Despliegue Automático al Ambiente QA (Trigger: Push/Merge a 'develop')
+  # Fase 3: Despliegue Automático al Ambiente QA (Trigger: Push/Merge a 'develop')
   # ==============================================================================
   deploy-qa:
     name: Deploy to QA Environment (Azure Cloud Staging)
@@ -180,103 +176,3 @@ jobs:
             exit 1
           fi
           echo "✅ Despliegue en QA completado y verificado con éxito."
-
-  # ==============================================================================
-  # Fase 5: Despliegue al Ambiente PROD (Trigger: Push/Merge a 'master' o 'main')
-  # Requiere aprobación previa de CMV y validación de compuerta
-  # ==============================================================================
-  deploy-prod:
-    name: Deploy to PROD Environment (Azure Production Cloud - CMV / Approval Required)
-    needs: build-and-test
-    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && github.event_name == 'push'
-    environment:
-      name: production
-      url: ${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}
-    runs-on: ubuntu-latest
-    env:
-      AZURE_WEBAPP_PUBLISH_PROFILE_PROD: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
-      DEPLOY_WEBHOOK_PROD: ${{ secrets.DEPLOY_WEBHOOK_PROD }}
-
-    steps:
-      - name: 1. Checkout Code
-        uses: actions/checkout@v4
-
-      - name: 2. Download Application JAR
-        uses: actions/download-artifact@v4
-        with:
-          name: application-jar
-          path: target
-
-      - name: 3. Validate Azure Deployment Credentials (PROD)
-        run: |
-          if [ -z "$AZURE_WEBAPP_PUBLISH_PROFILE_PROD" ] && [ -z "$DEPLOY_WEBHOOK_PROD" ]; then
-            echo "❌ ERROR: Faltan las credenciales de despliegue de Azure para PROD en GitHub Secrets."
-            echo "   Debe configurar AZURE_WEBAPP_PUBLISH_PROFILE_PROD o DEPLOY_WEBHOOK_PROD en el repositorio."
-            exit 1
-          fi
-          echo "✅ Credenciales de despliegue para PROD validadas."
-
-      - name: 4. Deploy to Azure Web App (PROD)
-        if: env.AZURE_WEBAPP_PUBLISH_PROFILE_PROD != ''
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: styleradar-donaciones-prod-jmunar
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
-          package: 'target/*.jar'
-
-      - name: 5. Deploy via Webhook (PROD Fallback)
-        if: env.AZURE_WEBAPP_PUBLISH_PROFILE_PROD == '' && env.DEPLOY_WEBHOOK_PROD != ''
-        run: |
-          echo "-> Invocando Webhook de despliegue PROD..."
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$DEPLOY_WEBHOOK_PROD")
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "❌ ERROR: El webhook de despliegue PROD retornó código HTTP $HTTP_CODE"
-            exit 1
-          fi
-          echo "✅ Webhook de despliegue PROD ejecutado exitosamente (HTTP $HTTP_CODE)."
-
-      - name: 6. PROD Smoke Test, Health Check & Deployment Verification
-        run: |
-          PROD_HEALTH_URL="${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}/api/v1/health"
-          EXPECTED_COMMIT_SHA="${{ github.sha }}"
-          echo "======================================================================"
-          echo " Iniciando Smoke Test contra endpoint de salud de PROD: $PROD_HEALTH_URL"
-          echo " Commit SHA esperado a verificar: $EXPECTED_COMMIT_SHA"
-          echo "======================================================================"
-
-          SUCCESS=false
-          for i in {1..20}; do
-            echo "Intento $i de 20..."
-            RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$PROD_HEALTH_URL" || true)
-            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
-            BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
-
-            echo "HTTP Status -> $HTTP_STATUS"
-            echo "Response Body -> $BODY"
-
-            if [ "$HTTP_STATUS" -eq 200 ]; then
-              STATUS_FIELD=$(echo "$BODY" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || true)
-              COMMIT_SHA_FIELD=$(echo "$BODY" | grep -o '"commitSha":"[^"]*"' | cut -d'"' -f4 || true)
-
-              if [ "$STATUS_FIELD" = "UP" ]; then
-                echo "-> Estado del servicio en PROD: UP"
-                if [ -z "$COMMIT_SHA_FIELD" ]; then
-                  echo "⏳ El commitSha aún no está presente en la respuesta (posible reinicio en curso con versión previa)..."
-                elif [ "$COMMIT_SHA_FIELD" != "$EXPECTED_COMMIT_SHA" ] && [[ "$EXPECTED_COMMIT_SHA" != "$COMMIT_SHA_FIELD"* ]]; then
-                  echo "⏳ El commitSha reportado ($COMMIT_SHA_FIELD) aún no coincide con el nuevo commit ($EXPECTED_COMMIT_SHA). Esperando propagación del artefacto..."
-                else
-                  echo "✅ Commit SHA desplegado en PROD verificado exitosamente: $COMMIT_SHA_FIELD"
-                  SUCCESS=true
-                  break
-                fi
-              fi
-            fi
-            sleep 10
-          done
-
-          if [ "$SUCCESS" = false ]; then
-            echo "❌ ERROR CRÍTICO: El health check de PROD no confirmó el despliegue del commit $EXPECTED_COMMIT_SHA con status UP tras 20 intentos (200s)."
-            echo "El nuevo artefacto no se desplegó correctamente en: $PROD_HEALTH_URL"
-            exit 1
-          fi
-          echo "✅ Despliegue en PROD completado y verificado con éxito."

@@ -5,6 +5,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
@@ -70,16 +73,30 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
 
         log.info("Solicitud de donación radicada exitosamente con ID: {}", saved.getId());
 
-        eventPublisherPort.publishEvent(
-                new DonationRequestCreatedEvent(
-                        saved.getId(),
-                        saved.getPublicationId(),
-                        saved.getDonorId(),
-                        saved.getFoundationId()
-                )
+        DonationRequestCreatedEvent event = new DonationRequestCreatedEvent(
+                saved.getId(),
+                saved.getPublicationId(),
+                saved.getDonorId(),
+                saved.getFoundationId(),
+                saved.getStatus() != null ? saved.getStatus().name() : "PENDING"
         );
 
+        publishAfterCommitOrImmediate(event);
+
         return saved;
+    }
+
+    private void publishAfterCommitOrImmediate(DonationRequestCreatedEvent event) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    eventPublisherPort.publishEvent(event);
+                }
+            });
+        } else {
+            eventPublisherPort.publishEvent(event);
+        }
     }
 
     @Override

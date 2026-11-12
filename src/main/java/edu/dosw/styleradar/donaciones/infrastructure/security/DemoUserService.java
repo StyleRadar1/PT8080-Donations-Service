@@ -56,9 +56,18 @@ public class DemoUserService {
                 Role.FOUNDATION
         );
 
+        UserPrincipal store = new UserPrincipal(
+                301L,
+                "store@styleradar.com",
+                "Store123*",
+                "Boutique Vintage Bogotá (Tienda Aliada)",
+                Role.STORE
+        );
+
         registerUser(admin);
         registerUser(normalUser);
         registerUser(foundation);
+        registerUser(store);
     }
 
     private void registerUser(UserPrincipal user) {
