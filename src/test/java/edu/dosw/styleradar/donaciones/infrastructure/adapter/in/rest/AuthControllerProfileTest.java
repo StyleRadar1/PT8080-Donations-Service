@@ -4,10 +4,10 @@ import edu.dosw.styleradar.donaciones.infrastructure.security.DemoUserService;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Pruebas unitarias de aislamiento por perfil para AuthController y DemoUserService.
@@ -18,7 +18,7 @@ class AuthControllerProfileTest {
 
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
             .withUserConfiguration(AuthController.class, DemoUserService.class)
-            .withBean(JwtTokenProvider.class, () -> Mockito.mock(JwtTokenProvider.class));
+            .withBean(JwtTokenProvider.class, () -> mock(JwtTokenProvider.class));
 
     @Test
     @DisplayName("En perfil prod - AuthController y DemoUserService NO deben registrarse como beans")

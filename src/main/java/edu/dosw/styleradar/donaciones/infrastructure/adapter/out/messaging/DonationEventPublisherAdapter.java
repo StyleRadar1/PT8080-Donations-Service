@@ -31,6 +31,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private static final Logger log = LoggerFactory.getLogger(DonationEventPublisherAdapter.class);
 
+    private static final String ESTADO_EN_RECOGIDA = "EN_RECOGIDA";
+    private static final String ESTADO_ENTREGADA = "ENTREGADA";
+
     private final RabbitTemplate rabbitTemplate;
     private final String exchangeName;
     private final String chatExchangeName;
@@ -78,21 +81,18 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             return;
         }
 
-        if (event instanceof DonationRequestCreatedEvent domainEvent) {
-            publishDonationRequestCreated(domainEvent);
-        } else if (event instanceof PublicationSoldEvent soldEvent) {
-            publishPublicationSold(soldEvent);
-        } else if (event instanceof DonationRequestDecidedEvent decidedEvent) {
-            publishDonationDecided(decidedEvent);
-        } else if (event instanceof PickupScheduledEvent pickupEvent) {
-            publishPickupScheduled(pickupEvent);
-        } else if (event instanceof DonationDeliveredEvent deliveredEvent) {
-            publishDonationDelivered(deliveredEvent);
-        } else {
-            log.info("Publicando evento en broker RabbitMQ [Exchange: {}, Evento: {}]",
-                    exchangeName, event.getClass().getSimpleName());
-            CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
-            rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
+        switch (event) {
+            case DonationRequestCreatedEvent domainEvent -> publishDonationRequestCreated(domainEvent);
+            case PublicationSoldEvent soldEvent -> publishPublicationSold(soldEvent);
+            case DonationRequestDecidedEvent decidedEvent -> publishDonationDecided(decidedEvent);
+            case PickupScheduledEvent pickupEvent -> publishPickupScheduled(pickupEvent);
+            case DonationDeliveredEvent deliveredEvent -> publishDonationDelivered(deliveredEvent);
+            default -> {
+                log.info("Publicando evento en broker RabbitMQ [Exchange: {}, Evento: {}]",
+                        exchangeName, event.getClass().getSimpleName());
+                CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
+                rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
+            }
         }
     }
 
@@ -168,8 +168,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .donanteId(domainEvent.donorId())
                         .donorId(domainEvent.donorId())
                         .estadoAnterior("ACEPTADA")
-                        .nuevoEstado("EN_RECOGIDA")
-                        .estado("EN_RECOGIDA")
+                        .nuevoEstado(ESTADO_EN_RECOGIDA)
+                        .estado(ESTADO_EN_RECOGIDA)
                         .status("SCHEDULED")
                         .puntoEntrega(domainEvent.deliveryPoint())
                         .deliveryPoint(domainEvent.deliveryPoint())
@@ -184,8 +184,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .donanteId(domainEvent.donorId())
                 .donorId(domainEvent.donorId())
                 .estadoAnterior("ACEPTADA")
-                .nuevoEstado("EN_RECOGIDA")
-                .estado("EN_RECOGIDA")
+                .nuevoEstado(ESTADO_EN_RECOGIDA)
+                .estado(ESTADO_EN_RECOGIDA)
                 .status("SCHEDULED")
                 .puntoEntrega(domainEvent.deliveryPoint())
                 .deliveryPoint(domainEvent.deliveryPoint())
@@ -210,9 +210,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .publicationId(domainEvent.publicationId())
                         .fundacionId(domainEvent.foundationId())
                         .foundationId(domainEvent.foundationId())
-                        .estadoAnterior("EN_RECOGIDA")
-                        .nuevoEstado("ENTREGADA")
-                        .estado("ENTREGADA")
+                        .estadoAnterior(ESTADO_EN_RECOGIDA)
+                        .nuevoEstado(ESTADO_ENTREGADA)
+                        .estado(ESTADO_ENTREGADA)
                         .status("COMPLETED")
                         .build();
 
@@ -226,9 +226,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .publicationId(domainEvent.publicationId())
                 .fundacionId(domainEvent.foundationId())
                 .foundationId(domainEvent.foundationId())
-                .estadoAnterior("EN_RECOGIDA")
-                .nuevoEstado("ENTREGADA")
-                .estado("ENTREGADA")
+                .estadoAnterior(ESTADO_EN_RECOGIDA)
+                .nuevoEstado(ESTADO_ENTREGADA)
+                .estado(ESTADO_ENTREGADA)
                 .status("COMPLETED")
                 .data(data)
                 .build();

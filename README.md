@@ -31,7 +31,7 @@
     <a href="#4-endpoints-y-enlace-a-swagger"><img src="https://img.shields.io/badge/PROD_CLOUD-Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="PROD Cloud Active" /></a>
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions"><img src="https://img.shields.io/badge/CI_MASTER-passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Master Status" /></a>
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions"><img src="https://img.shields.io/badge/CI_DEVELOP-passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Develop Status" /></a>
-    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/Tests-197_Passing-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Tests 197 Passing" /></a>
+    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/Tests-199_Passing-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Tests 199 Passing" /></a>
     <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/JaCoCo_Coverage-99.37%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" /></a>
   </p>
 
@@ -176,7 +176,7 @@ Diseñado siguiendo el formato y paleta visual oficial de **StyleRadar** (`#4811
 Diseñado 100% en inglés técnico alineado estrictamente con el código fuente en Java 21:
 
 <div align="center">
-  <img src="docs/diagramas/png/diagrama_clases_sprint3.drawio.png" width="98%" alt="Diagrama de Clases Sprint 3" />
+  <img src="docs/diagramas/png/diagrama_clases_sprint3.drawio.png" width="98%" alt="Diagrama de Clases" />
   <p><sub><b>Figura 3.2:</b> Diagrama de Clases del dominio de <code>ms-segunda-vida-donaciones</code>. Modela entidades agregadas (<code>SecondHandPublication</code>, <code>DonationRequest</code>), value objects inmutables (<code>Garment</code>), puertos de entrada/salida, casos de uso y enums de dominio (<code>BogotaLocality</code>, <code>ConservationStatus</code>, <code>GarmentType</code>, <code>PublicationStatus</code>, <code>DonationRequestStatus</code>).</sub></p>
   <p>
     📁 <b>Archivo editable Draw.io:</b> <a href="docs/diagramas/drawio/diagrama_clases_sprint3.drawio"><code>docs/diagramas/drawio/diagrama_clases_sprint3.drawio</code></a>
@@ -416,11 +416,11 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 
 El proyecto exige una cobertura de código mínima del **85%** verificada automáticamente mediante **JaCoCo** durante la fase `verify` de Maven.
 
-### Resumen de Métricas de Pruebas y Cobertura (Sprint 3)
+### Resumen de Métricas de Pruebas y Cobertura
 
 | Métrica | Valor Alcanzado | Umbral Exigido | Estado |
 | :--- | :---: | :---: | :---: |
-| **Pruebas Automatizadas Ejecutadas** | **197 tests** | Suite completa | ✅ **100% Passing (0 fallos, 0 errores)** |
+| **Pruebas Automatizadas Ejecutadas** | **199 tests** | Suite completa | ✅ **100% Passing (0 fallos, 0 errores)** |
 | **Cobertura de Instrucciones (JaCoCo)** | **99.37%** | `≥ 85.00%` | ✅ **Aprobado (+14.37%)** |
 | **Cobertura de Líneas (JaCoCo)** | **99.28%** | `≥ 85.00%` | ✅ **Aprobado (+14.28%)** |
 | **Cobertura de Ramas / Branches (JaCoCo)** | **90.30%** | `≥ 85.00%` | ✅ **Aprobado (+5.30%)** |

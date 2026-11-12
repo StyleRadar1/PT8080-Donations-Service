@@ -27,6 +27,8 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
 
     private static final long serialVersionUID = 1L;
 
+    public static final String PRODUCER_NAME = "ms-segunda-vida-donaciones";
+
     @Builder.Default
     private String eventoId = UUID.randomUUID().toString();
 
@@ -43,16 +45,16 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
     private String eventType = "styleradar.donaciones.estado.cambiado";
 
     @Builder.Default
-    private String emisor = "ms-segunda-vida-donaciones";
+    private String emisor = PRODUCER_NAME;
 
     @Builder.Default
-    private String servicio = "ms-segunda-vida-donaciones";
+    private String servicio = PRODUCER_NAME;
 
     @Builder.Default
-    private String microservicio = "ms-segunda-vida-donaciones";
+    private String microservicio = PRODUCER_NAME;
 
     @Builder.Default
-    private String producer = "ms-segunda-vida-donaciones";
+    private String producer = PRODUCER_NAME;
 
     @Builder.Default
     private String modulo = "DONACIONES";

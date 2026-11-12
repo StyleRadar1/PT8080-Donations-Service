@@ -19,7 +19,7 @@ public class UploadGarmentPhotoUseCaseImpl implements UploadGarmentPhotoUseCase 
 
     private static final Logger log = LoggerFactory.getLogger(UploadGarmentPhotoUseCaseImpl.class);
 
-    public static final long MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    public static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024; // 5 MB
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "image/jpeg",
             "image/jpg",

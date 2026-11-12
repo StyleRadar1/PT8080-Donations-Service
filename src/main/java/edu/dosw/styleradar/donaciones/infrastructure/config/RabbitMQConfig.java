@@ -165,9 +165,8 @@ public class RabbitMQConfig {
     }
 
     public RabbitTemplate.ReturnsCallback returnsCallback() {
-        return returned -> {
-            log.error("Mensaje devuelto por el broker RabbitMQ (no enrutable) [ReplyCode: {}, ReplyText: {}, Exchange: {}, RoutingKey: {}]",
-                    returned.getReplyCode(), returned.getReplyText(), returned.getExchange(), returned.getRoutingKey());
-        };
+        return returned -> log.error(
+                "Mensaje devuelto por el broker RabbitMQ (no enrutable) [ReplyCode: {}, ReplyText: {}, Exchange: {}, RoutingKey: {}]",
+                returned.getReplyCode(), returned.getReplyText(), returned.getExchange(), returned.getRoutingKey());
     }
 }

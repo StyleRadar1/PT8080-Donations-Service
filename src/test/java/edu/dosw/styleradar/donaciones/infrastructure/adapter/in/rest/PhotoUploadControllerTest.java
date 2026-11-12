@@ -15,7 +15,6 @@ import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationExcepti
 import edu.dosw.styleradar.donaciones.domain.port.in.UploadGarmentPhotoUseCase;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtAuthenticationFilter;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtTokenProvider;
-import edu.dosw.styleradar.donaciones.infrastructure.security.ResourceOwnershipValidator;
 import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityConfig;
 import edu.dosw.styleradar.donaciones.infrastructure.security.SecurityErrorHandler;
 

@@ -28,6 +28,9 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
 
     private static final long serialVersionUID = 1L;
 
+    public static final String SERVICE_NAME = "ms-segunda-vida-donaciones";
+    public static final String EVENT_TYPE_SOLD = "segunda-mano.prenda.vendida";
+
     @Builder.Default
     private String eventoId = UUID.randomUUID().toString();
 
@@ -35,25 +38,25 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
     private String eventId = UUID.randomUUID().toString();
 
     @Builder.Default
-    private String tipoEvento = "segunda-mano.prenda.vendida";
+    private String tipoEvento = EVENT_TYPE_SOLD;
 
     @Builder.Default
     private String tipoEventoUnificado = "styleradar.segundavida-donaciones.prenda.vendida";
 
     @Builder.Default
-    private String eventType = "segunda-mano.prenda.vendida";
+    private String eventType = EVENT_TYPE_SOLD;
 
     @Builder.Default
-    private String emisor = "ms-segunda-vida-donaciones";
+    private String emisor = SERVICE_NAME;
 
     @Builder.Default
-    private String servicio = "ms-segunda-vida-donaciones";
+    private String servicio = SERVICE_NAME;
 
     @Builder.Default
-    private String microservicio = "ms-segunda-vida-donaciones";
+    private String microservicio = SERVICE_NAME;
 
     @Builder.Default
-    private String producer = "ms-segunda-vida-donaciones";
+    private String producer = SERVICE_NAME;
 
     @Builder.Default
     private String modulo = "SEGUNDA_VIDA";
@@ -126,13 +129,13 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
                 .eventId(evtId)
                 .correlationId(corrId)
                 .version(1)
-                .tipoEvento("segunda-mano.prenda.vendida")
+                .tipoEvento(EVENT_TYPE_SOLD)
                 .tipoEventoUnificado("styleradar.segundavida-donaciones.prenda.vendida")
-                .eventType("segunda-mano.prenda.vendida")
-                .emisor("ms-segunda-vida-donaciones")
-                .servicio("ms-segunda-vida-donaciones")
-                .microservicio("ms-segunda-vida-donaciones")
-                .producer("ms-segunda-vida-donaciones")
+                .eventType(EVENT_TYPE_SOLD)
+                .emisor(SERVICE_NAME)
+                .servicio(SERVICE_NAME)
+                .microservicio(SERVICE_NAME)
+                .producer(SERVICE_NAME)
                 .modulo("SEGUNDA_VIDA")
                 .canal("C2C")
                 .publicacionId(domainEvent.publicationId())
