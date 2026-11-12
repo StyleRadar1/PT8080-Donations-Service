@@ -89,7 +89,8 @@ public class ClaimDonationUseCaseImpl implements ClaimDonationUseCase {
                 savedRequest.getId(),
                 savedRequest.getPublicationId(),
                 savedRequest.getDonorId(),
-                savedRequest.getFoundationId()
+                savedRequest.getFoundationId(),
+                savedRequest.getStatus() != null ? savedRequest.getStatus().name() : "APPROVED"
         ));
 
         return savedRequest;

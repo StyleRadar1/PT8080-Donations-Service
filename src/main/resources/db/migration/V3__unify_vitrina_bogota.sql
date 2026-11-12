@@ -45,7 +45,7 @@ BEGIN
         ALTER TABLE publicaciones_segunda_mano
             ADD CONSTRAINT chk_pub_es_donacion_precio CHECK (
                 (es_donacion = TRUE AND precio = 0) OR
-                (es_donacion = FALSE AND precio >= 0)
+                (es_donacion = FALSE AND precio > 0)
             );
     END IF;
 END $$;

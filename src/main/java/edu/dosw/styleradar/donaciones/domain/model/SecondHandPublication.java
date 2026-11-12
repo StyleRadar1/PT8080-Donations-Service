@@ -82,8 +82,8 @@ public class SecondHandPublication {
                 throw new InvalidPublicationException("Una prenda destinada a donación benéfica debe tener precio 0 COP");
             }
         } else {
-            if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
-                throw new InvalidPublicationException("El precio de la prenda usada debe ser mayor o igual a 0");
+            if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new InvalidPublicationException("Para publicaciones de segunda mano (venta C2C), el precio debe ser estrictamente mayor a 0 COP");
             }
         }
 

@@ -44,6 +44,9 @@ public class UploadGarmentPhotoUseCaseImpl implements UploadGarmentPhotoUseCase 
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
             throw new InvalidPublicationException("Tipo de archivo no permitido: " + contentType + ". Solo se admiten formatos JPEG, PNG y WEBP.");
         }
+        if (!isValidImageBinarySignature(content)) {
+            throw new InvalidPublicationException("El contenido binario del archivo no corresponde a una firma de imagen válida (JPEG, PNG o WEBP).");
+        }
 
         String extension = extractExtension(originalFilename, contentType);
         String uniqueFilename = "garment_" + UUID.randomUUID().toString().replace("-", "") + extension;
@@ -68,5 +71,37 @@ public class UploadGarmentPhotoUseCaseImpl implements UploadGarmentPhotoUseCase 
             return ".webp";
         }
         return ".jpg";
+    }
+
+    public static boolean isValidImageBinarySignature(byte[] content) {
+        if (content == null || content.length < 12) {
+            return false;
+        }
+        // JPEG magic bytes: FF D8 FF
+        boolean isJpeg = (content[0] == (byte) 0xFF)
+                && (content[1] == (byte) 0xD8)
+                && (content[2] == (byte) 0xFF);
+        if (isJpeg) {
+            return true;
+        }
+
+        // PNG magic bytes: 89 50 4E 47
+        boolean isPng = (content[0] == (byte) 0x89)
+                && (content[1] == (byte) 0x50)
+                && (content[2] == (byte) 0x4E)
+                && (content[3] == (byte) 0x47);
+        if (isPng) {
+            return true;
+        }
+
+        // WEBP magic bytes: RIFF....WEBP
+        return (content[0] == 'R')
+                && (content[1] == 'I')
+                && (content[2] == 'F')
+                && (content[3] == 'F')
+                && (content[8] == 'W')
+                && (content[9] == 'E')
+                && (content[10] == 'B')
+                && (content[11] == 'P');
     }
 }

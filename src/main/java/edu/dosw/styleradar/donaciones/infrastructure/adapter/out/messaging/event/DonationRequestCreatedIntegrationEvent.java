@@ -96,6 +96,8 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
         String nowStr = domainEvent.occurredOn() != null ? domainEvent.occurredOn().toString() : Instant.now().toString();
         String eventUuid = UUID.randomUUID().toString();
         String corrUuid = UUID.randomUUID().toString();
+        String rawStatus = domainEvent.status() != null ? domainEvent.status() : "PENDING";
+        String estadoEsp = "APPROVED".equalsIgnoreCase(rawStatus) ? "APROBADA" : "PENDIENTE";
 
         DonationRequestData requestData = DonationRequestData.builder()
                 .donacionId(domainEvent.requestId())
@@ -107,8 +109,8 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
                 .donorId(domainEvent.donorId())
                 .foundationId(domainEvent.foundationId())
                 .fundacionId(domainEvent.foundationId())
-                .status("PENDING")
-                .estado("PENDIENTE")
+                .status(rawStatus)
+                .estado(estadoEsp)
                 .version(1)
                 .occurredOn(nowStr)
                 .build();

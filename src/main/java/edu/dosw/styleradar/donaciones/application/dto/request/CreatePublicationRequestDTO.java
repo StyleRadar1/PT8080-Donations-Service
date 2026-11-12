@@ -3,12 +3,14 @@ package edu.dosw.styleradar.donaciones.application.dto.request;
 import java.math.BigDecimal;
 import java.util.List;
 
+import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
 import edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota;
 import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -82,6 +84,17 @@ public record CreatePublicationRequestDTO(
         if (localidad == null) {
             localidad = LocalidadBogota.CHAPINERO;
         }
+    }
+
+    /**
+     * Valida que las publicaciones de segunda mano C2C tengan un precio estrictamente mayor a 0 COP.
+     */
+    @AssertTrue(message = "Para publicaciones de segunda mano (venta C2C), el precio debe ser estrictamente mayor a 0 COP")
+    public boolean isPriceValidForC2C() {
+        if (Boolean.TRUE.equals(esDonacion)) {
+            return true;
+        }
+        return price != null && price.compareTo(BigDecimal.ZERO) > 0;
     }
 
     /**

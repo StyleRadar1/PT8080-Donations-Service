@@ -17,6 +17,16 @@ class DonationRequestCreatedIntegrationEventTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    @DisplayName("Debe mapear correctamente el estado APROBADA cuando la donación proviene de un reclamo de vitrina")
+    void shouldMapApprovedStatusCorrectly() {
+        DonationRequestCreatedEvent domainEvent = new DonationRequestCreatedEvent(101L, 202L, 303L, 501L, "APPROVED");
+        DonationRequestCreatedIntegrationEvent integrationEvent = DonationRequestCreatedIntegrationEvent.from(domainEvent);
+
+        assertThat(integrationEvent.getData().getStatus()).isEqualTo("APPROVED");
+        assertThat(integrationEvent.getData().getEstado()).isEqualTo("APROBADA");
+    }
+
+    @Test
     @DisplayName("Debe construir un evento de integración a partir del evento de dominio con todos los campos requeridos")
     void shouldBuildFromDomainEvent() {
         Instant now = Instant.parse("2026-11-08T20:00:00Z");

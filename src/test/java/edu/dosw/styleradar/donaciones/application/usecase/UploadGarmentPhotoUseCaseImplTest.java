@@ -33,7 +33,7 @@ class UploadGarmentPhotoUseCaseImplTest {
     @Test
     @DisplayName("Debe cargar exitosamente una imagen válida JPEG y retornar su URL")
     void shouldUploadValidJpegPhotoSuccessfully() {
-        byte[] content = "fake-jpeg-bytes".getBytes();
+        byte[] content = new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 16, 'J', 'F', 'I', 'F', 0, 1};
         String originalFilename = "prenda.jpg";
         String contentType = "image/jpeg";
         String expectedUrl = "https://srdonacionesjmunar.blob.core.windows.net/donaciones-fotos/garment_abc.jpg";
@@ -50,7 +50,7 @@ class UploadGarmentPhotoUseCaseImplTest {
     @Test
     @DisplayName("Debe cargar exitosamente una imagen PNG y asignar extensión .png")
     void shouldUploadValidPngPhotoSuccessfully() {
-        byte[] content = "fake-png-bytes".getBytes();
+        byte[] content = new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13};
         String originalFilename = "foto.png";
         String contentType = "image/png";
         String expectedUrl = "https://srdonacionesjmunar.blob.core.windows.net/donaciones-fotos/garment_123.png";
@@ -61,6 +61,32 @@ class UploadGarmentPhotoUseCaseImplTest {
         String resultUrl = useCase.uploadPhoto(content, originalFilename, contentType);
 
         assertThat(resultUrl).isEqualTo(expectedUrl);
+    }
+
+    @Test
+    @DisplayName("Debe cargar exitosamente una imagen WEBP y asignar extensión .webp")
+    void shouldUploadValidWebpPhotoSuccessfully() {
+        byte[] content = new byte[] {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P', 0, 0};
+        String originalFilename = "foto.webp";
+        String contentType = "image/webp";
+        String expectedUrl = "https://srdonacionesjmunar.blob.core.windows.net/donaciones-fotos/garment_456.webp";
+
+        when(photoStoragePort.storePhoto(eq(content), any(String.class), eq(contentType)))
+                .thenReturn(expectedUrl);
+
+        String resultUrl = useCase.uploadPhoto(content, originalFilename, contentType);
+
+        assertThat(resultUrl).isEqualTo(expectedUrl);
+    }
+
+    @Test
+    @DisplayName("Debe fallar cuando el contenido binario no corresponde a la firma de imagen JPEG, PNG o WEBP")
+    void shouldFailWhenBinarySignatureIsInvalid() {
+        byte[] corruptContent = "this-is-not-an-image-signature".getBytes();
+
+        assertThatThrownBy(() -> useCase.uploadPhoto(corruptContent, "foto.jpg", "image/jpeg"))
+                .isInstanceOf(InvalidPublicationException.class)
+                .hasMessageContaining("El contenido binario del archivo no corresponde a una firma de imagen válida");
     }
 
     @Test

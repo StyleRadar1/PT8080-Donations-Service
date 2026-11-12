@@ -75,7 +75,8 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
                         saved.getId(),
                         saved.getPublicationId(),
                         saved.getDonorId(),
-                        saved.getFoundationId()
+                        saved.getFoundationId(),
+                        saved.getStatus() != null ? saved.getStatus().name() : "PENDING"
                 )
         );
 
