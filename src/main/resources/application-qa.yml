@@ -46,7 +46,7 @@ spring:
       enabled: ${RABBITMQ_SSL_ENABLED:true}
       trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
       trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
-      trust-store-type: JKS
+      trust-store-type: ${RABBITMQ_TRUSTSTORE_TYPE:PKCS12}
       verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
     publisher-confirm-type: correlated
     publisher-returns: true

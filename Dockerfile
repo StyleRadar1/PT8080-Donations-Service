@@ -28,6 +28,11 @@ RUN addgroup -g 10001 -S appgroup && \
 
 WORKDIR /app
 
+# Importar la CA raíz de RabbitMQ de StyleRadar en el almacén de certificados del sistema Java (AMQPS TLS Puerto 5671)
+COPY src/main/resources/certs/rabbitmq-ca.pem /tmp/rabbitmq-ca.pem
+RUN keytool -importcert -trustcacerts -cacerts -storepass changeit -noprompt -alias styleradar-rabbitmq-ca -file /tmp/rabbitmq-ca.pem && \
+    rm /tmp/rabbitmq-ca.pem
+
 # Copy executable jar from builder stage with proper ownership
 COPY --from=builder --chown=appuser:appgroup /build/target/*.jar app.jar
 
