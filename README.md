@@ -442,7 +442,7 @@ El proyecto exige una cobertura de código mínima del **85%** verificada autom�
 
 ## 10. CI/CD CON EL BADGE DEL PIPELINE
 
-El ciclo de integración y despliegue continuo está automatizado en **GitHub Actions** (`.github/workflows/ci.yml`):
+El ciclo de integración y despliegue continuo está automatizado en **GitHub Actions** mediante dos flujos separados (`.github/workflows/ci-qa.yml` para QA y `.github/workflows/cd-prod.yml` para Producción):
 
 ### Matriz de Pipelines por Rama Protegida
 
