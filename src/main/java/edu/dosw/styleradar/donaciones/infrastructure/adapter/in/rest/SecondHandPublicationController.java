@@ -199,7 +199,7 @@ public class SecondHandPublicationController {
             )
     })
     @PostMapping
-    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> createPublication(
             @Valid @RequestBody CreatePublicationRequestDTO requestDTO) {
         resourceOwnershipValidator.validateOwnerOrAdmin(requestDTO.userId());
@@ -319,6 +319,8 @@ public class SecondHandPublicationController {
             @RequestParam(required = false) String searchTerm,
             @Parameter(description = "Categoría de prenda textil", example = "UPPER")
             @RequestParam(required = false) GarmentType type,
+            @Parameter(description = "Alias opcional para categoría de prenda textil", example = "UPPER")
+            @RequestParam(required = false) GarmentType garmentType,
             @Parameter(description = "Color predominante", example = "Azul")
             @RequestParam(required = false) String color,
             @Parameter(description = "Talla estandarizada", example = "M")
@@ -342,7 +344,7 @@ public class SecondHandPublicationController {
 
         PublicationSearchCriteria criteria = PublicationSearchCriteria.builder()
                 .searchTerm(searchTerm)
-                .type(type)
+                .type(type != null ? type : garmentType)
                 .color(color)
                 .size(size)
                 .conservationStatus(conservationStatus)
@@ -730,7 +732,7 @@ public class SecondHandPublicationController {
             )
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> editPublication(
             @Parameter(description = "ID de la publicación a editar", example = "10")
             @PathVariable Long id,
@@ -908,7 +910,7 @@ public class SecondHandPublicationController {
             )
     })
     @PatchMapping("/{id}/sell")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> markAsSold(
             @Parameter(description = "ID de la publicación vendida", example = "10")
             @PathVariable Long id,
@@ -1035,7 +1037,7 @@ public class SecondHandPublicationController {
             )
     })
     @PatchMapping("/{id}/retire")
-    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<Void> retirePublication(
             @Parameter(description = "ID de la publicación a retirar", example = "10")
             @PathVariable Long id,
@@ -1192,7 +1194,7 @@ public class SecondHandPublicationController {
             )
     })
     @PatchMapping("/{id}/donate")
-    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> markForDonation(
             @Parameter(description = "ID de la publicación a donar", example = "10")
             @PathVariable Long id,

@@ -76,5 +76,23 @@ class DonationRequestRestMapperTest {
         assertThat(resp.id()).isEqualTo(1L);
         assertThat(resp.status()).isEqualTo(DonationRequestStatus.PENDING);
         assertThat(resp.deliveryPoint()).isEqualTo("Punto");
+        assertThat(resp.receiptCode()).isNull();
+    }
+
+    @Test
+    @DisplayName("Debe generar receiptCode SR-DON-XXXX al mapear solicitud DELIVERED")
+    void shouldGenerateReceiptCodeWhenDelivered() {
+        DonationRequest delivered = DonationRequest.builder()
+                .id(42L)
+                .publicationId(2L)
+                .donorId(3L)
+                .foundationId(4L)
+                .status(DonationRequestStatus.DELIVERED)
+                .receivedAt(LocalDateTime.now())
+                .build();
+
+        DonationRequestResponseDTO resp = mapper.toResponse(delivered);
+
+        assertThat(resp.receiptCode()).isEqualTo("SR-DON-0042");
     }
 }

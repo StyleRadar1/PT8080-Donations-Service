@@ -51,6 +51,44 @@ public record DonationRequestResponseDTO(
         LocalDateTime decisionDate,
 
         @Schema(description = "Fecha y hora de la confirmación de recepción física", example = "2026-11-15T11:45:00")
-        LocalDateTime receptionDate
+        LocalDateTime receptionDate,
+
+        @Schema(description = "Código verificable de comprobante de donación generada al confirmar entrega (SR-DON-XXXX)", example = "SR-DON-0001")
+        String receiptCode
 ) {
+    /**
+     * Constructor de compatibilidad sin receiptCode explícito (lo deriva automáticamente si está entregada).
+     */
+    public DonationRequestResponseDTO(
+            Long id,
+            Long publicationId,
+            Long donorId,
+            Long foundationId,
+            String message,
+            DonationRequestStatus status,
+            String rejectionReason,
+            String deliveryPoint,
+            LocalDateTime slotStart,
+            LocalDateTime slotEnd,
+            Long version,
+            LocalDateTime requestDate,
+            LocalDateTime decisionDate,
+            LocalDateTime receptionDate) {
+        this(
+                id, publicationId, donorId, foundationId, message, status,
+                rejectionReason, deliveryPoint, slotStart, slotEnd, version,
+                requestDate, decisionDate, receptionDate,
+                generateReceiptCode(id, status)
+        );
+    }
+
+    /**
+     * Genera el código verificable de comprobante cuando la donación ha sido confirmada como entregada.
+     */
+    public static String generateReceiptCode(Long id, DonationRequestStatus status) {
+        if (id == null || status != DonationRequestStatus.DELIVERED) {
+            return null;
+        }
+        return String.format("SR-DON-%04d", id);
+    }
 }

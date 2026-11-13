@@ -54,7 +54,7 @@ public record EditPublicationRequestDTO(
         @NotNull(message = "La talla es obligatoria")
         Size size,
 
-        @Schema(description = "Grado o estado de conservación actual", example = "GOOD")
+        @Schema(description = "Grado o estado de conservación actual", example = "GOOD_CONDITION")
         @NotNull(message = "El estado de conservación es obligatorio")
         ConservationStatus conservationStatus,
 

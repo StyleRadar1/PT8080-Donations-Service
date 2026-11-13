@@ -78,7 +78,8 @@ public class DonationRequestRestMapper {
                 domain.getVersion(),
                 domain.getRequestedAt(),
                 domain.getDecidedAt(),
-                domain.getReceivedAt()
+                domain.getReceivedAt(),
+                DonationRequestResponseDTO.generateReceiptCode(domain.getId(), domain.getStatus())
         );
     }
 
