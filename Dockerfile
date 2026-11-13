@@ -46,5 +46,9 @@ ENV PORT=8520 \
 # Official microservice assigned port
 EXPOSE 8520
 
+# Verificación de salud del contenedor en ejecución
+HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
+    CMD wget -qO- http://localhost:8520/api/v1/health || exit 1
+
 # Microservice entrypoint
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]
