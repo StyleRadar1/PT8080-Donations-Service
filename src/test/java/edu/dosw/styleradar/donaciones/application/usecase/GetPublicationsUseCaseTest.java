@@ -82,19 +82,52 @@ class GetPublicationsUseCaseTest {
     }
 
     @Test
-    @DisplayName("Debe retornar publicaciones filtradas por criterios de búsqueda")
+    @DisplayName("Debe retornar publicaciones filtradas por criterios aplicando estado AVAILABLE por defecto")
     void shouldSearchByCriteria() {
         PublicationSearchCriteria criteria = PublicationSearchCriteria.builder()
                 .type(GarmentType.UPPER)
                 .size(Size.M)
                 .build();
 
+        PublicationSearchCriteria expectedCriteria = criteria.toBuilder()
+                .status(PublicationStatus.AVAILABLE)
+                .build();
+
         SecondHandPublication pub = SecondHandPublication.builder().id(1L).build();
-        when(publicationRepositoryPort.findByCriteria(criteria)).thenReturn(List.of(pub));
+        when(publicationRepositoryPort.findByCriteria(expectedCriteria)).thenReturn(List.of(pub));
 
         List<SecondHandPublication> result = getPublicationsUseCase.search(criteria);
 
         assertEquals(1, result.size());
-        verify(publicationRepositoryPort, times(1)).findByCriteria(criteria);
+        verify(publicationRepositoryPort, times(1)).findByCriteria(expectedCriteria);
+    }
+
+    @Test
+    @DisplayName("Debe respetar el estado explícito cuando el caller lo envía en la búsqueda")
+    void shouldRespectExplicitStatusInSearch() {
+        PublicationSearchCriteria criteria = PublicationSearchCriteria.builder()
+                .status(PublicationStatus.SOLD)
+                .build();
+
+        when(publicationRepositoryPort.findByCriteria(criteria)).thenReturn(List.of());
+
+        List<SecondHandPublication> result = getPublicationsUseCase.search(criteria);
+
+        assertTrue(result.isEmpty());
+        verify(publicationRepositoryPort).findByCriteria(criteria);
+    }
+
+    @Test
+    @DisplayName("Debe aplicar AVAILABLE por defecto cuando criteria es null")
+    void shouldDefaultToAvailableWhenCriteriaIsNull() {
+        PublicationSearchCriteria expected = PublicationSearchCriteria.builder()
+                .status(PublicationStatus.AVAILABLE)
+                .build();
+        when(publicationRepositoryPort.findByCriteria(expected)).thenReturn(List.of());
+
+        List<SecondHandPublication> result = getPublicationsUseCase.search(null);
+
+        assertTrue(result.isEmpty());
+        verify(publicationRepositoryPort).findByCriteria(expected);
     }
 }

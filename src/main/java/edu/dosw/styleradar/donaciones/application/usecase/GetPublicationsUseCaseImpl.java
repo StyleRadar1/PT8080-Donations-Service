@@ -5,9 +5,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationSearchCriteria;
+import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 import edu.dosw.styleradar.donaciones.domain.port.in.GetPublicationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class GetPublicationsUseCaseImpl implements GetPublicationsUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(GetPublicationsUseCaseImpl.class);
@@ -39,7 +42,19 @@ public class GetPublicationsUseCaseImpl implements GetPublicationsUseCase {
 
     @Override
     public List<SecondHandPublication> search(PublicationSearchCriteria criteria) {
-        log.info("Ejecutando búsqueda de publicaciones con criterios: {}", criteria);
-        return publicationRepositoryPort.findByCriteria(criteria);
+        PublicationSearchCriteria effectiveCriteria;
+        if (criteria == null) {
+            effectiveCriteria = PublicationSearchCriteria.builder()
+                    .status(PublicationStatus.AVAILABLE)
+                    .build();
+        } else if (criteria.getStatus() == null) {
+            effectiveCriteria = criteria.toBuilder()
+                    .status(PublicationStatus.AVAILABLE)
+                    .build();
+        } else {
+            effectiveCriteria = criteria;
+        }
+        log.info("Ejecutando búsqueda de publicaciones con criterios: {}", effectiveCriteria);
+        return publicationRepositoryPort.findByCriteria(effectiveCriteria);
     }
 }

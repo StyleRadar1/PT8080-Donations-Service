@@ -3,6 +3,7 @@ package edu.dosw.styleradar.donaciones.application.usecase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -27,6 +28,7 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
     private final DonationEventPublisherPort eventPublisherPort;
 
     @Override
+    @Transactional
     public DonationRequest schedulePickup(SchedulePickupCommand command) {
         log.info("Programando recogida para la solicitud ID: {} por usuario ID: {}",
                 command.requestId(), command.userId());
@@ -46,7 +48,8 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
         DonationRequest saved = donationRequestRepositoryPort.save(request);
         log.info("Recogida programada con éxito para la solicitud ID: {}", saved.getId());
 
-        eventPublisherPort.publishEvent(
+        TransactionEventHelper.publishAfterCommitOrImmediate(
+                eventPublisherPort,
                 new PickupScheduledEvent(
                         saved.getId(),
                         saved.getDonorId(),

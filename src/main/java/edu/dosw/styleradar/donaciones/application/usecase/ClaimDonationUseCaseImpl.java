@@ -5,8 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.ConcurrentDonationClaimException;
@@ -95,25 +93,8 @@ public class ClaimDonationUseCaseImpl implements ClaimDonationUseCase {
                 savedRequest.getStatus() != null ? savedRequest.getStatus().name() : "APPROVED"
         );
 
-        publishAfterCommitOrImmediate(event);
+        TransactionEventHelper.publishAfterCommitOrImmediate(eventPublisherPort, event);
 
         return savedRequest;
-    }
-
-    /**
-     * Publica el evento hacia RabbitMQ garantizando que la transacción en base de datos
-     * ya haya realizado su commit exitosamente (evita publicar eventos huérfanos ante rollback).
-     */
-    private void publishAfterCommitOrImmediate(DonationRequestCreatedEvent event) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    eventPublisherPort.publishEvent(event);
-                }
-            });
-        } else {
-            eventPublisherPort.publishEvent(event);
-        }
     }
 }

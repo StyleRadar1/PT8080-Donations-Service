@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.donaciones.application.usecase;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,10 +14,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
+import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
+import edu.dosw.styleradar.donaciones.domain.model.Garment;
+import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
+import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
+import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
+import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,6 +39,9 @@ class DecideDonationRequestUseCaseTest {
 
     @Mock
     private DonationRequestRepositoryPort donationRequestRepositoryPort;
+
+    @Mock
+    private PublicationRepositoryPort publicationRepositoryPort;
 
     @Mock
     private DonationEventPublisherPort eventPublisherPort;
@@ -65,15 +76,31 @@ class DecideDonationRequestUseCaseTest {
     }
 
     @Test
-    @DisplayName("Debe rechazar solicitud con motivo y publicar evento")
+    @DisplayName("Debe rechazar solicitud con motivo, devolver publicación a AVAILABLE y publicar evento")
     void shouldRejectRequestWithReasonAndPublishEvent() {
+        SecondHandPublication publication = SecondHandPublication.builder()
+                .id(100L)
+                .userId(1L)
+                .garment(Garment.builder().name("Chaqueta").type(GarmentType.UPPER).build())
+                .size(Size.M)
+                .conservationStatus(ConservationStatus.LIKE_NEW)
+                .price(BigDecimal.ZERO)
+                .esDonacion(true)
+                .status(PublicationStatus.IN_DONATION)
+                .build();
+
         when(donationRequestRepositoryPort.findById(10L)).thenReturn(Optional.of(request));
+        when(publicationRepositoryPort.findById(100L)).thenReturn(Optional.of(publication));
         when(donationRequestRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         DonationRequest result = decideDonationRequestUseCase.decide(20L, 10L, false, "Capacidad colmada");
 
         assertEquals(DonationRequestStatus.REJECTED, result.getStatus());
         assertEquals("Capacidad colmada", result.getRejectionReason());
+        assertEquals(PublicationStatus.AVAILABLE, publication.getStatus());
+        assertTrue(publication.isEsDonacion());
+        assertEquals(BigDecimal.ZERO, publication.getPrice());
+        verify(publicationRepositoryPort).save(publication);
         verify(eventPublisherPort).publishEvent(any(DonationRequestDecidedEvent.class));
     }
 

@@ -3,6 +3,7 @@ package edu.dosw.styleradar.donaciones.application.usecase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -28,6 +29,7 @@ public class ConfirmDonationReceiptUseCaseImpl implements ConfirmDonationReceipt
     private final DonationEventPublisherPort eventPublisherPort;
 
     @Override
+    @Transactional
     public DonationRequest confirmReceipt(Long foundationId, Long requestId) {
         log.info("Fundación ID: {} confirma recepción de la donación para la solicitud ID: {}",
                 foundationId, requestId);
@@ -51,7 +53,8 @@ public class ConfirmDonationReceiptUseCaseImpl implements ConfirmDonationReceipt
         DonationRequest saved = donationRequestRepositoryPort.save(request);
         log.info("Solicitud ID: {} confirmada y marcada como DELIVERED", saved.getId());
 
-        eventPublisherPort.publishEvent(
+        TransactionEventHelper.publishAfterCommitOrImmediate(
+                eventPublisherPort,
                 new DonationDeliveredEvent(
                         saved.getId(),
                         saved.getPublicationId(),

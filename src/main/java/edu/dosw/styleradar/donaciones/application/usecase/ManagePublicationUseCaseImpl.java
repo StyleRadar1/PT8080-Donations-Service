@@ -3,6 +3,7 @@ package edu.dosw.styleradar.donaciones.application.usecase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(ManagePublicationUseCaseImpl.class);
@@ -59,7 +61,10 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
         publication.markAsSold();
         SecondHandPublication saved = publicationRepositoryPort.save(publication);
 
-        eventPublisherPort.publishEvent(new PublicationSoldEvent(saved.getId(), saved.getUserId(), compradorId));
+        TransactionEventHelper.publishAfterCommitOrImmediate(
+                eventPublisherPort,
+                new PublicationSoldEvent(saved.getId(), saved.getUserId(), compradorId)
+        );
         log.info("Publicación ID: {} marcada como VENDIDA exitosamente", saved.getId());
         return saved;
     }
