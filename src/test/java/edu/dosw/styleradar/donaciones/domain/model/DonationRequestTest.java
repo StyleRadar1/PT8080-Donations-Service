@@ -112,6 +112,8 @@ class DonationRequestTest {
         assertThrows(InvalidDonationRequestException.class,
                 () -> request.schedulePickup("Sede Norte", null, end));
         assertThrows(InvalidDonationRequestException.class,
+                () -> request.schedulePickup("Sede Norte", LocalDateTime.now().minusDays(1), end)); // en el pasado
+        assertThrows(InvalidDonationRequestException.class,
                 () -> request.schedulePickup("Sede Norte", end, start)); // fin antes de inicio
 
         request.schedulePickup("Carrera 7 # 120-10, Bogotá", start, end);

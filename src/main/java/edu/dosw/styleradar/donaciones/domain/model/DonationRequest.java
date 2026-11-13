@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.donaciones.domain.model;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -130,6 +131,9 @@ public class DonationRequest {
         }
         if (start == null || end == null) {
             throw new InvalidDonationRequestException("Las fechas de la franja horaria son obligatorias");
+        }
+        if (start.isBefore(LocalDateTime.now(ZoneId.of("America/Bogota")))) {
+            throw new InvalidDonationRequestException("La fecha de inicio de la franja horaria no puede estar en el pasado");
         }
         if (!end.isAfter(start)) {
             throw new InvalidDonationRequestException("El fin de la franja horaria debe ser posterior al inicio");

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * Permite filtrar por discriminador 'esDonacion' y por localidad oficial de Bogotá D.C.
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class PublicationSearchCriteria {

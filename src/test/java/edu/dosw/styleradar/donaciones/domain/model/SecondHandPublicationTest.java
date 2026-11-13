@@ -203,29 +203,42 @@ class SecondHandPublicationTest {
         assertEquals(PublicationStatus.RETIRED, pub.getStatus());
         assertThrows(InvalidStateTransitionException.class, pub::retire);
 
+        pub.setStatus(PublicationStatus.SOLD);
+        assertThrows(InvalidStateTransitionException.class, pub::retire);
+
         pub.setStatus(PublicationStatus.DONATED);
         assertThrows(InvalidStateTransitionException.class, pub::retire);
     }
 
     @Test
-    @DisplayName("Debe gestionar ciclo hacia donación y donada correctamente")
+    @DisplayName("Debe gestionar ciclo hacia donación, fijar precio cero, permitir reversión y cerrar como donada")
     void shouldManageDonationLifecycle() {
         SecondHandPublication pub = SecondHandPublication.builder()
                 .userId(1L)
                 .garment(validGarment)
                 .size(Size.M)
                 .conservationStatus(ConservationStatus.GOOD_CONDITION)
-                .price(BigDecimal.ZERO)
-                .esDonacion(true)
+                .price(BigDecimal.valueOf(50000.0))
+                .esDonacion(false)
                 .build();
         pub.publish();
 
         pub.markForDonation();
         assertEquals(PublicationStatus.IN_DONATION, pub.getStatus());
+        assertTrue(pub.isEsDonacion());
+        assertEquals(BigDecimal.ZERO, pub.getPrice());
 
         // No puede destinarse a donacion si ya no esta AVAILABLE
         assertThrows(InvalidStateTransitionException.class, pub::markForDonation);
 
+        // Si se rechaza solicitud, regresa a vitrina disponible con valor 0
+        pub.revertToAvailableDonation();
+        assertEquals(PublicationStatus.AVAILABLE, pub.getStatus());
+        assertTrue(pub.isEsDonacion());
+        assertEquals(BigDecimal.ZERO, pub.getPrice());
+        assertThrows(InvalidStateTransitionException.class, pub::revertToAvailableDonation);
+
+        pub.markForDonation();
         pub.markAsDonated();
         assertEquals(PublicationStatus.DONATED, pub.getStatus());
 
