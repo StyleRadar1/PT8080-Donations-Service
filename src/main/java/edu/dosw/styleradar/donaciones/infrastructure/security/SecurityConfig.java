@@ -76,9 +76,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/segunda-mano/{id}/donate").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/segunda-mano/user/{userId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
 
-                        // Operaciones de Donación - Donante (USER, STORE) y ADMIN
+                        // Operaciones de Donación - Donante (USER, STORE) y coordinación logística con Fundación (FOUNDATION)
                         .requestMatchers(HttpMethod.POST, "/donaciones").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PATCH, "/donaciones/{id}/pickup").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH, "/donaciones/{id}/pickup").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/donaciones/donor/{donorId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
 
                         // Operaciones de Donación - Reclamo en Vitrina y Gestión Fundación (FOUNDATION, ADMIN)

@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.dosw.styleradar.donaciones.application.dto.request.CreatePublicationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.DecideDonationRequestDTO;
+import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
@@ -43,7 +44,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -290,5 +293,85 @@ class SecurityRbacIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"));
+    }
+
+    @Test
+    @DisplayName("Debe retornar 403 Forbidden (BOLA/IDOR) cuando un tercero intenta consultar una solicitud ajena por ID")
+    void shouldDenyDonationRequestByIdForThirdParty() throws Exception {
+        String thirdPartyToken = jwtTokenProvider.generateToken(999L, "intruso@styleradar.com", Role.USER, "Tercero");
+
+        DonationRequest foreignRequest = DonationRequest.builder()
+                .id(1L)
+                .publicationId(10L)
+                .donorId(101L)
+                .foundationId(501L)
+                .status(DonationRequestStatus.PENDING)
+                .requestedAt(LocalDateTime.now())
+                .build();
+
+        when(createDonationRequestUseCase.getById(1L)).thenReturn(foreignRequest);
+
+        mockMvc.perform(get("/donaciones/1")
+                        .header("Authorization", "Bearer " + thirdPartyToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.title").value("Acceso denegado"));
+    }
+
+    @Test
+    @DisplayName("Debe permitir a una FUNDACIÓN participante agendar la recogida con su propio foundationId")
+    void shouldAllowFoundationToSchedulePickup() throws Exception {
+        String foundationToken = jwtTokenProvider.generateToken(501L, "fundacion@styleradar.com", Role.FOUNDATION, "Fundación");
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime end = start.plusHours(2);
+        SchedulePickupRequestDTO request = new SchedulePickupRequestDTO(501L, "Sede Chapinero Cra 7", start, end);
+
+        DonationRequest inPickup = DonationRequest.builder()
+                .id(1L)
+                .publicationId(10L)
+                .donorId(101L)
+                .foundationId(501L)
+                .status(DonationRequestStatus.IN_PICKUP)
+                .deliveryPoint("Sede Chapinero Cra 7")
+                .pickupStartTime(start)
+                .pickupEndTime(end)
+                .requestedAt(LocalDateTime.now())
+                .build();
+
+        when(scheduleDonationPickupUseCase.schedulePickup(any())).thenReturn(inPickup);
+
+        mockMvc.perform(patch("/donaciones/1/pickup")
+                        .header("Authorization", "Bearer " + foundationToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_PICKUP"));
+    }
+
+    @Test
+    @DisplayName("Debe permitir a una TIENDA (ROLE_STORE) marcar su publicación de segunda mano como vendida")
+    void shouldAllowStoreRoleToMarkPublicationAsSold() throws Exception {
+        String storeToken = jwtTokenProvider.generateToken(202L, "tienda@styleradar.com", Role.STORE, "Tienda Eco");
+
+        SecondHandPublication sold = SecondHandPublication.builder()
+                .id(10L)
+                .userId(202L)
+                .garment(Garment.builder().name("Chaqueta").type(GarmentType.UPPER).brand("Levi's").color("Azul").style(Style.URBAN).build())
+                .size(Size.M)
+                .conservationStatus(ConservationStatus.LIKE_NEW)
+                .price(new BigDecimal("60000.00"))
+                .status(PublicationStatus.SOLD)
+                .photos(List.of("https://styleradar.com/img1.jpg"))
+                .publishedAt(LocalDateTime.now())
+                .build();
+
+        when(managePublicationUseCase.markAsSold(eq(202L), eq(10L), eq(303L))).thenReturn(sold);
+
+        mockMvc.perform(patch("/segunda-mano/10/sell")
+                        .header("Authorization", "Bearer " + storeToken)
+                        .param("userId", "202")
+                        .param("compradorId", "303"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SOLD"));
     }
 }

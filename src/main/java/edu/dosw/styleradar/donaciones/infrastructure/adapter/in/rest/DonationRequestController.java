@@ -404,6 +404,7 @@ public class DonationRequestController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> createDonationRequest(
             @Valid @RequestBody CreateDonationRequestDTO requestDTO) {
         resourceOwnershipValidator.validateOwnerOrAdmin(requestDTO.donorId());
@@ -491,10 +492,12 @@ public class DonationRequestController {
             )
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> getDonationRequestById(
             @Parameter(description = "ID de la solicitud de donación", example = "1")
             @PathVariable Long id) {
         DonationRequest request = createDonationRequestUseCase.getById(id);
+        resourceOwnershipValidator.validateDonationRequestAccess(request);
         return ResponseEntity.ok(donationRequestRestMapper.toResponse(request));
     }
 
@@ -839,7 +842,7 @@ public class DonationRequestController {
             )
     })
     @PatchMapping("/{id}/pickup")
-    @PreAuthorize("hasAnyRole('USER', 'FOUNDATION', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> schedulePickup(
             @Parameter(description = "ID de la solicitud", example = "1")
             @PathVariable Long id,
