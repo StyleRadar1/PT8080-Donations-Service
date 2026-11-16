@@ -21,13 +21,16 @@ import edu.dosw.styleradar.donaciones.application.dto.request.DecideDonationRequ
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.domain.exception.ConcurrentDonationClaimException;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
+import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
+import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
 import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ConfirmDonationReceiptUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.DecideDonationRequestUseCase;
+import edu.dosw.styleradar.donaciones.domain.port.in.GetPartnerFoundationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCase;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.DonationRequestRestMapper;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtAuthenticationFilter;
@@ -84,6 +87,9 @@ class DonationRequestControllerTest {
 
     @MockBean
     private ConfirmDonationReceiptUseCase confirmDonationReceiptUseCase;
+
+    @MockBean
+    private GetPartnerFoundationsUseCase getPartnerFoundationsUseCase;
 
     @MockBean
     private ResourceOwnershipValidator resourceOwnershipValidator;
@@ -290,5 +296,71 @@ class DonationRequestControllerTest {
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.title").value("Acceso denegado"))
                 .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"));
+    }
+
+    @Test
+    @DisplayName("GET /donaciones/foundations - Debe retornar listado de fundaciones activas de ms-tiendas")
+    void shouldReturnActiveFoundations() throws Exception {
+        FoundationSummary foundation = new FoundationSummary(
+                3L,
+                "Fundación Abrigo Solidario",
+                "Chapinero",
+                "Recolección de prendas",
+                "Calle 85 # 15-32",
+                "+57 601 742 8899",
+                "contacto@abrigosolidario.org",
+                List.of("SUPERIOR", "INFERIOR"),
+                "Niñez vulnerable",
+                "Lunes a Sábado 08:00 - 17:00",
+                "Prendas limpias",
+                true
+        );
+
+        when(getPartnerFoundationsUseCase.getActiveFoundations(null)).thenReturn(List.of(foundation));
+
+        mockMvc.perform(get("/donaciones/foundations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(3L))
+                .andExpect(jsonPath("$[0].nombre").value("Fundación Abrigo Solidario"))
+                .andExpect(jsonPath("$[0].activa").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /donaciones/foundations/{id} - Debe retornar detalle de fundación activa")
+    void shouldReturnActiveFoundationById() throws Exception {
+        FoundationSummary foundation = new FoundationSummary(
+                3L,
+                "Fundación Abrigo Solidario",
+                "Chapinero",
+                "Recolección de prendas",
+                "Calle 85 # 15-32",
+                "+57 601 742 8899",
+                "contacto@abrigosolidario.org",
+                List.of("SUPERIOR"),
+                "Niñez vulnerable",
+                "Lunes a Sábado 08:00 - 17:00",
+                "Prendas limpias",
+                true
+        );
+
+        when(getPartnerFoundationsUseCase.getActiveFoundationById(3L)).thenReturn(foundation);
+
+        mockMvc.perform(get("/donaciones/foundations/3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3L))
+                .andExpect(jsonPath("$.barrio").value("Chapinero"));
+    }
+
+    @Test
+    @DisplayName("GET /donaciones/foundations - Debe retornar 503 RFC 7807 cuando ms-tiendas no responde")
+    void shouldReturn503WhenTiendasUnavailable() throws Exception {
+        when(getPartnerFoundationsUseCase.getActiveFoundations(any()))
+                .thenThrow(new ExternalServiceUnavailableException("ms-tiendas no disponible"));
+
+        mockMvc.perform(get("/donaciones/foundations"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503))
+                .andExpect(jsonPath("$.title").value("Servicio externo no disponible"))
+                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/service-unavailable"));
     }
 }

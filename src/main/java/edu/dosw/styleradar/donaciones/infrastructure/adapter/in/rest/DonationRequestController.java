@@ -22,14 +22,17 @@ import edu.dosw.styleradar.donaciones.application.dto.request.CreateDonationRequ
 import edu.dosw.styleradar.donaciones.application.dto.request.DecideDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.response.DonationRequestResponseDTO;
+import edu.dosw.styleradar.donaciones.application.dto.response.FoundationResponseDTO;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
+import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
 import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ConfirmDonationReceiptUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.DecideDonationRequestUseCase;
+import edu.dosw.styleradar.donaciones.domain.port.in.GetPartnerFoundationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.SchedulePickupCommand;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.DonationRequestRestMapper;
@@ -65,8 +68,74 @@ public class DonationRequestController {
     private final DecideDonationRequestUseCase decideDonationRequestUseCase;
     private final ScheduleDonationPickupUseCase scheduleDonationPickupUseCase;
     private final ConfirmDonationReceiptUseCase confirmDonationReceiptUseCase;
+    private final GetPartnerFoundationsUseCase getPartnerFoundationsUseCase;
     private final DonationRequestRestMapper donationRequestRestMapper;
     private final ResourceOwnershipValidator resourceOwnershipValidator;
+
+    @Operation(
+            summary = "Listar fundaciones aliadas activas para donación (SR-RF-44)",
+            description = "Consulta el catálogo de fundaciones activas en ms-tiendas para poblar el selector desplegable de donaciones en Frontend, con filtro opcional por categoría de prenda (SUPERIOR, INFERIOR, CALZADO, ACCESORIOS o valores de GarmentType como UPPER, LOWER, FOOTWEAR, ACCESSORY).",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Listado de fundaciones aliadas activas ordenadas alfabéticamente",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = FoundationResponseDTO.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "ms-tiendas no disponible temporalmente",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    @GetMapping("/foundations")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
+    public ResponseEntity<List<FoundationResponseDTO>> getActiveFoundations(
+            @Parameter(description = "Categoría opcional de prenda para filtrar fundaciones compatibles", example = "SUPERIOR")
+            @RequestParam(required = false) String category) {
+        List<FoundationSummary> foundations = getPartnerFoundationsUseCase.getActiveFoundations(category);
+        return ResponseEntity.ok(donationRequestRestMapper.toFoundationResponseList(foundations));
+    }
+
+    @Operation(
+            summary = "Consultar detalle de una fundación aliada activa por ID (SR-RF-44)",
+            description = "Consulta en ms-tiendas el detalle institucional de una fundación aliada y valida que se encuentre activa.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Fundación aliada activa encontrada",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = FoundationResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "La fundación existe pero se encuentra inactiva",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Fundación no encontrada en ms-tiendas",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "ms-tiendas no disponible temporalmente",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    @GetMapping("/foundations/{foundationId}")
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
+    public ResponseEntity<FoundationResponseDTO> getActiveFoundationById(
+            @Parameter(description = "ID de la fundación en ms-tiendas", example = "3")
+            @PathVariable Long foundationId) {
+        FoundationSummary foundation = getPartnerFoundationsUseCase.getActiveFoundationById(foundationId);
+        return ResponseEntity.ok(donationRequestRestMapper.toFoundationResponse(foundation));
+    }
 
     @Operation(
             summary = "Reclamar donación desde la Vitrina Abierta (Fundaciones aliadas)",

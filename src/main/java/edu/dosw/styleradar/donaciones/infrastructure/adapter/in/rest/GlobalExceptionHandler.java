@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import edu.dosw.styleradar.donaciones.domain.exception.ConcurrentDonationClaimException;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
+import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidStateTransitionException;
@@ -107,6 +108,18 @@ public class GlobalExceptionHandler {
             fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
         problem.setProperty("invalidParams", fieldErrors);
+        return problem;
+    }
+
+    @ExceptionHandler(ExternalServiceUnavailableException.class)
+    public ProblemDetail handleExternalServiceUnavailable(ExternalServiceUnavailableException ex,
+                                                          HttpServletRequest request) {
+        log.error("Servicio externo no disponible: {}", ex.getMessage(), ex);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+        problem.setTitle("Servicio externo no disponible");
+        problem.setType(URI.create("https://styleradar.dosw.edu/errors/service-unavailable"));
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty(TIMESTAMP_PROPERTY, Instant.now());
         return problem;
     }
 

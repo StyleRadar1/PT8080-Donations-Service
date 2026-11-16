@@ -11,6 +11,7 @@ import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequ
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
+import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
 import edu.dosw.styleradar.donaciones.domain.model.Garment;
 import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
@@ -22,6 +23,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.ConfirmDonationReceiptUseCa
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreatePublicationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.DecideDonationRequestUseCase;
+import edu.dosw.styleradar.donaciones.domain.port.in.GetPartnerFoundationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.GetPublicationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ManagePublicationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCase;
@@ -98,6 +100,9 @@ class SecurityRbacIntegrationTest {
 
     @MockBean
     private ConfirmDonationReceiptUseCase confirmDonationReceiptUseCase;
+
+    @MockBean
+    private GetPartnerFoundationsUseCase getPartnerFoundationsUseCase;
 
     @Test
     @DisplayName("Debe retornar 401 Unauthorized (RFC 7807) cuando un cliente anónimo intenta crear una donación sin Bearer JWT")
@@ -373,5 +378,23 @@ class SecurityRbacIntegrationTest {
                         .param("compradorId", "303"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SOLD"));
+    }
+
+    @Test
+    @DisplayName("Debe retornar 401 sin token en GET /donaciones/foundations y 200 con token USER")
+    void shouldEnforceAuthOnPartnerFoundationsEndpoint() throws Exception {
+        mockMvc.perform(get("/donaciones/foundations"))
+                .andExpect(status().isUnauthorized());
+
+        String userToken = jwtTokenProvider.generateToken(101L, "user@styleradar.com", Role.USER, "Comprador");
+        when(getPartnerFoundationsUseCase.getActiveFoundations(null)).thenReturn(List.of(
+                new FoundationSummary(3L, "Fundación Abrigo Solidario", "Chapinero", "Desc", "Dir", "Tel",
+                        "contacto@abrigosolidario.org", List.of("SUPERIOR"), "Niñez", "08:00-17:00", "Política", true)
+        ));
+
+        mockMvc.perform(get("/donaciones/foundations")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(3L));
     }
 }

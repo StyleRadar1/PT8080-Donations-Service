@@ -76,6 +76,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/segunda-mano/{id}/donate").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/segunda-mano/user/{userId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
 
+                        // Catálogo de fundaciones aliadas activas (selector SR-RF-44 integrado con ms-tiendas)
+                        .requestMatchers(HttpMethod.GET, "/donaciones/foundations", "/donaciones/foundations/{foundationId}")
+                        .hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
+
                         // Operaciones de Donación - Donante (USER, STORE) y coordinación logística con Fundación (FOUNDATION)
                         .requestMatchers(HttpMethod.POST, "/donaciones").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.PATCH, "/donaciones/{id}/pickup").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
