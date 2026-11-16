@@ -501,7 +501,7 @@ flowchart LR
     B --> C["242 Tests & JaCoCo<br>(95.93% ≥ 85%)"]
     C --> D["Empaquetado JAR &<br>Docker OCI Image"]
     D -->|Rama develop| E["Deploy Automático QA<br>(Azure App Service QA)"]
-    D -->|Rama master + CMV| F["Deploy Producción PROD<br>(Azure App Service PROD)"]
+    D -->|Rama main + CMV| F["Deploy Producción PROD<br>(Azure App Service PROD)"]
 
     classDef step fill:#12063A,stroke:#5600EF,stroke-width:2px,color:#FFFFFF;
     classDef pass fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#0C0C12;
