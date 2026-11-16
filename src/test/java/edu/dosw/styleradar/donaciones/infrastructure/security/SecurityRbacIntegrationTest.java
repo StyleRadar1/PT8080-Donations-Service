@@ -397,4 +397,39 @@ class SecurityRbacIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(3L));
     }
+
+    @Test
+    @DisplayName("Debe aceptar tokens oficiales de ms-auth (sub numérico + lista roles) y permitir preflight CORS")
+    void shouldAcceptOfficialMsAuthJwtAndCorsPreflight() throws Exception {
+        String testSecret = "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+        javax.crypto.SecretKey key = new javax.crypto.spec.SecretKeySpec(
+                java.util.Base64.getDecoder().decode(testSecret), "HmacSHA256");
+        java.time.Instant now = java.time.Instant.now();
+
+        String msAuthFoundationJwt = io.jsonwebtoken.Jwts.builder()
+                .subject("24")
+                .claim("roles", List.of("REPRESENTANTE_FUNDACION"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, io.jsonwebtoken.Jwts.SIG.HS256)
+                .compact();
+
+        FoundationSummary foundation = new FoundationSummary(
+                3L, "Fundación Abrigo Solidario", "Chapinero", "Desc", "Dir", "Tel",
+                "contacto@abrigosolidario.org", List.of("SUPERIOR"), "Niñez", "08:00-17:00", "Política", true, 24L
+        );
+        when(getPartnerFoundationsUseCase.getFoundationByRepresentativeId(24L)).thenReturn(foundation);
+
+        mockMvc.perform(get("/donaciones/foundations/me")
+                        .header("Authorization", "Bearer " + msAuthFoundationJwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3L))
+                .andExpect(jsonPath("$.representanteId").value(24L));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/donaciones/foundations")
+                        .header("Origin", "https://styleradar-front.azurewebsites.net")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "Authorization"))
+                .andExpect(status().isOk());
+    }
 }

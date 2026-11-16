@@ -1,8 +1,13 @@
 package edu.dosw.styleradar.donaciones.infrastructure.security;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,6 +15,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * Configuración de Spring Security y control de acceso basado en roles (RBAC) para la API REST.
@@ -27,6 +35,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final SecurityErrorHandler securityErrorHandler;
 
+    @Value("${styleradar.cors.allowed-origins:*}")
+    private String allowedOrigins = "*";
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                           SecurityErrorHandler securityErrorHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
@@ -38,7 +49,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -77,6 +88,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/segunda-mano/user/{userId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
 
                         // Catálogo de fundaciones aliadas activas (selector SR-RF-44 integrado con ms-tiendas)
+                        .requestMatchers(HttpMethod.GET, "/donaciones/foundations/me")
+                        .hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/donaciones/foundations", "/donaciones/foundations/{foundationId}")
                         .hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
 
@@ -99,5 +112,23 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+        configuration.setAllowedOriginPatterns(origins.isEmpty() ? List.of("*") : origins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Location", "Content-Disposition"));
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

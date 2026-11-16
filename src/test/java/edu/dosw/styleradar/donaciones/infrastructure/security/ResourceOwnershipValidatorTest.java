@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
+import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -191,5 +193,34 @@ class ResourceOwnershipValidatorTest {
 
         // Auth nulo
         assertThat(validator.extractAuthenticatedUserId(null)).isNull();
+    }
+
+    @Test
+    @DisplayName("validateFoundationOwnership y validateDonationRequestAccess deben autorizar al representanteId registrado en ms-tiendas")
+    void shouldAllowFoundationAccessViaRepresentativeIdFromTiendas() {
+        FoundationCatalogPort foundationCatalogPort = Mockito.mock(FoundationCatalogPort.class);
+        ResourceOwnershipValidator representativeValidator = new ResourceOwnershipValidator(foundationCatalogPort);
+
+        Authentication repAuth = new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(24L, "user-24@styleradar.local", "", "Usuario #24", Role.FOUNDATION),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_FOUNDATION"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(repAuth);
+
+        Mockito.when(foundationCatalogPort.isFoundationRepresentative(24L, 3L)).thenReturn(true);
+        Mockito.when(foundationCatalogPort.isFoundationRepresentative(24L, 99L)).thenReturn(false);
+
+        assertThatCode(() -> representativeValidator.validateFoundationOwnership(3L)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> representativeValidator.validateFoundationOwnership(99L))
+                .isInstanceOf(AccessDeniedException.class);
+
+        DonationRequest reqAllowed = DonationRequest.builder().id(10L).donorId(101L).foundationId(3L).build();
+        assertThatCode(() -> representativeValidator.validateDonationRequestAccess(reqAllowed))
+                .doesNotThrowAnyException();
+
+        DonationRequest reqForbidden = DonationRequest.builder().id(11L).donorId(101L).foundationId(99L).build();
+        assertThatThrownBy(() -> representativeValidator.validateDonationRequestAccess(reqForbidden))
+                .isInstanceOf(AccessDeniedException.class);
     }
 }

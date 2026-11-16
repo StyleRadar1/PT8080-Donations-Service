@@ -17,10 +17,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
- * Proveedor de tokens JWT para autenticación segura en la API y Swagger.
+ * Proveedor de tokens JWT para autenticación segura en la API, compatible tanto con los tokens
+ * oficiales emitidos por ms-auth (sub numérico + lista roles) como con los tokens demo de Swagger.
  * En perfiles productivos exige estrictamente una clave secreta segura (>= 256 bits) por variable de entorno.
  */
 @Component
@@ -32,6 +36,22 @@ public class JwtTokenProvider {
     // Clave de desarrollo predeterminada para perfiles local/test exclusivamente
     private static final String DEFAULT_DEV_SECRET_BASE64 =
             "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+
+    private static final String ROLE_PREFIX = "ROLE_";
+
+    private static final Map<String, Role> ROLE_ALIASES = Map.ofEntries(
+            Map.entry("USER", Role.USER),
+            Map.entry("COMPRADOR", Role.USER),
+            Map.entry("STORE", Role.STORE),
+            Map.entry("ALMACEN", Role.STORE),
+            Map.entry("TIENDA", Role.STORE),
+            Map.entry("ADMIN_ALMACEN", Role.STORE),
+            Map.entry("FOUNDATION", Role.FOUNDATION),
+            Map.entry("FUNDACION", Role.FOUNDATION),
+            Map.entry("REPRESENTANTE_FUNDACION", Role.FOUNDATION),
+            Map.entry("ADMIN", Role.ADMIN),
+            Map.entry("ADMIN_STYLERADAR", Role.ADMIN)
+    );
 
     private final SecretKey key;
     private final Duration duration;
@@ -146,24 +166,85 @@ public class JwtTokenProvider {
     }
 
     public Long getUserId(String token) {
-        Object userIdClaim = getClaims(token).get("userId");
+        Claims claims = getClaims(token);
+        Object userIdClaim = claims.get("userId");
+        if (userIdClaim == null) {
+            userIdClaim = claims.get("id");
+        }
         if (userIdClaim instanceof Number number) {
             return number.longValue();
         }
-        return Long.valueOf(userIdClaim.toString());
+        if (userIdClaim != null && !userIdClaim.toString().isBlank()) {
+            return Long.valueOf(userIdClaim.toString().trim());
+        }
+
+        String subject = claims.getSubject();
+        if (subject != null && !subject.isBlank()) {
+            return Long.valueOf(subject.trim());
+        }
+        throw new IllegalArgumentException("El token JWT no contiene un identificador de usuario válido.");
     }
 
     public String getEmail(String token) {
-        return getClaims(token).getSubject();
+        Claims claims = getClaims(token);
+        String email = claims.get("email", String.class);
+        if (email != null && !email.isBlank()) {
+            return email.trim();
+        }
+        String subject = claims.getSubject();
+        if (subject != null && subject.contains("@")) {
+            return subject.trim();
+        }
+        return "user-" + getUserId(token) + "@styleradar.local";
     }
 
     public Role getRole(String token) {
-        String roleStr = getClaims(token).get("role", String.class);
-        return Role.valueOf(roleStr);
+        Claims claims = getClaims(token);
+        Object rawRoles = claims.get("roles");
+        if (rawRoles == null) {
+            rawRoles = claims.get("authorities");
+        }
+        if (rawRoles == null) {
+            rawRoles = claims.get("role");
+        }
+
+        if (rawRoles instanceof Collection<?> collection) {
+            for (Object item : collection) {
+                Role resolved = resolveSingleRole(item != null ? item.toString() : null);
+                if (resolved != null) {
+                    return resolved;
+                }
+            }
+        } else if (rawRoles instanceof String rawStr) {
+            for (String tokenRole : rawStr.split(",")) {
+                Role resolved = resolveSingleRole(tokenRole);
+                if (resolved != null) {
+                    return resolved;
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("El token JWT no contiene un rol reconocido por StyleRadar: " + rawRoles);
     }
 
     public String getName(String token) {
-        return getClaims(token).get("name", String.class);
+        Claims claims = getClaims(token);
+        String name = claims.get("name", String.class);
+        if (name != null && !name.isBlank()) {
+            return name;
+        }
+        return "Usuario #" + getUserId(token);
+    }
+
+    private static Role resolveSingleRole(String rawRole) {
+        if (rawRole == null || rawRole.isBlank()) {
+            return null;
+        }
+        String normalized = rawRole.trim().toUpperCase(Locale.ROOT);
+        if (normalized.startsWith(ROLE_PREFIX)) {
+            normalized = normalized.substring(ROLE_PREFIX.length());
+        }
+        return ROLE_ALIASES.get(normalized);
     }
 
     public long getExpiresInSeconds() {

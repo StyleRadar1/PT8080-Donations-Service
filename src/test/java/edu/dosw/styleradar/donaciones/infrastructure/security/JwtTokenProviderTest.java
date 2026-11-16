@@ -170,4 +170,72 @@ class JwtTokenProviderTest {
         assertThat(devProvider.validateToken(token)).isTrue();
         assertThat(devProvider.getRole(token)).isEqualTo(Role.USER);
     }
+
+    @Test
+    @DisplayName("Debe validar y extraer ID numérico y roles oficiales emitidos por ms-auth")
+    void shouldParseOfficialMsAuthTokensWithSubAndRolesList() {
+        String testSecret = "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+        SecretKey key = new SecretKeySpec(Base64.getDecoder().decode(testSecret), "HmacSHA256");
+        Instant now = Instant.now();
+
+        String compradorToken = Jwts.builder()
+                .subject("24")
+                .claim("roles", java.util.List.of("COMPRADOR"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+
+        assertThat(jwtTokenProvider.validateToken(compradorToken)).isTrue();
+        assertThat(jwtTokenProvider.getUserId(compradorToken)).isEqualTo(24L);
+        assertThat(jwtTokenProvider.getRole(compradorToken)).isEqualTo(Role.USER);
+        assertThat(jwtTokenProvider.getEmail(compradorToken)).isEqualTo("user-24@styleradar.local");
+        assertThat(jwtTokenProvider.getName(compradorToken)).isEqualTo("Usuario #24");
+
+        String fundacionToken = Jwts.builder()
+                .subject("24")
+                .claim("roles", java.util.List.of("REPRESENTANTE_FUNDACION"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+        assertThat(jwtTokenProvider.getRole(fundacionToken)).isEqualTo(Role.FOUNDATION);
+
+        String tiendaToken = Jwts.builder()
+                .subject("15")
+                .claim("roles", java.util.List.of("ADMIN_ALMACEN"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+        assertThat(jwtTokenProvider.getRole(tiendaToken)).isEqualTo(Role.STORE);
+
+        String adminToken = Jwts.builder()
+                .subject("1")
+                .claim("roles", java.util.List.of("ADMIN_STYLERADAR"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+        assertThat(jwtTokenProvider.getRole(adminToken)).isEqualTo(Role.ADMIN);
+    }
+
+    @Test
+    @DisplayName("Debe rechazar tokens sin un rol reconocido por StyleRadar")
+    void shouldRejectTokenWithUnknownRole() {
+        String testSecret = "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+        SecretKey key = new SecretKeySpec(Base64.getDecoder().decode(testSecret), "HmacSHA256");
+        Instant now = Instant.now();
+
+        String badRoleToken = Jwts.builder()
+                .subject("24")
+                .claim("roles", java.util.List.of("INVITADO_DESCONOCIDO"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+
+        assertThatThrownBy(() -> jwtTokenProvider.getRole(badRoleToken))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }
