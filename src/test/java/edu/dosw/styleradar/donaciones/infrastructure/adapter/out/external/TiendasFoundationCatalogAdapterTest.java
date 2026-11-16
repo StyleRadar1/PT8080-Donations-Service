@@ -180,4 +180,32 @@ class TiendasFoundationCatalogAdapterTest {
         RestClient configured = new TiendasClientConfig().tiendasRestClient(RestClient.builder(), properties);
         assertThat(configured).isNotNull();
     }
+
+    @Test
+    @DisplayName("Debe verificar correctamente si el usuario es representanteId de la fundación en ms-tiendas")
+    void shouldValidateFoundationRepresentative() {
+        String json = """
+                {
+                  "id": 3,
+                  "nombre": "Fundación Abrigo Solidario",
+                  "representanteId": 24,
+                  "activa": true
+                }
+                """;
+
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.isFoundationRepresentative(24L, 3L)).isTrue();
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.isFoundationRepresentative(999L, 3L)).isFalse();
+        mockServer.verify();
+    }
 }

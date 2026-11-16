@@ -18,9 +18,28 @@ public record FoundationSummary(
         String causasApoyadas,
         String horarioAtencion,
         String politicasDonacion,
-        boolean activa
+        boolean activa,
+        Long representanteId
 ) {
     public FoundationSummary {
         categoriasAceptadas = categoriasAceptadas == null ? List.of() : List.copyOf(categoriasAceptadas);
+    }
+
+    public FoundationSummary(
+            Long id,
+            String nombre,
+            String barrio,
+            String descripcion,
+            String direccion,
+            String telefono,
+            String email,
+            List<String> categoriasAceptadas,
+            String causasApoyadas,
+            String horarioAtencion,
+            String politicasDonacion,
+            boolean activa
+    ) {
+        this(id, nombre, barrio, descripcion, direccion, telefono, email, categoriasAceptadas,
+                causasApoyadas, horarioAtencion, politicasDonacion, activa, null);
     }
 }

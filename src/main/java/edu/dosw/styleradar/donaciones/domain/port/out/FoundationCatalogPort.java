@@ -24,4 +24,10 @@ public interface FoundationCatalogPort {
      * Valida que la fundación exista y se encuentre activa antes de registrar o reclamar una donación.
      */
     void validateActiveFoundation(Long foundationId);
+
+    /**
+     * Verifica si el usuario autenticado (sub de ms-auth) figura como representante legal asignado
+     * de la fundación en ms-tiendas.
+     */
+    boolean isFoundationRepresentative(Long userId, Long foundationId);
 }

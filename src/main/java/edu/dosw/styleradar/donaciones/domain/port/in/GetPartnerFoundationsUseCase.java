@@ -18,4 +18,9 @@ public interface GetPartnerFoundationsUseCase {
      * Obtiene el detalle de una fundación aliada activa por su identificador.
      */
     FoundationSummary getActiveFoundationById(Long foundationId);
+
+    /**
+     * Obtiene la fundación activa asociada al ID de representante autenticado (sub de ms-auth).
+     */
+    FoundationSummary getFoundationByRepresentativeId(Long representativeUserId);
 }

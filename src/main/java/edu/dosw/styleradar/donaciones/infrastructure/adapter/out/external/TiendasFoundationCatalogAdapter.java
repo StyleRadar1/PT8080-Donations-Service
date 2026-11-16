@@ -114,6 +114,16 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         }
     }
 
+    @Override
+    public boolean isFoundationRepresentative(Long userId, Long foundationId) {
+        if (userId == null || foundationId == null || !tiendasProperties.isValidationEnabled()) {
+            return false;
+        }
+        return findFoundationById(foundationId)
+                .map(foundation -> foundation.representanteId() != null && foundation.representanteId().equals(userId))
+                .orElse(false);
+    }
+
     private FoundationSummary toDomain(TiendasFoundationResponseDTO dto) {
         return new FoundationSummary(
                 dto.id(),
@@ -127,7 +137,8 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
                 dto.causasApoyadas(),
                 dto.horarioAtencion(),
                 dto.politicasDonacion(),
-                Boolean.TRUE.equals(dto.activa())
+                Boolean.TRUE.equals(dto.activa()),
+                dto.representanteId()
         );
     }
 }

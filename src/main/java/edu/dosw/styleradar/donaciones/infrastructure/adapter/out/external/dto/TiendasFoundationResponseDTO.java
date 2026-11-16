@@ -20,6 +20,7 @@ public record TiendasFoundationResponseDTO(
         String causasApoyadas,
         String horarioAtencion,
         String politicasDonacion,
-        Boolean activa
+        Boolean activa,
+        Long representanteId
 ) {
 }
