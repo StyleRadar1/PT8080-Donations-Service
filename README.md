@@ -66,6 +66,8 @@
    - [3.2 Diagrama de Clases del Dominio y Puertos](#32-diagrama-de-clases-del-dominio-y-puertos)
    - [3.3 Diagrama Entidad-Relación de Base de Datos](#33-diagrama-entidad-relación-de-base-de-datos)
    - [3.4 Estructura Oficial de Paquetes](#34-estructura-oficial-de-paquetes)
+   - [3.5 Diagrama de Componentes General del Ecosistema](#35-diagrama-de-componentes-general-del-ecosistema)
+   - [3.6 Diagrama de Despliegue General](#36-diagrama-de-despliegue-general)
 4. [Endpoints y enlace a Swagger](#4-endpoints-y-enlace-a-swagger)
 5. [Eventos que publica y consume (RabbitMQ)](#5-eventos-que-publica-y-consume)
 6. [Tecnologías y dependencias](#6-tecnologías-y-dependencias)
@@ -254,6 +256,38 @@ src/main/java/edu/dosw/styleradar/donaciones/
     ├── security/                                <-- SecurityConfig (CORS + RBAC), JwtAuthenticationFilter, JwtTokenProvider (ms-auth), ResourceOwnershipValidator
     └── config/                                  <-- OpenApiConfig, RabbitMQConfig, TiendasClientConfig, TiendasProperties
 ```
+
+---
+
+<a id="35-diagrama-de-componentes-general-del-ecosistema"></a>
+
+### 3.5 Diagrama de Componentes General del Ecosistema (`StyleRadar`)
+
+Vista global de integración del ecosistema completo de **13 microservicios**, **API Gateway**, caché **Redis**, buses **RabbitMQ**, bases de datos aisladas y sistemas externos (`Google OAuth`, `MercadoPago API`, `Azure Blob Storage`, `FASHN AI API`):
+
+<div align="center">
+  <img src="docs/diagramas/png/componentesGeneral.png" width="98%" alt="Diagrama de Componentes General del Ecosistema StyleRadar" />
+  <p><sub><b>Figura 3.4:</b> Diagrama de Componentes General de StyleRadar. Muestra la entrada desde <code>StyleRadar Client (Web App)</code> a través del <code>API Gateway</code> en notación <i>Lollipop</i> hacia los 13 microservicios, incluyendo <code>ms-segunda-vida</code> y sus dependencias con <code>segunda_vida_db</code>, <code>Azure Blob Storage</code>, <code>RabbitMQ</code> y <code>ms-tiendas</code> / <code>ms-chat</code> / <code>ms-notificaciones</code>.</sub></p>
+  <p>
+    📁 <b>Archivo editable Draw.io:</b> <a href="docs/diagramas/drawio/componentesGeneralSR.drawio"><code>docs/diagramas/drawio/componentesGeneralSR.drawio</code></a>
+  </p>
+</div>
+
+---
+
+<a id="36-diagrama-de-despliegue-general"></a>
+
+### 3.6 Diagrama de Despliegue General (`Container Apps` & Infraestructura)
+
+Distribución física y topología de despliegue de los microservicios en **Container Apps**, asignación de puertos por servicio (`API Gateway :8080`, `Donations :8520`, `Store :8140`, etc.), instancias de **PostgreSQL** (*Database-per-Service*), caché **Redis** y nodo **RabbitMQAdapter**:
+
+<div align="center">
+  <img src="docs/diagramas/png/DiagramaDespliegueSR.png" width="98%" alt="Diagrama de Despliegue General StyleRadar" />
+  <p><sub><b>Figura 3.5:</b> Diagrama de Despliegue General de StyleRadar. Detalla el artefacto <code>Web Application</code> comunicándose con <code>&lt;&lt;Container Apps&gt;&gt; API Gateway (8080)</code>, el contenedor <code>Donations (8520)</code>, el dispositivo <code>Postgres Database</code> con sus esquemas aislados, <code>Redis</code> y <code>RabbitMQAdapter</code>.</sub></p>
+  <p>
+    📁 <b>Archivo editable Draw.io:</b> <a href="docs/diagramas/drawio/DiagramaDespliegueSR.drawio"><code>docs/diagramas/drawio/DiagramaDespliegueSR.drawio</code></a>
+  </p>
+</div>
 
 ---
 
