@@ -102,6 +102,36 @@ public class DonationRequestController {
     }
 
     @Operation(
+            summary = "Consultar la fundación asociada al representante autenticado",
+            description = "Resuelve desde ms-tiendas la fundación activa cuyo representanteId coincide con el usuario autenticado (sub del JWT de ms-auth), facilitando al Frontend obtener el foundationId tras el login.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Fundación aliada asociada al representante autenticado",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = FoundationResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No existe fundación activa vinculada a este usuario",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "ms-tiendas no disponible temporalmente",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    @GetMapping("/foundations/me")
+    @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
+    public ResponseEntity<FoundationResponseDTO> getMyFoundation() {
+        Long authenticatedUserId = resourceOwnershipValidator.extractAuthenticatedUserId();
+        FoundationSummary foundation = getPartnerFoundationsUseCase.getFoundationByRepresentativeId(authenticatedUserId);
+        return ResponseEntity.ok(donationRequestRestMapper.toFoundationResponse(foundation));
+    }
+
+    @Operation(
             summary = "Consultar detalle de una fundación aliada activa por ID (SR-RF-44)",
             description = "Consulta en ms-tiendas el detalle institucional de una fundación aliada y valida que se encuentre activa.",
             security = @SecurityRequirement(name = "bearerAuth")
@@ -303,7 +333,7 @@ public class DonationRequestController {
     @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> claimDonation(
             @Valid @RequestBody ClaimDonationRequestDTO requestDTO) {
-        resourceOwnershipValidator.validateOwnerOrAdmin(requestDTO.foundationId());
+        resourceOwnershipValidator.validateFoundationOwnership(requestDTO.foundationId());
         ClaimDonationCommand command = donationRequestRestMapper.toCommand(requestDTO);
         DonationRequest request = claimDonationUseCase.claimDonation(command);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -738,7 +768,7 @@ public class DonationRequestController {
             @Parameter(description = "ID de la solicitud", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody DecideDonationRequestDTO requestDTO) {
-        resourceOwnershipValidator.validateOwnerOrAdmin(requestDTO.foundationId());
+        resourceOwnershipValidator.validateFoundationOwnership(requestDTO.foundationId());
         DonationRequest updated = decideDonationRequestUseCase.decide(
                 requestDTO.foundationId(),
                 id,
@@ -1069,7 +1099,7 @@ public class DonationRequestController {
             @Parameter(description = "ID de la solicitud", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody ConfirmReceiptRequestDTO requestDTO) {
-        resourceOwnershipValidator.validateOwnerOrAdmin(requestDTO.foundationId());
+        resourceOwnershipValidator.validateFoundationOwnership(requestDTO.foundationId());
         DonationRequest updated = confirmDonationReceiptUseCase.confirmReceipt(requestDTO.foundationId(), id);
         return ResponseEntity.ok(donationRequestRestMapper.toResponse(updated));
     }
@@ -1293,7 +1323,7 @@ public class DonationRequestController {
             @PathVariable Long foundationId,
             @Parameter(description = "Filtro de estado opcional", example = "PENDING")
             @RequestParam(required = false) DonationRequestStatus status) {
-        resourceOwnershipValidator.validateOwnerOrAdmin(foundationId);
+        resourceOwnershipValidator.validateFoundationOwnership(foundationId);
         List<DonationRequest> list = createDonationRequestUseCase.getByFoundationId(foundationId, status);
         return ResponseEntity.ok(donationRequestRestMapper.toResponseList(list));
     }

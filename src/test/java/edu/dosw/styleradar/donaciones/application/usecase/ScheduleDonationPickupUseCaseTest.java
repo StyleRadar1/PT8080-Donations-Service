@@ -19,6 +19,7 @@ import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
 import edu.dosw.styleradar.donaciones.domain.port.in.SchedulePickupCommand;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,6 +37,9 @@ class ScheduleDonationPickupUseCaseTest {
 
     @Mock
     private DonationEventPublisherPort eventPublisherPort;
+
+    @Mock
+    private FoundationCatalogPort foundationCatalogPort;
 
     @InjectMocks
     private ScheduleDonationPickupUseCaseImpl scheduleDonationPickupUseCase;
@@ -108,5 +112,18 @@ class ScheduleDonationPickupUseCaseTest {
 
         assertThrows(InvalidDonationRequestException.class,
                 () -> scheduleDonationPickupUseCase.schedulePickup(command));
+    }
+
+    @Test
+    @DisplayName("Debe permitir programar recogida al representanteId de la fundación según ms-tiendas")
+    void shouldSchedulePickupByFoundationRepresentative() {
+        SchedulePickupCommand command = new SchedulePickupCommand(24L, 10L, "Sede Chapinero", startTime, endTime);
+        when(donationRequestRepositoryPort.findById(10L)).thenReturn(Optional.of(request));
+        when(foundationCatalogPort.isFoundationRepresentative(24L, 20L)).thenReturn(true);
+        when(donationRequestRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        DonationRequest result = scheduleDonationPickupUseCase.schedulePickup(command);
+
+        assertEquals(DonationRequestStatus.IN_PICKUP, result.getStatus());
     }
 }

@@ -13,6 +13,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCa
 import edu.dosw.styleradar.donaciones.domain.port.in.SchedulePickupCommand;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -26,6 +27,7 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
 
     private final DonationRequestRepositoryPort donationRequestRepositoryPort;
     private final DonationEventPublisherPort eventPublisherPort;
+    private final FoundationCatalogPort foundationCatalogPort;
 
     @Override
     @Transactional
@@ -38,7 +40,8 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
                         "No existe solicitud de donación con ID: " + command.requestId()));
 
         boolean isParticipant = request.getDonorId().equals(command.userId())
-                || request.getFoundationId().equals(command.userId());
+                || request.getFoundationId().equals(command.userId())
+                || foundationCatalogPort.isFoundationRepresentative(command.userId(), request.getFoundationId());
         if (!isParticipant) {
             throw new InvalidDonationRequestException("El usuario no participa en esta solicitud de donación");
         }

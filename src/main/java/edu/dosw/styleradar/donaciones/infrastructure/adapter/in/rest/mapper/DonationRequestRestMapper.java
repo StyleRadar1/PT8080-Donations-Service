@@ -108,7 +108,8 @@ public class DonationRequestRestMapper {
                 foundation.causasApoyadas(),
                 foundation.horarioAtencion(),
                 foundation.politicasDonacion(),
-                foundation.activa()
+                foundation.activa(),
+                foundation.representanteId()
         );
     }
 

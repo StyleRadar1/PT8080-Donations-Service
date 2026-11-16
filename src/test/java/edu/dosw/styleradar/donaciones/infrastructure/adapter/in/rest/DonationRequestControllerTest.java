@@ -287,7 +287,7 @@ class DonationRequestControllerTest {
     void shouldReturn403WhenFoundationMismatches() throws Exception {
         ConfirmReceiptRequestDTO request = new ConfirmReceiptRequestDTO(999L);
         doThrow(new AccessDeniedException("Acceso denegado: No pertenece a la fundación"))
-                .when(resourceOwnershipValidator).validateOwnerOrAdmin(999L);
+                .when(resourceOwnershipValidator).validateFoundationOwnership(999L);
 
         mockMvc.perform(patch("/donaciones/1/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -362,5 +362,23 @@ class DonationRequestControllerTest {
                 .andExpect(jsonPath("$.status").value(503))
                 .andExpect(jsonPath("$.title").value("Servicio externo no disponible"))
                 .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/service-unavailable"));
+    }
+
+    @Test
+    @DisplayName("GET /donaciones/foundations/me - Debe retornar la fundación asociada al representante autenticado")
+    void shouldReturnMyFoundation() throws Exception {
+        FoundationSummary foundation = new FoundationSummary(
+                3L, "Fundación Abrigo Solidario", "Chapinero", "Recolección", "Calle 85 # 15-32",
+                "+57 601 742 8899", "contacto@abrigosolidario.org", List.of("SUPERIOR"),
+                "Niñez vulnerable", "08:00 - 17:00", "Prendas limpias", true, 24L
+        );
+
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(24L);
+        when(getPartnerFoundationsUseCase.getFoundationByRepresentativeId(24L)).thenReturn(foundation);
+
+        mockMvc.perform(get("/donaciones/foundations/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3L))
+                .andExpect(jsonPath("$.representanteId").value(24L));
     }
 }

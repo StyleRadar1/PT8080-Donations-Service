@@ -62,6 +62,21 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
         return foundation;
     }
 
+    @Override
+    public FoundationSummary getFoundationByRepresentativeId(Long representativeUserId) {
+        if (representativeUserId == null) {
+            throw new InvalidDonationRequestException("El ID del representante de la fundación es obligatorio");
+        }
+
+        return foundationCatalogPort.findAllActiveFoundations().stream()
+                .filter(FoundationSummary::activa)
+                .filter(foundation -> representativeUserId.equals(foundation.representanteId())
+                        || representativeUserId.equals(foundation.id()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId));
+    }
+
     private String normalizeCategory(String rawCategory) {
         if (rawCategory == null || rawCategory.isBlank()) {
             return null;

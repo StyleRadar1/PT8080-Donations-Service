@@ -44,6 +44,9 @@ public record FoundationResponseDTO(
         String politicasDonacion,
 
         @Schema(description = "Indica si la fundación está activa y habilitada para recibir donaciones", example = "true")
-        boolean activa
+        boolean activa,
+
+        @Schema(description = "ID del usuario representante en ms-auth / ms-usuarios vinculado a esta fundación", example = "24")
+        Long representanteId
 ) {
 }

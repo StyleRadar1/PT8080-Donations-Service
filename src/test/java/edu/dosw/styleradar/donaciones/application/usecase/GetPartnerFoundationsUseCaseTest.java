@@ -105,4 +105,19 @@ class GetPartnerFoundationsUseCaseTest {
         assertThatThrownBy(() -> useCase.getActiveFoundationById(3L))
                 .isInstanceOf(InvalidDonationRequestException.class);
     }
+
+    @Test
+    @DisplayName("Debe encontrar la fundación activa asociada al representanteId del usuario")
+    void shouldGetFoundationByRepresentativeId() {
+        FoundationSummary matched = new FoundationSummary(
+                3L, "Abrigo Solidario", "Chapinero", "Desc", "Dir", "Tel",
+                "contacto@abrigosolidario.org", List.of("SUPERIOR"), "Niñez", "08:00-17:00", "Política", true, 24L
+        );
+        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(matched));
+
+        FoundationSummary found = useCase.getFoundationByRepresentativeId(24L);
+
+        assertThat(found.id()).isEqualTo(3L);
+        assertThat(found.representanteId()).isEqualTo(24L);
+    }
 }
