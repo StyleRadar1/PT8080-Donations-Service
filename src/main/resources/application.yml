@@ -79,12 +79,17 @@ app:
     simulator:
       enabled: ${RABBITMQ_SIMULATOR_ENABLED:false}
 
-# Configuración de Seguridad y JWT
+# Configuración de Seguridad, JWT e Integraciones Externas
 styleradar:
   security:
     jwt:
       secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:}}
       duration: ${JWT_DURATION:PT24H}
+  tiendas:
+    base-url: ${TIENDAS_SERVICE_URL:http://localhost:8140}
+    validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
+    connect-timeout-ms: ${TIENDAS_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${TIENDAS_READ_TIMEOUT_MS:5000}
 
 # Configuración de Azure Blob Storage (Carga de Fotografías de Prendas)
 azure:

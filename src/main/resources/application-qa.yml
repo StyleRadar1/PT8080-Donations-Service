@@ -104,3 +104,9 @@ logging:
     edu.dosw.styleradar.donaciones: INFO
     org.springframework.web: INFO
     org.springframework.security: WARN
+
+# Integración con ms-tiendas (Catálogo maestro de fundaciones aliadas)
+styleradar:
+  tiendas:
+    base-url: ${TIENDAS_SERVICE_URL:https://styleradar-tiendas-qa.azurewebsites.net}
+    validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
