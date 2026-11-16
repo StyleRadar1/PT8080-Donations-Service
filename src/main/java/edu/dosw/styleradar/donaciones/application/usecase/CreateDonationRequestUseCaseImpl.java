@@ -20,6 +20,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestComman
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +37,7 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
     private final DonationRequestRepositoryPort donationRequestRepositoryPort;
     private final PublicationRepositoryPort publicationRepositoryPort;
     private final DonationEventPublisherPort eventPublisherPort;
+    private final FoundationCatalogPort foundationCatalogPort;
 
     @Override
     @Transactional
@@ -60,6 +62,8 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
         if (donationRequestRepositoryPort.existsActiveRequestForPublication(command.publicationId())) {
             throw new DomainConflictException("La prenda ya tiene una solicitud de donación en curso");
         }
+
+        foundationCatalogPort.validateActiveFoundation(command.foundationId());
 
         DonationRequest request = DonationRequest.builder()
                 .publicationId(command.publicationId())

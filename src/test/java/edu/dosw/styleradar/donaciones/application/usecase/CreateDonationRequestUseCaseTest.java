@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
+import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
@@ -23,6 +24,7 @@ import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestCommand;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,6 +46,9 @@ class CreateDonationRequestUseCaseTest {
 
     @Mock
     private DonationEventPublisherPort eventPublisherPort;
+
+    @Mock
+    private FoundationCatalogPort foundationCatalogPort;
 
     @InjectMocks
     private CreateDonationRequestUseCaseImpl createDonationRequestUseCase;
@@ -80,6 +85,7 @@ class CreateDonationRequestUseCaseTest {
         assertEquals(1L, result.getId());
         assertEquals(DonationRequestStatus.PENDING, result.getStatus());
 
+        verify(foundationCatalogPort).validateActiveFoundation(20L);
         verify(donationRequestRepositoryPort).save(any());
         verify(eventPublisherPort).publishEvent(any(DonationRequestCreatedEvent.class));
     }
@@ -144,5 +150,31 @@ class CreateDonationRequestUseCaseTest {
 
         assertNotNull(createDonationRequestUseCase.getById(1L));
         assertThrows(ResourceNotFoundException.class, () -> createDonationRequestUseCase.getById(999L));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar la solicitud si la fundación no existe o está inactiva en ms-tiendas")
+    void shouldFailWhenFoundationIsInvalidOrInactive() {
+        CreateDonationRequestCommand command = new CreateDonationRequestCommand(5L, 100L, 999L, "Mensaje");
+        when(publicationRepositoryPort.findById(100L)).thenReturn(Optional.of(publicationInDonation));
+        when(donationRequestRepositoryPort.existsActiveRequestForPublication(100L)).thenReturn(false);
+        doThrow(new InvalidDonationRequestException("La fundación no está activa"))
+                .when(foundationCatalogPort).validateActiveFoundation(999L);
+
+        assertThrows(InvalidDonationRequestException.class, () -> createDonationRequestUseCase.create(command));
+        verify(donationRequestRepositoryPort, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Debe propagar error 503 cuando ms-tiendas no está disponible")
+    void shouldPropagateExternalServiceUnavailable() {
+        CreateDonationRequestCommand command = new CreateDonationRequestCommand(5L, 100L, 20L, "Mensaje");
+        when(publicationRepositoryPort.findById(100L)).thenReturn(Optional.of(publicationInDonation));
+        when(donationRequestRepositoryPort.existsActiveRequestForPublication(100L)).thenReturn(false);
+        doThrow(new ExternalServiceUnavailableException("ms-tiendas no disponible"))
+                .when(foundationCatalogPort).validateActiveFoundation(20L);
+
+        assertThrows(ExternalServiceUnavailableException.class, () -> createDonationRequestUseCase.create(command));
+        verify(donationRequestRepositoryPort, never()).save(any());
     }
 }

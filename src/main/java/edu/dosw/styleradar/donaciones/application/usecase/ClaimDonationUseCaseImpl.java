@@ -18,6 +18,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,7 @@ public class ClaimDonationUseCaseImpl implements ClaimDonationUseCase {
     private final PublicationRepositoryPort publicationRepositoryPort;
     private final DonationRequestRepositoryPort donationRequestRepositoryPort;
     private final DonationEventPublisherPort eventPublisherPort;
+    private final FoundationCatalogPort foundationCatalogPort;
 
     @Override
     @Transactional
@@ -68,6 +70,8 @@ public class ClaimDonationUseCaseImpl implements ClaimDonationUseCase {
         if (donationRequestRepositoryPort.existsActiveRequestForPublication(command.publicationId())) {
             throw new DomainConflictException("La prenda ya tiene una solicitud o reclamo de donación en curso");
         }
+
+        foundationCatalogPort.validateActiveFoundation(command.foundationId());
 
         try {
             publication.markForDonation();
