@@ -2,6 +2,7 @@ package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence.en
 
 import java.time.LocalDateTime;
 
+import edu.dosw.styleradar.donaciones.domain.model.DeliveryMode;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,6 +57,10 @@ public class DonationRequestEntity {
 
     @Column(name = "motivo_rechazo", length = 500)
     private String rejectionReason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modo_entrega", length = 30)
+    private DeliveryMode deliveryMode;
 
     @Column(name = "punto_entrega", length = 255)
     private String deliveryPoint;

@@ -70,6 +70,10 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
                 .donorId(command.donorId())
                 .foundationId(command.foundationId())
                 .message(command.message())
+                .deliveryMode(command.deliveryMode())
+                .deliveryPoint(command.deliveryPoint())
+                .pickupStartTime(command.startTime())
+                .pickupEndTime(command.endTime())
                 .build();
 
         request.initiate();

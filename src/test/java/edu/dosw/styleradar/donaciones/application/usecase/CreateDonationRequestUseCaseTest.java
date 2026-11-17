@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.donaciones.application.usecase;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +18,7 @@ import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailabl
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
+import edu.dosw.styleradar.donaciones.domain.model.DeliveryMode;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
@@ -54,6 +56,8 @@ class CreateDonationRequestUseCaseTest {
     private CreateDonationRequestUseCaseImpl createDonationRequestUseCase;
 
     private SecondHandPublication publicationInDonation;
+    private LocalDateTime futureStart;
+    private LocalDateTime futureEnd;
 
     @BeforeEach
     void setUp() {
@@ -62,12 +66,21 @@ class CreateDonationRequestUseCaseTest {
                 .userId(5L)
                 .status(PublicationStatus.IN_DONATION)
                 .build();
+        futureStart = LocalDateTime.now().plusDays(1);
+        futureEnd = futureStart.plusHours(3);
+    }
+
+    private CreateDonationRequestCommand buildCommand(Long donorId, Long publicationId, Long foundationId, String msg) {
+        return new CreateDonationRequestCommand(
+                donorId, publicationId, foundationId, msg,
+                DeliveryMode.DROP_OFF_POINT, "Calle 85 # 15-32, Chapinero, Bogotá", futureStart, futureEnd
+        );
     }
 
     @Test
-    @DisplayName("Debe crear solicitud de donación exitosamente y publicar evento")
+    @DisplayName("Debe crear solicitud de donación exitosamente con propuesta de entrega y publicar evento")
     void shouldCreateDonationRequestSuccessfully() {
-        CreateDonationRequestCommand command = new CreateDonationRequestCommand(
+        CreateDonationRequestCommand command = buildCommand(
                 5L, 100L, 20L, "Deseo donar esta prenda a su fundación"
         );
 
@@ -84,6 +97,10 @@ class CreateDonationRequestUseCaseTest {
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals(DonationRequestStatus.PENDING, result.getStatus());
+        assertEquals(DeliveryMode.DROP_OFF_POINT, result.getDeliveryMode());
+        assertEquals("Calle 85 # 15-32, Chapinero, Bogotá", result.getDeliveryPoint());
+        assertEquals(futureStart, result.getPickupStartTime());
+        assertEquals(futureEnd, result.getPickupEndTime());
 
         verify(foundationCatalogPort).validateActiveFoundation(20L);
         verify(donationRequestRepositoryPort).save(any());
@@ -93,7 +110,7 @@ class CreateDonationRequestUseCaseTest {
     @Test
     @DisplayName("Debe fallar si la publicación no existe")
     void shouldFailWhenPublicationDoesNotExist() {
-        CreateDonationRequestCommand command = new CreateDonationRequestCommand(5L, 999L, 20L, "Mensaje");
+        CreateDonationRequestCommand command = buildCommand(5L, 999L, 20L, "Mensaje");
         when(publicationRepositoryPort.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> createDonationRequestUseCase.create(command));
@@ -102,7 +119,7 @@ class CreateDonationRequestUseCaseTest {
     @Test
     @DisplayName("Debe fallar si el donante no es el dueño de la publicación")
     void shouldFailWhenDonorIsNotOwner() {
-        CreateDonationRequestCommand command = new CreateDonationRequestCommand(999L, 100L, 20L, "Mensaje");
+        CreateDonationRequestCommand command = buildCommand(999L, 100L, 20L, "Mensaje");
         when(publicationRepositoryPort.findById(100L)).thenReturn(Optional.of(publicationInDonation));
 
         assertThrows(InvalidPublicationException.class, () -> createDonationRequestUseCase.create(command));
@@ -112,7 +129,7 @@ class CreateDonationRequestUseCaseTest {
     @DisplayName("Debe fallar si la publicación no está marcada en IN_DONATION")
     void shouldFailWhenPublicationNotInDonationState() {
         publicationInDonation.setStatus(PublicationStatus.AVAILABLE);
-        CreateDonationRequestCommand command = new CreateDonationRequestCommand(5L, 100L, 20L, "Mensaje");
+        CreateDonationRequestCommand command = buildCommand(5L, 100L, 20L, "Mensaje");
         when(publicationRepositoryPort.findById(100L)).thenReturn(Optional.of(publicationInDonation));
 
         assertThrows(InvalidDonationRequestException.class, () -> createDonationRequestUseCase.create(command));
@@ -121,7 +138,7 @@ class CreateDonationRequestUseCaseTest {
     @Test
     @DisplayName("Debe fallar si ya existe una solicitud en curso para esa publicación")
     void shouldFailWhenActiveRequestAlreadyExists() {
-        CreateDonationRequestCommand command = new CreateDonationRequestCommand(5L, 100L, 20L, "Mensaje");
+        CreateDonationRequestCommand command = buildCommand(5L, 100L, 20L, "Mensaje");
         when(publicationRepositoryPort.findById(100L)).thenReturn(Optional.of(publicationInDonation));
         when(donationRequestRepositoryPort.existsActiveRequestForPublication(100L)).thenReturn(true);
 
@@ -155,7 +172,7 @@ class CreateDonationRequestUseCaseTest {
     @Test
     @DisplayName("Debe rechazar la solicitud si la fundación no existe o está inactiva en ms-tiendas")
     void shouldFailWhenFoundationIsInvalidOrInactive() {
-        CreateDonationRequestCommand command = new CreateDonationRequestCommand(5L, 100L, 999L, "Mensaje");
+        CreateDonationRequestCommand command = buildCommand(5L, 100L, 999L, "Mensaje");
         when(publicationRepositoryPort.findById(100L)).thenReturn(Optional.of(publicationInDonation));
         when(donationRequestRepositoryPort.existsActiveRequestForPublication(100L)).thenReturn(false);
         doThrow(new InvalidDonationRequestException("La fundación no está activa"))
@@ -168,7 +185,7 @@ class CreateDonationRequestUseCaseTest {
     @Test
     @DisplayName("Debe propagar error 503 cuando ms-tiendas no está disponible")
     void shouldPropagateExternalServiceUnavailable() {
-        CreateDonationRequestCommand command = new CreateDonationRequestCommand(5L, 100L, 20L, "Mensaje");
+        CreateDonationRequestCommand command = buildCommand(5L, 100L, 20L, "Mensaje");
         when(publicationRepositoryPort.findById(100L)).thenReturn(Optional.of(publicationInDonation));
         when(donationRequestRepositoryPort.existsActiveRequestForPublication(100L)).thenReturn(false);
         doThrow(new ExternalServiceUnavailableException("ms-tiendas no disponible"))

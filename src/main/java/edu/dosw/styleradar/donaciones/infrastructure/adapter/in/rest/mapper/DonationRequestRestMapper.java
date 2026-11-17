@@ -31,7 +31,11 @@ public class DonationRequestRestMapper {
                 dto.donorId(),
                 dto.publicationId(),
                 dto.foundationId(),
-                dto.message()
+                dto.message(),
+                dto.deliveryMode(),
+                dto.deliveryPoint(),
+                dto.startTime(),
+                dto.endTime()
         );
     }
 
@@ -74,6 +78,7 @@ public class DonationRequestRestMapper {
                 domain.getMessage(),
                 domain.getStatus(),
                 domain.getRejectionReason(),
+                domain.getDeliveryMode(),
                 domain.getDeliveryPoint(),
                 domain.getPickupStartTime(),
                 domain.getPickupEndTime(),

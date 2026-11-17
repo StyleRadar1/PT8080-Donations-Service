@@ -70,8 +70,7 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
 
         return foundationCatalogPort.findAllActiveFoundations().stream()
                 .filter(FoundationSummary::activa)
-                .filter(foundation -> representativeUserId.equals(foundation.representanteId())
-                        || representativeUserId.equals(foundation.id()))
+                .filter(foundation -> representativeUserId.equals(foundation.representanteId()))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId));

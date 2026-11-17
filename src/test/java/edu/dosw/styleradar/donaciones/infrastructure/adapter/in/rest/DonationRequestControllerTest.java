@@ -23,6 +23,7 @@ import edu.dosw.styleradar.donaciones.domain.exception.ConcurrentDonationClaimEx
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
 import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
+import edu.dosw.styleradar.donaciones.domain.model.DeliveryMode;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
 import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
@@ -98,6 +99,7 @@ class DonationRequestControllerTest {
     private DonationRequestRestMapper donationRequestRestMapper;
 
     private DonationRequest buildSampleRequest(Long id, DonationRequestStatus status) {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
         return DonationRequest.builder()
                 .id(id)
                 .publicationId(10L)
@@ -105,7 +107,10 @@ class DonationRequestControllerTest {
                 .foundationId(501L)
                 .message("Deseo donar")
                 .status(status)
+                .deliveryMode(DeliveryMode.DROP_OFF_POINT)
                 .deliveryPoint("Cra 7 # 45")
+                .pickupStartTime(start)
+                .pickupEndTime(start.plusHours(2))
                 .requestedAt(LocalDateTime.now())
                 .build();
     }
@@ -113,7 +118,11 @@ class DonationRequestControllerTest {
     @Test
     @DisplayName("POST /donaciones - Debe crear solicitud de donación y responder 201 Created")
     void shouldCreateDonationRequestSuccessfully() throws Exception {
-        CreateDonationRequestDTO request = new CreateDonationRequestDTO(10L, 101L, 501L, "Deseo donar");
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        CreateDonationRequestDTO request = new CreateDonationRequestDTO(
+                10L, 101L, 501L, "Deseo donar",
+                DeliveryMode.DROP_OFF_POINT, "Cra 7 # 45", start, start.plusHours(2)
+        );
         DonationRequest created = buildSampleRequest(1L, DonationRequestStatus.PENDING);
 
         when(createDonationRequestUseCase.create(any())).thenReturn(created);
@@ -124,7 +133,11 @@ class DonationRequestControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "/api/v1/donations/1"))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.deliveryMode").value("DROP_OFF_POINT"))
+                .andExpect(jsonPath("$.deliveryPoint").value("Cra 7 # 45"))
+                .andExpect(jsonPath("$.slotStart").isNotEmpty())
+                .andExpect(jsonPath("$.slotEnd").isNotEmpty());
     }
 
     @Test
@@ -162,9 +175,9 @@ class DonationRequestControllerTest {
     }
 
     @Test
-    @DisplayName("POST /donaciones - Debe responder 400 Bad Request cuando faltan IDs obligatorios")
+    @DisplayName("POST /donaciones - Debe responder 400 Bad Request cuando faltan IDs o propuesta de entrega obligatorios")
     void shouldFailWhenMissingRequiredFields() throws Exception {
-        CreateDonationRequestDTO request = new CreateDonationRequestDTO(null, null, null, null);
+        CreateDonationRequestDTO request = new CreateDonationRequestDTO(null, null, null, null, null, null, null, null);
 
         mockMvc.perform(post("/api/v1/donations")
                         .contentType(MediaType.APPLICATION_JSON)

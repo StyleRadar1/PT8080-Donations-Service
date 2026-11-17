@@ -3657,7 +3657,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 99,\n  \"message\": \"Fundación inactiva\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 99,\n  \"message\": \"Fundación inactiva\",\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3711,7 +3711,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3762,7 +3762,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3821,7 +3821,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 9999\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 9999,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3880,7 +3880,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 503\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 503,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3939,7 +3939,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"message\": \"Deseo donar este abrigo térmico para programas comunitarios en Bogotá\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"message\": \"Deseo donar este abrigo térmico para programas comunitarios en Bogotá\",\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3958,6 +3958,10 @@
                   "    pm.response.to.have.status(201);",
                   "    const b = pm.response.json();",
                   "    pm.expect(b.status).to.eql('PENDING');",
+                  "    pm.expect(b.deliveryMode).to.eql('DROP_OFF_POINT');",
+                  "    pm.expect(b.deliveryPoint).to.be.a('string').and.not.empty;",
+                  "    pm.expect(b.slotStart).to.be.a('string');",
+                  "    pm.expect(b.slotEnd).to.be.a('string');",
                   "    pm.collectionVariables.set('donationRequestId', b.id);",
                   "});"
                 ]
@@ -3995,7 +3999,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{rejectDonatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"message\": \"Solicitud para validar rechazo y reversión automática a AVAILABLE\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{rejectDonatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"message\": \"Solicitud para validar rechazo y reversión automática a AVAILABLE\",\n  \"deliveryMode\": \"HOME_PICKUP\",\n  \"deliveryPoint\": \"Carrera 15 # 90-20, Chicó, Bogotá\",\n  \"startTime\": \"2026-12-20T14:00:00\",\n  \"endTime\": \"2026-12-20T17:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4049,7 +4053,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

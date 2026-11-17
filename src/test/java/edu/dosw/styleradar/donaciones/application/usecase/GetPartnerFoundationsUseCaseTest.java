@@ -107,7 +107,7 @@ class GetPartnerFoundationsUseCaseTest {
     }
 
     @Test
-    @DisplayName("Debe encontrar la fundación activa asociada al representanteId del usuario")
+    @DisplayName("Debe encontrar la fundación activa únicamente por representanteId y rechazar coincidencia numérica con id")
     void shouldGetFoundationByRepresentativeId() {
         FoundationSummary matched = new FoundationSummary(
                 3L, "Abrigo Solidario", "Chapinero", "Desc", "Dir", "Tel",
@@ -120,7 +120,11 @@ class GetPartnerFoundationsUseCaseTest {
         assertThat(found.id()).isEqualTo(3L);
         assertThat(found.representanteId()).isEqualTo(24L);
 
-        FoundationSummary matchedById = new FoundationSummary(
+        // Coincidencia numérica con foundation.id (3L) sin ser representanteId (24L) debe ser rechazada
+        assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(3L))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        FoundationSummary withoutRep = new FoundationSummary(
                 88L, null, "Suba", "Desc", "Dir", "Tel",
                 "a@b.org", List.of("  SUPERIOR "), "Niñez", "08:00-17:00", "Política", true, null
         );
@@ -128,8 +132,10 @@ class GetPartnerFoundationsUseCaseTest {
                 89L, "Zeta", "Suba", "Desc", "Dir", "Tel",
                 "a@b.org", null, "Niñez", "08:00-17:00", "Política", true, null
         );
-        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(matchedById, nullCats));
-        assertThat(useCase.getFoundationByRepresentativeId(88L).id()).isEqualTo(88L);
+        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(withoutRep, nullCats));
+
+        assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(88L))
+                .isInstanceOf(ResourceNotFoundException.class);
         assertThat(useCase.getActiveFoundations("   ")).hasSize(2);
         assertThat(useCase.getActiveFoundations("FOOTWEAR")).isEmpty();
 
