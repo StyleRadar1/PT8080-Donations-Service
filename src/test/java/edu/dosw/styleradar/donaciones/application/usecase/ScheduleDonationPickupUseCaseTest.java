@@ -80,18 +80,18 @@ class ScheduleDonationPickupUseCaseTest {
     }
 
     @Test
-    @DisplayName("Debe programar recogida exitosamente por la fundación")
-    void shouldSchedulePickupByFoundation() {
+    @DisplayName("Debe rechazar recogida si userId coincide numéricamente con foundationId pero no es representanteId en ms-tiendas")
+    void shouldDenySchedulePickupWhenUserIdCollidesWithFoundationId() {
         SchedulePickupCommand command = new SchedulePickupCommand(
                 20L, 10L, "Sede Fundación", startTime, endTime
         );
 
         when(donationRequestRepositoryPort.findById(10L)).thenReturn(Optional.of(request));
-        when(donationRequestRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(foundationCatalogPort.isFoundationRepresentative(20L, 20L)).thenReturn(false);
 
-        DonationRequest result = scheduleDonationPickupUseCase.schedulePickup(command);
-
-        assertEquals(DonationRequestStatus.IN_PICKUP, result.getStatus());
+        assertThrows(InvalidDonationRequestException.class,
+                () -> scheduleDonationPickupUseCase.schedulePickup(command));
+        verify(donationRequestRepositoryPort, never()).save(any());
     }
 
     @Test

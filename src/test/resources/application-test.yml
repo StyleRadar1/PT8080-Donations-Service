@@ -41,3 +41,6 @@ styleradar:
     foundations-path: /api/v1/admin/fundaciones
     foundation-by-id-path: /api/v1/admin/fundaciones/{id}
     validation-enabled: false
+    forward-bearer-token: true
+    service-roles-header-name: X-User-Roles
+    service-roles-header-value: ROLE_ADMIN_STYLERADAR

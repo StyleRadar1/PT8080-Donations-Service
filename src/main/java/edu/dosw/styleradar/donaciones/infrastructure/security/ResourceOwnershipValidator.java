@@ -43,9 +43,6 @@ public class ResourceOwnershipValidator {
         }
 
         Long authenticatedUserId = extractAuthenticatedUserId(authentication);
-        if (authenticatedUserId != null && authenticatedUserId.equals(foundationId)) {
-            return;
-        }
         if (authenticatedUserId != null && foundationCatalogPort != null
                 && foundationCatalogPort.isFoundationRepresentative(authenticatedUserId, foundationId)) {
             return;
@@ -56,10 +53,6 @@ public class ResourceOwnershipValidator {
                         + ") no tiene autorización para operar sobre la fundación (ID: "
                         + foundationId + ")."
         );
-    }
-
-    public void validateUserOrFoundationOwnership(Long targetUserId) {
-        validateOwnerOrAdmin(targetUserId);
     }
 
     public void validateOwnerOrAdmin(Authentication authentication, Long targetUserId) {
@@ -90,9 +83,8 @@ public class ResourceOwnershipValidator {
         Long authenticatedUserId = extractAuthenticatedUserId(authentication);
         boolean isOwnerDonor = authenticatedUserId != null && authenticatedUserId.equals(request.getDonorId());
         boolean isTargetFoundation = authenticatedUserId != null
-                && (authenticatedUserId.equals(request.getFoundationId())
-                || (foundationCatalogPort != null
-                && foundationCatalogPort.isFoundationRepresentative(authenticatedUserId, request.getFoundationId())));
+                && foundationCatalogPort != null
+                && foundationCatalogPort.isFoundationRepresentative(authenticatedUserId, request.getFoundationId());
 
         if (!isOwnerDonor && !isTargetFoundation) {
             throw new AccessDeniedException(

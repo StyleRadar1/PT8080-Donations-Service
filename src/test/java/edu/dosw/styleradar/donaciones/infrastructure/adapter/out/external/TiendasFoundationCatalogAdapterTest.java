@@ -3,13 +3,18 @@ package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.external;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -52,6 +57,11 @@ class TiendasFoundationCatalogAdapterTest {
 
         RestClient restClient = builder.build();
         adapter = new TiendasFoundationCatalogAdapter(restClient, properties);
+    }
+
+    @AfterEach
+    void tearDown() {
+        RequestContextHolder.resetRequestAttributes();
     }
 
     @Test
@@ -225,5 +235,46 @@ class TiendasFoundationCatalogAdapterTest {
 
         properties.setValidationEnabled(false);
         assertThat(adapter.isFoundationRepresentative(24L, 3L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Debe propagar el token Bearer JWT entrante hacia ms-tiendas y respetar la configuración de cabeceras")
+    void shouldForwardIncomingBearerTokenToTiendas() {
+        MockHttpServletRequest incomingRequest = new MockHttpServletRequest();
+        incomingRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer jwt-ms-auth-123");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(incomingRequest));
+
+        String json = """
+                [
+                  {
+                    "id": 3,
+                    "nombre": "Fundación Abrigo Solidario",
+                    "activa": true,
+                    "representanteId": 24
+                  }
+                ]
+                """;
+
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer jwt-ms-auth-123"))
+                .andExpect(header("X-User-Roles", "ROLE_ADMIN_STYLERADAR"))
+                .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+
+        List<FoundationSummary> result = adapter.findAllActiveFoundations();
+        assertThat(result).hasSize(1);
+        mockServer.verify();
+
+        // Con forwardBearerToken=false y cabecera de rol vacía, no envía ni Authorization ni X-User-Roles
+        mockServer.reset();
+        properties.setForwardBearerToken(false);
+        properties.setServiceRolesHeaderValue("");
+
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.findAllActiveFoundations()).isEmpty();
+        mockServer.verify();
     }
 }

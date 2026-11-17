@@ -6,10 +6,13 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -18,17 +21,19 @@ import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
 import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.external.dto.TiendasFoundationResponseDTO;
 import edu.dosw.styleradar.donaciones.infrastructure.config.TiendasProperties;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Adaptador HTTP hacia ms-tiendas para listar fundaciones aliadas activas
  * y verificar su existencia/estado antes de aceptar donaciones (SR-RF-44).
+ * Propaga el token Bearer JWT de la petición entrante (si existe) y adjunta
+ * la cabecera de servicio configurable esperada por ms-tiendas.
  */
 @Component
 public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
 
     private static final Logger log = LoggerFactory.getLogger(TiendasFoundationCatalogAdapter.class);
-    private static final String HEADER_USER_ROLES = "X-User-Roles";
-    private static final String ROLE_ADMIN_STYLERADAR = "ROLE_ADMIN_STYLERADAR";
+    private static final String BEARER_PREFIX = "Bearer ";
 
     private final RestClient tiendasRestClient;
     private final TiendasProperties tiendasProperties;
@@ -43,7 +48,7 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         try {
             TiendasFoundationResponseDTO[] response = tiendasRestClient.get()
                     .uri(tiendasProperties.getFoundationsPath())
-                    .header(HEADER_USER_ROLES, ROLE_ADMIN_STYLERADAR)
+                    .headers(this::applyAuthHeaders)
                     .retrieve()
                     .body(TiendasFoundationResponseDTO[].class);
 
@@ -73,7 +78,7 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         try {
             TiendasFoundationResponseDTO response = tiendasRestClient.get()
                     .uri(tiendasProperties.getFoundationByIdPath(), foundationId)
-                    .header(HEADER_USER_ROLES, ROLE_ADMIN_STYLERADAR)
+                    .headers(this::applyAuthHeaders)
                     .retrieve()
                     .body(TiendasFoundationResponseDTO.class);
 
@@ -88,6 +93,35 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
                     "No fue posible validar la fundación con ms-tiendas. Intente nuevamente más tarde.",
                     ex);
         }
+    }
+
+    private void applyAuthHeaders(HttpHeaders headers) {
+        if (tiendasProperties.isForwardBearerToken()) {
+            extractIncomingBearerHeader().ifPresent(token -> headers.set(HttpHeaders.AUTHORIZATION, token));
+        }
+        String rolesHeaderName = tiendasProperties.getServiceRolesHeaderName();
+        String rolesHeaderValue = tiendasProperties.getServiceRolesHeaderValue();
+        if (hasText(rolesHeaderName) && hasText(rolesHeaderValue)) {
+            headers.set(rolesHeaderName, rolesHeaderValue);
+        }
+    }
+
+    private Optional<String> extractIncomingBearerHeader() {
+        if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes)) {
+            return Optional.empty();
+        }
+        HttpServletRequest request = attributes.getRequest();
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null
+                && authHeader.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())
+                && authHeader.trim().length() > BEARER_PREFIX.length()) {
+            return Optional.of(authHeader.trim());
+        }
+        return Optional.empty();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     @Override

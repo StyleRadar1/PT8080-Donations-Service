@@ -31,8 +31,8 @@
     <a href="#4-endpoints-y-enlace-a-swagger"><img src="https://img.shields.io/badge/PROD_CLOUD-Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="PROD Cloud Active" /></a>
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions"><img src="https://img.shields.io/badge/CI_MASTER-passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Master Status" /></a>
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions"><img src="https://img.shields.io/badge/CI_DEVELOP-passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Develop Status" /></a>
-    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/Tests-252_Passing-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Tests 252 Passing" /></a>
-    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/JaCoCo_Coverage-98.28%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" /></a>
+    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/Tests-258_Passing-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Tests 258 Passing" /></a>
+    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/JaCoCo_Coverage-98.36%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" /></a>
   </p>
 
   <p align="center">
@@ -335,9 +335,9 @@ Todos los endpoints responden bajo el estándar **RFC 7807 (`application/problem
 | Tag Swagger | Método | Endpoint Canónico | RF Asociado | Descripción | Rol Requerido | Códigos HTTP |
 | :--- | :---: | :--- | :---: | :--- | :--- | :---: |
 | **Diagnóstico** | `GET` | `/api/v1/health` | Diagnóstico | Estado UP, versión, puerto y hash de commit | Público | `200` |
-| **Autenticación Demo** | `POST` | `/api/v1/auth/login` | Seguridad | Iniciar sesión por email y password en Swagger | dev/test/qa | `200`, `400`, `500` |
-| **Autenticación Demo** | `GET` | `/api/v1/auth/quick-token` | Seguridad | Generar token JWT rápido por rol (`USER`, `FOUNDATION`, `ADMIN`) | dev/test/qa | `200`, `400`, `500` |
-| **Autenticación Demo** | `GET` | `/api/v1/auth/demo-users` | Seguridad | Catálogo de identidades demo precargadas | dev/test/qa | `200`, `500` |
+| **Autenticación Demo** | `POST` | `/api/v1/auth/login` | Seguridad | Iniciar sesión por email y password en Swagger | local/dev/test | `200`, `400`, `500` |
+| **Autenticación Demo** | `GET` | `/api/v1/auth/quick-token` | Seguridad | Generar token JWT rápido por rol (`USER`, `FOUNDATION`, `ADMIN`) | local/dev/test | `200`, `400`, `500` |
+| **Autenticación Demo** | `GET` | `/api/v1/auth/demo-users` | Seguridad | Catálogo de identidades demo precargadas | local/dev/test | `200`, `500` |
 | **Carga de Fotos** | `POST` | `/api/v1/second-hand/photos` | Azure Storage | Subir imagen (JPEG/PNG/WEBP, máx 5MB) a Azure Blob Storage | `USER`, `STORE`, `FOUNDATION`, `ADMIN` | `201`, `400`, `401`, `403`, `500` |
 | **Economía Circular** | `POST` | `/api/v1/second-hand/publications` | `SR-RF-33..35` | Publicar prenda para reventa C2C (>0 COP) o donación (0 COP) | `USER`, `STORE`, `ADMIN` | `201`, `400`, `401`, `403`, `500` |
 | **Economía Circular** | `GET` | `/api/v1/second-hand/publications` | `SR-RF-36` | Buscar y filtrar prendas por localidad de Bogotá, precio, estado (`AVAILABLE` por defecto) | Público | `200`, `400`, `500` |
@@ -399,8 +399,8 @@ El stack tecnológico de `PT8080-Donations-Service` cumple con el estándar unif
 | **Broker de Mensajería** | RabbitMQ (Spring AMQP) | `3.12` | Topic Exchanges durables con confirmaciones de publicación (*Publisher Confirms*). |
 | **Mapeo y Boilerplate** | MapStruct + Lombok | `1.5.5` / `1.18.38` | Reducción de código repetitivo compatible con JDK 21. |
 | **Documentación API** | SpringDoc OpenAPI | `2.5.0` | Especificación OpenAPI 3.0 con Swagger UI, esquemas RFC 7807 y ejemplos interactivos. |
-| **Testing Automatizado** | JUnit 5 + Mockito + H2 + Testcontainers | `5.10.3` | **252 pruebas ejecutadas en verde** (unitarias, integración H2/PostgreSQL, Flyway, storage, cliente REST y seguridad RBAC) + **108 aserciones Newman/Postman**. |
-| **Métricas de Cobertura** | JaCoCo Maven Plugin | `0.8.12` | Verificación estricta de cobertura mínima (≥ 85%) alcanzando **98.28% líneas / 98.34% instrucciones / 90.42% ramas**. |
+| **Testing Automatizado** | JUnit 5 + Mockito + H2 + Testcontainers | `5.10.3` | **258 pruebas ejecutadas en verde** (unitarias, integración H2/PostgreSQL, Flyway, storage, cliente REST y seguridad RBAC) + **108 aserciones Newman/Postman**. |
+| **Métricas de Cobertura** | JaCoCo Maven Plugin | `0.8.12` | Verificación estricta de cobertura mínima (≥ 85%) alcanzando **98.36% líneas / 98.39% instrucciones / 90.16% ramas**. |
 
 ---
 
@@ -469,6 +469,9 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 | `JWT_SECRET_BASE64` | Clave Base64 HMAC-SHA256 compartida con `ms-auth` (≥ 256 bits) | Clave local dev/test | Sí |
 | `TIENDAS_SERVICE_URL` | URL base de `ms-tiendas` para fundaciones (`SR-RF-44`) | `http://localhost:8140` (`qa`/`prod` Azure) | Sí |
 | `TIENDAS_VALIDATION_ENABLED` | Activa/desactiva validación remota de fundaciones en `ms-tiendas` | `true` (`false` en test) | Opcional |
+| `TIENDAS_FORWARD_BEARER_TOKEN` | Reenvía el token `Authorization: Bearer` entrante hacia `ms-tiendas` | `true` | Opcional |
+| `TIENDAS_SERVICE_ROLES_HEADER` | Nombre de la cabecera de rol de servicio esperada por `ms-tiendas` | `X-User-Roles` | Opcional |
+| `TIENDAS_SERVICE_ROLES_VALUE` | Valor de la cabecera de rol para consultar el catálogo en `ms-tiendas` | `ROLE_ADMIN_STYLERADAR` | Opcional |
 | `CORS_ALLOWED_ORIGINS` | Orígenes permitidos para CORS del Frontend | `*` | Opcional |
 
 ---
@@ -483,11 +486,11 @@ El proyecto exige una cobertura de código mínima del **85%** verificada autom�
 
 | Métrica | Valor Alcanzado | Umbral Exigido | Estado |
 | :--- | :---: | :---: | :---: |
-| **Pruebas Automatizadas Ejecutadas** | **252 pasando** *(0 fallos, 0 errores, 0 omitidas)* | Suite completa | ✅ **0 fallos, 0 errores** |
-| **Cobertura de Instrucciones (JaCoCo)** | **98.34%** | `≥ 85.00%` | ✅ **Aprobado (+13.34%)** |
-| **Cobertura de Líneas (JaCoCo)** | **98.28%** | `≥ 85.00%` | ✅ **Aprobado (+13.28%)** |
-| **Cobertura de Ramas (JaCoCo)** | **90.42%** | `≥ 85.00%` | ✅ **Aprobado (+5.42%)** |
-| **Cobertura de Métodos (JaCoCo)** | **96.96%** | `≥ 85.00%` | ✅ **Aprobado (+11.96%)** |
+| **Pruebas Automatizadas Ejecutadas** | **258 pasando** *(0 fallos, 0 errores, 0 omitidas)* | Suite completa | ✅ **0 fallos, 0 errores** |
+| **Cobertura de Instrucciones (JaCoCo)** | **98.39%** | `≥ 85.00%` | ✅ **Aprobado (+13.39%)** |
+| **Cobertura de Líneas (JaCoCo)** | **98.36%** | `≥ 85.00%` | ✅ **Aprobado (+13.36%)** |
+| **Cobertura de Ramas (JaCoCo)** | **90.16%** | `≥ 85.00%` | ✅ **Aprobado (+5.16%)** |
+| **Cobertura de Métodos (JaCoCo)** | **97.32%** | `≥ 85.00%` | ✅ **Aprobado (+12.32%)** |
 | **Auditoría SonarQube** | **Quality Gate Passed (Rating A)** | 0 Bugs, 0 Vuln, 0 Smells | ✅ **Calificación A** |
 
 ### Pirámide de Pruebas Implementada
@@ -498,7 +501,7 @@ El proyecto exige una cobertura de código mínima del **85%** verificada autom�
 | **Casos de Uso (Unitarias Mockito)** | `ManagePublicationUseCaseTest`, `CreateDonationRequestUseCaseTest`, `ClaimDonationUseCaseTest`, `GetPartnerFoundationsUseCaseTest`, `UploadGarmentPhotoUseCaseImplTest` | Los 10 casos de uso (`*UseCaseImpl`), orquestación, concurrencia y subida de imágenes. |
 | **Controladores REST (`MockMvc`)** | `SecondHandPublicationControllerTest`, `DonationRequestControllerTest`, `PhotoUploadControllerTest`, `AuthControllerTest`, `HealthControllerTest` | Contratos HTTP, códigos 200/201/204 y RFC 7807 (`ProblemDetail`) para 400/401/403/404/409/500/503. |
 | **Persistencia, Storage, HTTP y Mensajería** | `SecondHandPublicationPersistenceAdapterTest`, `DonationRequestPersistenceAdapterTest`, `TiendasFoundationCatalogAdapterTest`, `AzureBlobStorageAdapterTest`, `DonationEventPublisherAdapterTest` | Mapeo JPA, cliente HTTP hacia `ms-tiendas`, Azure Blob Storage con fallback local, y RabbitMQ TLS (`AMQPS 5671`). |
-| **Seguridad e Integración RBAC** | `SecurityRbacIntegrationTest`, `JwtTokenProviderTest`, `ResourceOwnershipValidatorTest`, `DemoUserServiceTest` | JWT oficiales `ms-auth` (`sub` + `roles`), roles (`USER`, `STORE`, `FOUNDATION`, `ADMIN`), mitigación BOLA/IDOR, CORS y `representanteId`. |
+| **Seguridad e Integración RBAC** | `SecurityRbacIntegrationTest`, `AuthQaSecurityIsolationTest`, `JwtTokenProviderTest`, `ResourceOwnershipValidatorTest`, `DemoUserServiceTest` | JWT oficiales `ms-auth` (`sub` + `roles`), aislamiento en QA/Prod, roles (`USER`, `STORE`, `FOUNDATION`, `ADMIN`), mitigación BOLA/IDOR, CORS y `representanteId`. |
 
 ### Evidencias del Proyecto ([`docs/evidencias/`](docs/evidencias/))
 
@@ -516,15 +519,15 @@ El ciclo de integración y despliegue continuo está automatizado en **GitHub Ac
 
 | Pipeline | Rama / Entorno | Trigger | Quality Gate Requerido | Estado |
 | :--- | :---: | :---: | :--- | :---: |
-| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR | 252 Tests + JaCoCo ≥ 85% + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-passing-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
-| **CI - Master** | `master` / `main`<br>*(Producción)* | Push / PR | 252 Tests + JaCoCo ≥ 85% + Docker Build | [![CI Master](https://img.shields.io/badge/master-passing-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
+| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR | 258 Tests + JaCoCo ≥ 85% + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-passing-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
+| **CI - Master** | `master` / `main`<br>*(Producción)* | Push / PR | 258 Tests + JaCoCo ≥ 85% + Docker Build | [![CI Master](https://img.shields.io/badge/master-passing-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
 | **CD - Despliegue QA** | Azure QA (`rg-styleradar`) | Push / Merge a `develop` | Deploy Web App + Smoke Test `/health` | [![Deploy QA](https://img.shields.io/badge/Deploy_QA-Azure_Active-5600EF?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
 | **CD - Despliegue PROD** | Azure PROD (`rg-styleradar`) | Push / Merge a `master` (CMV) | Aprobación CMV + Smoke Test `/health` | [![Deploy PROD](https://img.shields.io/badge/Deploy_PROD-Azure_Active-16A34A?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
 
 ```mermaid
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
-    B --> C["252 Tests & JaCoCo<br>(98.28% ≥ 85%)"]
+    B --> C["258 Tests & JaCoCo<br>(98.36% ≥ 85%)"]
     C --> D["Empaquetado JAR &<br>Docker OCI Image"]
     D -->|Rama develop| E["Deploy Automático QA<br>(Azure App Service QA)"]
     D -->|Rama main + CMV| F["Deploy Producción PROD<br>(Azure App Service PROD)"]
@@ -561,8 +564,8 @@ master / main                           <-- Producción (Azure PROD · Requiere 
 
 - [x] La rama parte de la versión más reciente de `develop`.
 - [x] El código compila limpiamente sin advertencias críticas con `mvn clean compile`.
-- [x] Todas las pruebas automatizadas pasan en verde (`mvn -B test jacoco:report` con 252 passing, 0 omitidas; y suite Postman/Newman con 108 aserciones passing).
-- [x] La cobertura en JaCoCo supera el 85% obligatorio (alcanzado **98.28% líneas / 98.34% instrucciones / 90.42% ramas**).
+- [x] Todas las pruebas automatizadas pasan en verde (`mvn -B test jacoco:report` con 258 passing, 0 omitidas; y suite Postman/Newman con 108 aserciones passing).
+- [x] La cobertura en JaCoCo supera el 85% obligatorio (alcanzado **98.36% líneas / 98.39% instrucciones / 90.16% ramas**).
 - [x] Diagramas de arquitectura actualizados en [`docs/diagramas/drawio`](docs/diagramas/drawio) y [`docs/diagramas/png`](docs/diagramas/png).
 - [x] Evidencias de pruebas, cobertura JaCoCo, SonarQube, Swagger y despliegue almacenadas en [`docs/evidencias/`](docs/evidencias/).
 - [x] Colección Postman y pruebas automatizadas de todos los endpoints disponibles en [`docs/postman/`](docs/postman/).

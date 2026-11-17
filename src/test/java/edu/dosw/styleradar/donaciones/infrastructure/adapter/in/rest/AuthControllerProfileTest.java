@@ -11,8 +11,8 @@ import static org.mockito.Mockito.mock;
 
 /**
  * Pruebas unitarias de aislamiento por perfil para AuthController y DemoUserService.
- * Garantiza que en el perfil "prod" estos componentes no se instancien, impidiendo
- * la exposición de usuarios demo y generación no autenticada de tokens en producción.
+ * Garantiza que en los perfiles "qa" y "prod" estos componentes no se instancien, impidiendo
+ * la exposición de usuarios demo y generación no autenticada de tokens fuera de desarrollo/pruebas locales.
  */
 class AuthControllerProfileTest {
 
@@ -31,22 +31,24 @@ class AuthControllerProfileTest {
     }
 
     @Test
-    @DisplayName("En perfil qa - AuthController y DemoUserService SÍ deben registrarse para pruebas controladas")
-    void shouldRegisterAuthBeansInQaProfile() {
+    @DisplayName("En perfil qa - AuthController y DemoUserService NO deben registrarse como beans")
+    void shouldNotRegisterAuthBeansInQaProfile() {
         runner.withPropertyValues("spring.profiles.active=qa")
                 .run(context -> {
-                    assertThat(context).hasSingleBean(AuthController.class);
-                    assertThat(context).hasSingleBean(DemoUserService.class);
+                    assertThat(context).doesNotHaveBean(AuthController.class);
+                    assertThat(context).doesNotHaveBean(DemoUserService.class);
                 });
     }
 
     @Test
-    @DisplayName("En perfil dev/local/test - AuthController y DemoUserService SÍ deben registrarse")
-    void shouldRegisterAuthBeansInDevProfile() {
-        runner.withPropertyValues("spring.profiles.active=dev")
-                .run(context -> {
-                    assertThat(context).hasSingleBean(AuthController.class);
-                    assertThat(context).hasSingleBean(DemoUserService.class);
-                });
+    @DisplayName("En perfiles dev, local y test - AuthController y DemoUserService SÍ deben registrarse")
+    void shouldRegisterAuthBeansInLocalDevAndTestProfiles() {
+        for (String profile : new String[]{"dev", "local", "test"}) {
+            runner.withPropertyValues("spring.profiles.active=" + profile)
+                    .run(context -> {
+                        assertThat(context).hasSingleBean(AuthController.class);
+                        assertThat(context).hasSingleBean(DemoUserService.class);
+                    });
+        }
     }
 }

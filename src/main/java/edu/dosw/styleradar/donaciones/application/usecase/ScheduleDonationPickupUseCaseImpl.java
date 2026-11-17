@@ -40,7 +40,6 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
                         "No existe solicitud de donación con ID: " + command.requestId()));
 
         boolean isParticipant = request.getDonorId().equals(command.userId())
-                || request.getFoundationId().equals(command.userId())
                 || foundationCatalogPort.isFoundationRepresentative(command.userId(), request.getFoundationId());
         if (!isParticipant) {
             throw new InvalidDonationRequestException("El usuario no participa en esta solicitud de donación");
