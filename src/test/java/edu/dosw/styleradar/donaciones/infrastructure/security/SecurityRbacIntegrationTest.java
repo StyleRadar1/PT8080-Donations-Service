@@ -420,7 +420,7 @@ class SecurityRbacIntegrationTest {
         );
         when(getPartnerFoundationsUseCase.getFoundationByRepresentativeId(24L)).thenReturn(foundation);
 
-        mockMvc.perform(get("/api/v1/donations/foundations/me")
+        mockMvc.perform(get("/api/v1/donations/foundations/representative")
                         .header("Authorization", "Bearer " + msAuthFoundationJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(3L))

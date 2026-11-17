@@ -365,8 +365,8 @@ class DonationRequestControllerTest {
     }
 
     @Test
-    @DisplayName("GET /donaciones/foundations/me - Debe retornar la fundación asociada al representante autenticado")
-    void shouldReturnMyFoundation() throws Exception {
+    @DisplayName("GET /api/v1/donations/foundations/representative - Debe retornar la fundación asociada al representante autenticado")
+    void shouldReturnRepresentativeFoundation() throws Exception {
         FoundationSummary foundation = new FoundationSummary(
                 3L, "Fundación Abrigo Solidario", "Chapinero", "Recolección", "Calle 85 # 15-32",
                 "+57 601 742 8899", "contacto@abrigosolidario.org", List.of("SUPERIOR"),
@@ -376,7 +376,7 @@ class DonationRequestControllerTest {
         when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(24L);
         when(getPartnerFoundationsUseCase.getFoundationByRepresentativeId(24L)).thenReturn(foundation);
 
-        mockMvc.perform(get("/api/v1/donations/foundations/me"))
+        mockMvc.perform(get("/api/v1/donations/foundations/representative"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(3L))
                 .andExpect(jsonPath("$.representanteId").value(24L));

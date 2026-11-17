@@ -123,9 +123,9 @@ public class DonationRequestController {
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
-    @GetMapping("/foundations/me")
+    @GetMapping("/foundations/representative")
     @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
-    public ResponseEntity<FoundationResponseDTO> getMyFoundation() {
+    public ResponseEntity<FoundationResponseDTO> getRepresentativeFoundation() {
         Long authenticatedUserId = resourceOwnershipValidator.extractAuthenticatedUserId();
         FoundationSummary foundation = getPartnerFoundationsUseCase.getFoundationByRepresentativeId(authenticatedUserId);
         return ResponseEntity.ok(donationRequestRestMapper.toFoundationResponse(foundation));

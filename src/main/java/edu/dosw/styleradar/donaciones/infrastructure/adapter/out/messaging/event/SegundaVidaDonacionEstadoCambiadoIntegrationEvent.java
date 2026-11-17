@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * o publicación de donación cambia de estado (CREADA, ACEPTADA, RECHAZADA, RECLAMADA, PROGRAMADA, ENTREGADA).
  * 
  * Enrutado en 'styleradar.exchange' hacia:
- * 1) 'ms-notificaciones' y 'ms-estadisticas' con clave 'styleradar.donaciones.estado.cambiado'.
+ * 1) 'ms-notificaciones' con clave 'styleradar.donaciones.estado.cambiado'.
  * 2) Clave unificada 'styleradar.segundavida-donaciones.donacion.estado.cambiado'.
  */
 @Data

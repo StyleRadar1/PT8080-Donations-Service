@@ -23,7 +23,7 @@ import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event
 /**
  * Adaptador de salida RabbitMQ para la publicación asíncrona hacia 'styleradar.exchange' (puerto 5671 TLS / 5672).
  * Ambos flujos pertenecen a 'ms-segunda-vida-donaciones':
- * 1) 'styleradar.donaciones.estado.cambiado' hacia ms-notificaciones y ms-estadisticas.
+ * 1) 'styleradar.donaciones.estado.cambiado' hacia ms-notificaciones.
  * 2) 'styleradar.segundavida.prenda.vendida' hacia ms-chat (cola 'q.chat.segunda-mano') para cierre de salas.
  */
 @Component("donacionEventPublisherAdapter")
