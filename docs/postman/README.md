@@ -12,13 +12,46 @@ Carpeta oficial de pruebas funcionales, seguridad RBAC/BOLA, reglas de dominio e
 | [`mock-tiendas.js`](mock-tiendas.js) | Simulador ligero en Node.js de `ms-tiendas` (`:8140`) para probar `200`, `400` (fundación inactiva `99`), `404` (`9999`) y `503` (`503` / caída temporal) sin depender de otro repositorio. |
 | [`test-garment.png`](test-garment.png) / [`invalid-photo.txt`](invalid-photo.txt) | Archivos binarios de prueba para validar subida exitosa (`201`) y rechazo de formato inválido (`400`) en `/api/v1/second-hand/photos`. |
 
-## Cómo ejecutar en Postman (Interfaz Gráfica)
+## Cómo ejecutar en la App de Postman (Paso a paso)
 
-1. Abrir **Postman** → **Import** y seleccionar `StyleRadar-Donations-Service.postman_collection.json` y `StyleRadar-Local.postman_environment.json`.
-2. Seleccionar el entorno **StyleRadar Donations - Local (8520)** en la esquina superior derecha.
-3. En Postman **Settings → General**, definir el **Working Directory** en la raíz del repositorio (`PT8080-Donations-Service`) para que las rutas `docs/postman/test-garment.png` e `invalid-photo.txt` resuelvan automáticamente.
-4. Iniciar el microservicio (`mvn spring-boot:run`) y, si `ms-tiendas` no está levantado localmente, iniciar `node docs/postman/mock-tiendas.js`.
-5. Hacer clic en **Run collection** sobre `StyleRadar - ms-segunda-vida-donaciones` y ejecutar en orden de arriba hacia abajo (la colección guarda tokens e IDs dinámicos en `collectionVariables`).
+### 1. Prerrequisitos en tu máquina (Entorno Local)
+1. **RabbitMQ** activo en el puerto `5672` *(por ejemplo el contenedor `sr-rabbitmq-donaciones` de `docker-compose.yml`)*.
+2. **Terminal 1 — Simulador de `ms-tiendas` (puerto `8140`):**
+   ```powershell
+   node docs/postman/mock-tiendas.js
+   ```
+   *(Permite probar los casos reales `200`, `400` con fundación inactiva `99`, `404` con `9999` y `503` sin necesitar otro microservicio encendido).*
+3. **Terminal 2 — Microservicio en el puerto `8520`:**
+   ```powershell
+   mvn spring-boot:run
+   ```
+   *(Asegúrate de que el puerto `8520` no esté ocupado por otro contenedor Docker antes de arrancarlo).*
+
+### 2. Importar Colección y Entorno en Postman
+1. Abre la aplicación de **Postman** y haz clic en **Import** *(arriba a la izquierda)*.
+2. Arrastra o selecciona estos dos archivos desde `docs/postman/`:
+   * `StyleRadar-Donations-Service.postman_collection.json`
+   * `StyleRadar-Local.postman_environment.json` *(opcionalmente `StyleRadar-QA.postman_environment.json` si probarás QA)*
+3. En la esquina superior derecha de Postman, cambia el selector de entorno a **`StyleRadar Donations - Local (8520)`**.
+
+### 3. Configurar el Working Directory (obligatorio para subir fotos)
+Para que las 3 pruebas de la carpeta **`03 - Carga de Fotografías`** encuentren `test-garment.png` e `invalid-photo.txt` automáticamente:
+1. En Postman abre **Settings** *(ícono de engranaje arriba a la derecha → **Settings** → **General**)*.
+2. En **Working Directory** (o *Location*), selecciona o pega la ruta raíz del proyecto:
+   `C:\Users\JuanM\Desktop\Code\DOSW\Final_Project\PT8080-Donations-Service`
+3. *(Alternativa manual si no cambias el Working Directory: entra al tab **Body → form-data** de las 3 peticiones de la carpeta `03` y vuelve a seleccionar `docs/postman/test-garment.png` e `invalid-photo.txt`)*.
+
+### 4. Ejecutar las pruebas
+* **Opción A — Correr toda la suite automática (Collection Runner, recomendado):**
+  1. En el panel izquierdo, haz clic en los **tres puntos (`...`)** junto a **`StyleRadar - ms-segunda-vida-donaciones (API v1 Complete Suite)`** → **Run**.
+  2. Verifica que todas las carpetas (`01` a `06`) estén seleccionadas en su orden original.
+  3. Haz clic en **Run StyleRadar - ms-segunda-vida-donaciones...**.
+  4. Todas las peticiones guardan sus propios tokens (`tokenUser`, `tokenStore`, `tokenFoundation`, `tokenAdmin`) e IDs (`salePubId`, `retirePubId`, `donatePubId`, `rejectDonatePubId`, `openShowcasePubId`, `donationRequestId`, `rejectRequestId`, `claimedRequestId`), por lo que debe cerrar con **108/108 assertions passed** (y puedes volver a darle *Run again* las veces que quieras).
+* **Opción B — Probar peticiones una por una:**
+  1. Ejecuta primero las peticiones `200` de **`02 - Autenticación Demo`** (para generar y guardar los 4 tokens JWT) y la `201` de **`03 - Carga de Fotografías`** (para guardar `uploadedPhotoUrl`).
+  2. En las carpetas **`04`**, **`05`** y **`06`**, respeta el orden de aparición dentro de cada endpoint, porque las pruebas `409 Conflict` reutilizan las publicaciones/solicitudes recién vendidas, reclamadas o confirmadas en las peticiones anteriores.
+
+> **Si pruebas contra Azure QA (`StyleRadar Donations - Azure QA`):** cambia el entorno arriba a la derecha a `StyleRadar Donations - Azure QA`. Ten presente que en QA no corre `mock-tiendas.js`, por lo que los casos con IDs ficticios (`3`, `99`, `503`, `9999`) dependerán de las fundaciones reales registradas en `ms-tiendas` QA.
 
 ## Cómo ejecutar por CLI con Newman
 
