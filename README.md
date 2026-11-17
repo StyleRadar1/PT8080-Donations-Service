@@ -498,6 +498,10 @@ El proyecto exige una cobertura de código mínima del **85%** verificada autom�
 | **Persistencia, Storage, HTTP y Mensajería** | `SecondHandPublicationPersistenceAdapterTest`, `DonationRequestPersistenceAdapterTest`, `TiendasFoundationCatalogAdapterTest`, `AzureBlobStorageAdapterTest`, `DonationEventPublisherAdapterTest` | Mapeo JPA, cliente HTTP hacia `ms-tiendas`, Azure Blob Storage con fallback local, y RabbitMQ TLS (`AMQPS 5671`). |
 | **Seguridad e Integración RBAC** | `SecurityRbacIntegrationTest`, `JwtTokenProviderTest`, `ResourceOwnershipValidatorTest`, `DemoUserServiceTest` | JWT oficiales `ms-auth` (`sub` + `roles`), roles (`USER`, `STORE`, `FOUNDATION`, `ADMIN`), mitigación BOLA/IDOR, CORS y `representanteId`. |
 
+### Evidencias del Proyecto ([`docs/evidencias/`](docs/evidencias/))
+
+📁 **Todas las evidencias de ejecución, pruebas, cobertura, calidad y despliegue se encuentran centralizadas en la carpeta [`docs/evidencias/`](docs/evidencias/)** (compilación Maven, reporte JaCoCo, auditoría SonarQube, Swagger UI, Health Check en Azure, contenedores Docker, RabbitMQ TLS y tablero Jira del squad).
+
 ---
 
 <a id="10-cicd-con-el-badge-del-pipeline"></a>
@@ -557,7 +561,8 @@ master / main                           <-- Producción (Azure PROD · Requiere 
 - [x] El código compila limpiamente sin advertencias críticas con `mvn clean compile`.
 - [x] Todas las pruebas automatizadas pasan en verde (`mvn -B test jacoco:report` con 245 passing / 1 PG sin Docker).
 - [x] La cobertura en JaCoCo supera el 85% obligatorio (alcanzado **96.78% líneas / 96.51% instrucciones**).
-- [x] Diagramas de arquitectura actualizados en `docs/diagramas/drawio` y `docs/diagramas/png`.
+- [x] Diagramas de arquitectura actualizados en [`docs/diagramas/drawio`](docs/diagramas/drawio) y [`docs/diagramas/png`](docs/diagramas/png).
+- [x] Evidencias de pruebas, cobertura JaCoCo, SonarQube, Swagger y despliegue almacenadas en [`docs/evidencias/`](docs/evidencias/).
 - [x] No se introducen credenciales ni secretos en el código (uso de variables de entorno).
 - [x] El PR cuenta con la revisión y aprobación del líder técnico del squad.
 
@@ -590,3 +595,5 @@ master / main                           <-- Producción (Azure PROD · Requiere 
 | `SR-RF-47` | Aceptar o rechazar donación | `PATCH /api/v1/donations/{id}/decision` (`DecideDonationRequestUseCaseImpl`) con motivo obligatorio al rechazar y retorno automático a `AVAILABLE`. | ✅ Completado |
 | `SR-RF-48` | Coordinar recogida de donación | `PATCH /api/v1/donations/{id}/pickup` (`ScheduleDonationPickupUseCaseImpl`) con validación de franja futura (`America/Bogota`). | ✅ Completado |
 | `SR-RF-49` | Confirmar recepción de donación | `PATCH /api/v1/donations/{id}/confirmation` (`ConfirmDonationReceiptUseCaseImpl`) con comprobante `SR-DON-XXXX`. | ✅ Completado |
+
+> **Nota de flujo logístico (`SR-RF-45` → `SR-RF-48`):** El servicio adopta el flujo secuencial realista de donaciones (`POST /api/v1/donations` en estado `PENDING` → `PATCH /api/v1/donations/{id}/decision` para aceptar/rechazar → `PATCH /api/v1/donations/{id}/pickup` para agendar franja futura y punto de entrega → `PATCH /api/v1/donations/{id}/confirmation` para generar el comprobante `SR-DON-XXXX`). De este modo solo se coordina logística cuando la fundación ya aprobó la donación.
