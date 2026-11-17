@@ -4,14 +4,13 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
 import com.azure.storage.blob.BlobClient;
@@ -111,10 +110,7 @@ public class AzureBlobStorageAdapter implements PhotoStoragePort {
         if (env == null) {
             return false;
         }
-        List<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
-        return activeProfiles.contains("local")
-                || activeProfiles.contains("test")
-                || activeProfiles.contains("dev");
+        return env.acceptsProfiles(Profiles.of("local", "test", "dev"));
     }
 
     private void saveLocalCopy(byte[] content, String filename) {

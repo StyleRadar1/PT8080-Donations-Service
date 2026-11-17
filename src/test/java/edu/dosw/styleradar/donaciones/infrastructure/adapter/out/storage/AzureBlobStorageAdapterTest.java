@@ -230,5 +230,11 @@ class AzureBlobStorageAdapterTest {
         assertThatThrownBy(() -> threeArgAdapter.storePhoto("bytes".getBytes(), "foto.jpg", "image/jpeg"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("AZURE_STORAGE_CONNECTION_STRING es obligatoria");
+
+        MockEnvironment defaultLocalEnv = new MockEnvironment();
+        defaultLocalEnv.setDefaultProfiles("local");
+        AzureBlobStorageAdapter defaultLocalAdapter = new AzureBlobStorageAdapter("", "donaciones-fotos", "https://endpoint", defaultLocalEnv);
+        assertThat(defaultLocalAdapter.storePhoto("bytes".getBytes(), "default_local.png", "image/png"))
+                .isEqualTo("/uploads/garments/default_local.png");
     }
 }
