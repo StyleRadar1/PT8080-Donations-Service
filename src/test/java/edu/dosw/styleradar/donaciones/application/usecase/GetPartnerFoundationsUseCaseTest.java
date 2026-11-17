@@ -119,5 +119,25 @@ class GetPartnerFoundationsUseCaseTest {
 
         assertThat(found.id()).isEqualTo(3L);
         assertThat(found.representanteId()).isEqualTo(24L);
+
+        FoundationSummary matchedById = new FoundationSummary(
+                88L, null, "Suba", "Desc", "Dir", "Tel",
+                "a@b.org", List.of("  SUPERIOR "), "Niñez", "08:00-17:00", "Política", true, null
+        );
+        FoundationSummary nullCats = new FoundationSummary(
+                89L, "Zeta", "Suba", "Desc", "Dir", "Tel",
+                "a@b.org", null, "Niñez", "08:00-17:00", "Política", true, null
+        );
+        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(matchedById, nullCats));
+        assertThat(useCase.getFoundationByRepresentativeId(88L).id()).isEqualTo(88L);
+        assertThat(useCase.getActiveFoundations("   ")).hasSize(2);
+        assertThat(useCase.getActiveFoundations("FOOTWEAR")).isEmpty();
+
+        assertThatThrownBy(() -> useCase.getActiveFoundationById(null))
+                .isInstanceOf(InvalidDonationRequestException.class);
+        assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(null))
+                .isInstanceOf(InvalidDonationRequestException.class);
+        assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(999L))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

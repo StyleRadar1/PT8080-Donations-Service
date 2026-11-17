@@ -207,5 +207,21 @@ class TiendasFoundationCatalogAdapterTest {
 
         assertThat(adapter.isFoundationRepresentative(999L, 3L)).isFalse();
         mockServer.verify();
+
+        // Ramas nulas y validationEnabled=false
+        assertThat(adapter.isFoundationRepresentative(null, 3L)).isFalse();
+        assertThat(adapter.isFoundationRepresentative(24L, null)).isFalse();
+        assertThatThrownBy(() -> adapter.validateActiveFoundation(null))
+                .isInstanceOf(InvalidDonationRequestException.class);
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("null", MediaType.APPLICATION_JSON));
+        assertThat(adapter.findAllActiveFoundations()).isEmpty();
+        mockServer.verify();
+
+        properties.setValidationEnabled(false);
+        assertThat(adapter.isFoundationRepresentative(24L, 3L)).isFalse();
     }
 }

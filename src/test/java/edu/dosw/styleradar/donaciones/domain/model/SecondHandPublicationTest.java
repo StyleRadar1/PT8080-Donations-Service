@@ -245,4 +245,49 @@ class SecondHandPublicationTest {
         // No puede marcarse como donada si ya no esta IN_DONATION
         assertThrows(InvalidStateTransitionException.class, pub::markAsDonated);
     }
+
+    @Test
+    @DisplayName("Debe validar invariantes de localidad por defecto, donación precio 0, edición donación y máximo de fotos")
+    void shouldCoverAdditionalValidationAndEditBranches() {
+        SecondHandPublication donationPub = SecondHandPublication.builder()
+                .userId(1L)
+                .garment(validGarment)
+                .size(Size.M)
+                .conservationStatus(ConservationStatus.GOOD_CONDITION)
+                .esDonacion(true)
+                .price(null)
+                .localidad(null)
+                .photos(List.of("1.jpg", "2.jpg", "3.jpg", "4.jpg"))
+                .build();
+        donationPub.publish();
+        assertEquals(BigDecimal.ZERO, donationPub.getPrice());
+        assertEquals(LocalidadBogota.CHAPINERO, donationPub.getLocalidad());
+
+        // Al editar publicación marcada como donación, mantiene precio 0 aunque se pase otro precio
+        donationPub.edit(validGarment, Size.L, ConservationStatus.LIKE_NEW,
+                BigDecimal.valueOf(99000), LocalidadBogota.USAQUEN, List.of("a.jpg"));
+        assertEquals(BigDecimal.ZERO, donationPub.getPrice());
+        assertEquals(LocalidadBogota.USAQUEN, donationPub.getLocalidad());
+
+        // Si newLocalidad es null, conserva localidad anterior
+        donationPub.edit(validGarment, Size.M, ConservationStatus.GOOD_CONDITION,
+                BigDecimal.ZERO, null, null);
+        assertEquals(LocalidadBogota.USAQUEN, donationPub.getLocalidad());
+        assertTrue(donationPub.getPhotos().isEmpty());
+
+        // Donación con precio != 0 y >4 fotos fallan validateInvariants
+        SecondHandPublication invalidDonationPrice = SecondHandPublication.builder()
+                .userId(1L).garment(validGarment).size(Size.M).conservationStatus(ConservationStatus.GOOD_CONDITION)
+                .esDonacion(true).price(BigDecimal.TEN).build();
+        assertThrows(InvalidPublicationException.class, invalidDonationPrice::validateInvariants);
+
+        SecondHandPublication tooManyPhotos = SecondHandPublication.builder()
+                .userId(1L).garment(validGarment).size(Size.M).conservationStatus(ConservationStatus.GOOD_CONDITION)
+                .esDonacion(false).price(BigDecimal.TEN)
+                .photos(List.of("1", "2", "3", "4", "5")).build();
+        assertThrows(InvalidPublicationException.class, tooManyPhotos::validateInvariants);
+
+        // No se puede vender una prenda marcada como donación
+        assertThrows(InvalidStateTransitionException.class, donationPub::markAsSold);
+    }
 }
