@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -15,10 +16,8 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -117,10 +116,7 @@ public class JwtTokenProvider {
 
     private static boolean isLocalOrTestProfile(Environment env) {
         if (env == null) return false;
-        List<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
-        return activeProfiles.contains("local")
-                || activeProfiles.contains("test")
-                || activeProfiles.contains("dev");
+        return env.acceptsProfiles(Profiles.of("local", "test", "dev"));
     }
 
     private static byte[] padTo256Bits(byte[] input) {
