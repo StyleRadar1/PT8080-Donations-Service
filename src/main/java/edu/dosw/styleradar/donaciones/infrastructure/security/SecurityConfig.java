@@ -60,6 +60,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Documentación Swagger y OpenAPI
                         .requestMatchers(
+                                "/api/v1/swagger-ui.html",
+                                "/api/v1/swagger-ui/**",
+                                "/api/v1/v3/api-docs/**",
+                                "/api/v1/v3/api-docs",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -67,45 +71,45 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // Actuator y Health Checks
-                        .requestMatchers("/actuator/**", "/health").permitAll()
+                        .requestMatchers("/actuator/**", "/api/v1/health").permitAll()
 
                         // Endpoints de autenticación y tokens demo
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
 
                         // Carga de fotografías a Azure Blob Storage
-                        .requestMatchers(HttpMethod.POST, "/segunda-mano/fotos/**", "/donaciones/fotos/**", "/fotos/**")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/second-hand/photos/**", "/api/v1/donations/photos/**")
                         .hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
 
                         // Catálogo público de segunda mano (lectura)
-                        .requestMatchers(HttpMethod.GET, "/segunda-mano", "/segunda-mano/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/second-hand/publications", "/api/v1/second-hand/publications/{id}").permitAll()
 
                         // Operaciones sobre publicaciones (Crear, Editar, Vender, Retirar, Donar, Listar por usuario)
-                        .requestMatchers(HttpMethod.POST, "/segunda-mano").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, "/segunda-mano/{id}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PATCH, "/segunda-mano/{id}/sell").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PATCH, "/segunda-mano/{id}/retire").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PATCH, "/segunda-mano/{id}/donate").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.GET, "/segunda-mano/user/{userId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/second-hand/publications").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/second-hand/publications/{id}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/second-hand/publications/{id}/sale").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/second-hand/publications/{id}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/second-hand/publications/{id}/donation").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/second-hand/publications/users/{userId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
 
                         // Catálogo de fundaciones aliadas activas (selector SR-RF-44 integrado con ms-tiendas)
-                        .requestMatchers(HttpMethod.GET, "/donaciones/foundations/me")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/donations/foundations/me")
                         .hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.GET, "/donaciones/foundations", "/donaciones/foundations/{foundationId}")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/donations/foundations", "/api/v1/donations/foundations/{foundationId}")
                         .hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
 
                         // Operaciones de Donación - Donante (USER, STORE) y coordinación logística con Fundación (FOUNDATION)
-                        .requestMatchers(HttpMethod.POST, "/donaciones").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PATCH, "/donaciones/{id}/pickup").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.GET, "/donaciones/donor/{donorId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/donations").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/donations/{id}/pickup").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/donations/donors/{donorId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
 
                         // Operaciones de Donación - Reclamo en Vitrina y Gestión Fundación (FOUNDATION, ADMIN)
-                        .requestMatchers(HttpMethod.POST, "/donaciones/claim").hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PATCH, "/donaciones/{id}/decide").hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PATCH, "/donaciones/{id}/confirm").hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.GET, "/donaciones/foundation/{foundationId}").hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/donations/claims").hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/donations/{id}/decision").hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/donations/{id}/confirmation").hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/donations/foundations/{foundationId}/requests").hasAnyRole(ROLE_FOUNDATION, ROLE_ADMIN)
 
                         // Consulta de solicitud específica (compartida entre todos los roles autenticados)
-                        .requestMatchers(HttpMethod.GET, "/donaciones/{id}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/donations/{id}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
 
                         // Cualquier otra petición debe estar autenticada
                         .anyRequest().authenticated()

@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,7 +56,7 @@ import lombok.RequiredArgsConstructor;
  * Restringido exclusivamente al territorio de las 20 localidades de Bogotá D.C.
  */
 @RestController
-@RequestMapping("/segunda-mano")
+@RequestMapping("/api/v1/second-hand/publications")
 @RequiredArgsConstructor
 @Tag(
         name = "Publicaciones - Economía Circular",
@@ -127,7 +128,7 @@ public class SecondHandPublicationController {
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "La localidad de Bogotá es obligatoria. StyleRadar opera exclusivamente en las 20 localidades de Bogotá D.C.",
-                                      "instance": "/api/v1/segunda-mano",
+                                      "instance": "/api/v1/second-hand/publications",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -148,7 +149,7 @@ public class SecondHandPublicationController {
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token JWT ausente, expirado o con firma no válida.",
-                                      "instance": "/api/v1/segunda-mano",
+                                      "instance": "/api/v1/second-hand/publications",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -169,7 +170,7 @@ public class SecondHandPublicationController {
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado no posee privilegios para publicar.",
-                                      "instance": "/api/v1/segunda-mano",
+                                      "instance": "/api/v1/second-hand/publications",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -190,7 +191,7 @@ public class SecondHandPublicationController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al persistir la publicación.",
-                                      "instance": "/api/v1/segunda-mano",
+                                      "instance": "/api/v1/second-hand/publications",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -206,7 +207,7 @@ public class SecondHandPublicationController {
         CreatePublicationCommand command = publicationRestMapper.toCommand(requestDTO);
         SecondHandPublication created = createPublicationUseCase.create(command);
         PublicationResponseDTO response = publicationRestMapper.toResponse(created);
-        return ResponseEntity.created(URI.create("/api/v1/segunda-mano/" + created.getId())).body(response);
+        return ResponseEntity.created(URI.create("/api/v1/second-hand/publications/" + created.getId())).body(response);
     }
 
     @Operation(
@@ -284,7 +285,7 @@ public class SecondHandPublicationController {
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "Parámetro 'localidad' no válido. Solo se admiten las 20 localidades de Bogotá D.C.",
-                                      "instance": "/api/v1/segunda-mano",
+                                      "instance": "/api/v1/second-hand/publications",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -305,7 +306,7 @@ public class SecondHandPublicationController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al consultar el catálogo de publicaciones.",
-                                      "instance": "/api/v1/segunda-mano",
+                                      "instance": "/api/v1/second-hand/publications",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -413,7 +414,7 @@ public class SecondHandPublicationController {
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
-                                      "instance": "/api/v1/segunda-mano/999",
+                                      "instance": "/api/v1/second-hand/publications/999",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -434,7 +435,7 @@ public class SecondHandPublicationController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al buscar la publicación por ID.",
-                                      "instance": "/api/v1/segunda-mano/10",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -505,7 +506,7 @@ public class SecondHandPublicationController {
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
-                                      "instance": "/api/v1/segunda-mano/user/101",
+                                      "instance": "/api/v1/second-hand/publications/users/101",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -526,7 +527,7 @@ public class SecondHandPublicationController {
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "El usuario autenticado (ID: 102) no tiene autorización para operar sobre publicaciones del usuario ID: 101.",
-                                      "instance": "/api/v1/segunda-mano/user/101",
+                                      "instance": "/api/v1/second-hand/publications/users/101",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -547,7 +548,7 @@ public class SecondHandPublicationController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al consultar publicaciones por usuario.",
-                                      "instance": "/api/v1/segunda-mano/user/101",
+                                      "instance": "/api/v1/second-hand/publications/users/101",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -555,7 +556,7 @@ public class SecondHandPublicationController {
                     )
             )
     })
-    @GetMapping("/user/{userId}")
+    @GetMapping("/users/{userId}")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<List<PublicationResponseDTO>> getPublicationsByUserId(
             @Parameter(description = "ID del usuario propietario", example = "101")
@@ -618,7 +619,7 @@ public class SecondHandPublicationController {
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "El precio para venta C2C debe ser superior a 0 COP.",
-                                      "instance": "/api/v1/segunda-mano/10",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -639,7 +640,7 @@ public class SecondHandPublicationController {
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
-                                      "instance": "/api/v1/segunda-mano/10",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -660,7 +661,7 @@ public class SecondHandPublicationController {
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado (ID: 102) no es propietario de la publicación ID: 10.",
-                                      "instance": "/api/v1/segunda-mano/10",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -681,7 +682,7 @@ public class SecondHandPublicationController {
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
-                                      "instance": "/api/v1/segunda-mano/999",
+                                      "instance": "/api/v1/second-hand/publications/999",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -702,7 +703,7 @@ public class SecondHandPublicationController {
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "No se puede editar una publicación que ya ha sido vendida",
-                                      "instance": "/api/v1/segunda-mano/10",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -723,7 +724,7 @@ public class SecondHandPublicationController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al actualizar la publicación.",
-                                      "instance": "/api/v1/segunda-mano/10",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -796,7 +797,7 @@ public class SecondHandPublicationController {
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "El parámetro 'compradorId' es obligatorio para cerrar la venta C2C y coordinar la conversación con ms-chat.",
-                                      "instance": "/api/v1/segunda-mano/10/sell",
+                                      "instance": "/api/v1/second-hand/publications/10/sale",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -817,7 +818,7 @@ public class SecondHandPublicationController {
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
-                                      "instance": "/api/v1/segunda-mano/10/sell",
+                                      "instance": "/api/v1/second-hand/publications/10/sale",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -838,7 +839,7 @@ public class SecondHandPublicationController {
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado (ID: 102) no es el vendedor de la publicación ID: 10.",
-                                      "instance": "/api/v1/segunda-mano/10/sell",
+                                      "instance": "/api/v1/second-hand/publications/10/sale",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -859,7 +860,7 @@ public class SecondHandPublicationController {
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
-                                      "instance": "/api/v1/segunda-mano/999/sell",
+                                      "instance": "/api/v1/second-hand/publications/999/sale",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -880,7 +881,7 @@ public class SecondHandPublicationController {
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La publicación ya se encuentra marcada como vendida o no está disponible para reventa C2C.",
-                                      "instance": "/api/v1/segunda-mano/10/sell",
+                                      "instance": "/api/v1/second-hand/publications/10/sale",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -901,7 +902,7 @@ public class SecondHandPublicationController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al registrar la venta y publicar el evento a RabbitMQ.",
-                                      "instance": "/api/v1/segunda-mano/10/sell",
+                                      "instance": "/api/v1/second-hand/publications/10/sale",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -909,7 +910,7 @@ public class SecondHandPublicationController {
                     )
             )
     })
-    @PatchMapping("/{id}/sell")
+    @PatchMapping("/{id}/sale")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> markAsSold(
             @Parameter(description = "ID de la publicación vendida", example = "10")
@@ -944,7 +945,7 @@ public class SecondHandPublicationController {
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
-                                      "instance": "/api/v1/segunda-mano/10/retire",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -965,7 +966,7 @@ public class SecondHandPublicationController {
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado (ID: 102) no es propietario de la publicación ID: 10.",
-                                      "instance": "/api/v1/segunda-mano/10/retire",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -986,7 +987,7 @@ public class SecondHandPublicationController {
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
-                                      "instance": "/api/v1/segunda-mano/999/retire",
+                                      "instance": "/api/v1/second-hand/publications/999",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -1007,7 +1008,7 @@ public class SecondHandPublicationController {
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "No se puede retirar una prenda que ya ha sido donada a una fundación.",
-                                      "instance": "/api/v1/segunda-mano/10/retire",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -1028,7 +1029,7 @@ public class SecondHandPublicationController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al retirar la publicación de la vitrina.",
-                                      "instance": "/api/v1/segunda-mano/10/retire",
+                                      "instance": "/api/v1/second-hand/publications/10",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -1036,7 +1037,7 @@ public class SecondHandPublicationController {
                     )
             )
     })
-    @PatchMapping("/{id}/retire")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<Void> retirePublication(
             @Parameter(description = "ID de la publicación a retirar", example = "10")
@@ -1101,7 +1102,7 @@ public class SecondHandPublicationController {
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
-                                      "instance": "/api/v1/segunda-mano/10/donate",
+                                      "instance": "/api/v1/second-hand/publications/10/donation",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -1122,7 +1123,7 @@ public class SecondHandPublicationController {
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado (ID: 102) no es propietario de la prenda ID: 10.",
-                                      "instance": "/api/v1/segunda-mano/10/donate",
+                                      "instance": "/api/v1/second-hand/publications/10/donation",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -1143,7 +1144,7 @@ public class SecondHandPublicationController {
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
-                                      "instance": "/api/v1/segunda-mano/999/donate",
+                                      "instance": "/api/v1/second-hand/publications/999/donation",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -1164,7 +1165,7 @@ public class SecondHandPublicationController {
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La publicación no se encuentra en estado AVAILABLE para ser transferida al canal benéfico.",
-                                      "instance": "/api/v1/segunda-mano/10/donate",
+                                      "instance": "/api/v1/second-hand/publications/10/donation",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -1185,7 +1186,7 @@ public class SecondHandPublicationController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al destinar la prenda al canal de donación.",
-                                      "instance": "/api/v1/segunda-mano/10/donate",
+                                      "instance": "/api/v1/second-hand/publications/10/donation",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -1193,7 +1194,7 @@ public class SecondHandPublicationController {
                     )
             )
     })
-    @PatchMapping("/{id}/donate")
+    @PatchMapping("/{id}/donation")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> markForDonation(
             @Parameter(description = "ID de la publicación a donar", example = "10")

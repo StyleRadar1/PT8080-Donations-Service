@@ -107,7 +107,7 @@ class SecurityRbacIntegrationTest {
     @Test
     @DisplayName("Debe retornar 401 Unauthorized (RFC 7807) cuando un cliente anónimo intenta crear una donación sin Bearer JWT")
     void shouldReturn401WhenUnauthenticated() throws Exception {
-        mockMvc.perform(post("/donaciones")
+        mockMvc.perform(post("/api/v1/donations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isUnauthorized())
@@ -123,7 +123,7 @@ class SecurityRbacIntegrationTest {
     void shouldReturn403WhenUserTriesToDecideDonation() throws Exception {
         DecideDonationRequestDTO request = new DecideDonationRequestDTO(501L, true, null);
 
-        mockMvc.perform(patch("/donaciones/1/decide")
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
@@ -137,7 +137,7 @@ class SecurityRbacIntegrationTest {
     @DisplayName("Debe retornar 403 Forbidden (RFC 7807) cuando una FUNDACIÓN intenta crear una publicación de venta de ropa")
     @WithMockUser(roles = "FOUNDATION")
     void shouldReturn403WhenFoundationTriesToCreatePublication() throws Exception {
-        mockMvc.perform(post("/segunda-mano")
+        mockMvc.perform(post("/api/v1/second-hand/publications")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isForbidden())
@@ -152,7 +152,7 @@ class SecurityRbacIntegrationTest {
         // El endpoint /donaciones/1/decide acepta ADMIN; con token real debe superar el filtro de seguridad
         DecideDonationRequestDTO request = new DecideDonationRequestDTO(501L, true, null);
 
-        mockMvc.perform(patch("/donaciones/1/decide")
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -197,7 +197,7 @@ class SecurityRbacIntegrationTest {
                 List.of("https://styleradar.com/img1.jpg")
         );
 
-        mockMvc.perform(post("/segunda-mano")
+        mockMvc.perform(post("/api/v1/second-hand/publications")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -248,7 +248,7 @@ class SecurityRbacIntegrationTest {
 
         when(createPublicationUseCase.create(any())).thenReturn(created);
 
-        mockMvc.perform(post("/segunda-mano")
+        mockMvc.perform(post("/api/v1/second-hand/publications")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -264,7 +264,7 @@ class SecurityRbacIntegrationTest {
 
         DecideDonationRequestDTO request = new DecideDonationRequestDTO(999L, true, null);
 
-        mockMvc.perform(patch("/donaciones/1/decide")
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -292,7 +292,7 @@ class SecurityRbacIntegrationTest {
 
         when(decideDonationRequestUseCase.decide(any(), any(), anyBoolean(), any())).thenReturn(accepted);
 
-        mockMvc.perform(patch("/donaciones/1/decide")
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -316,7 +316,7 @@ class SecurityRbacIntegrationTest {
 
         when(createDonationRequestUseCase.getById(1L)).thenReturn(foreignRequest);
 
-        mockMvc.perform(get("/donaciones/1")
+        mockMvc.perform(get("/api/v1/donations/1")
                         .header("Authorization", "Bearer " + thirdPartyToken))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
@@ -345,7 +345,7 @@ class SecurityRbacIntegrationTest {
 
         when(scheduleDonationPickupUseCase.schedulePickup(any())).thenReturn(inPickup);
 
-        mockMvc.perform(patch("/donaciones/1/pickup")
+        mockMvc.perform(patch("/api/v1/donations/1/pickup")
                         .header("Authorization", "Bearer " + foundationToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -372,7 +372,7 @@ class SecurityRbacIntegrationTest {
 
         when(managePublicationUseCase.markAsSold(eq(202L), eq(10L), eq(303L))).thenReturn(sold);
 
-        mockMvc.perform(patch("/segunda-mano/10/sell")
+        mockMvc.perform(patch("/api/v1/second-hand/publications/10/sale")
                         .header("Authorization", "Bearer " + storeToken)
                         .param("userId", "202")
                         .param("compradorId", "303"))
@@ -383,7 +383,7 @@ class SecurityRbacIntegrationTest {
     @Test
     @DisplayName("Debe retornar 401 sin token en GET /donaciones/foundations y 200 con token USER")
     void shouldEnforceAuthOnPartnerFoundationsEndpoint() throws Exception {
-        mockMvc.perform(get("/donaciones/foundations"))
+        mockMvc.perform(get("/api/v1/donations/foundations"))
                 .andExpect(status().isUnauthorized());
 
         String userToken = jwtTokenProvider.generateToken(101L, "user@styleradar.com", Role.USER, "Comprador");
@@ -392,7 +392,7 @@ class SecurityRbacIntegrationTest {
                         "contacto@abrigosolidario.org", List.of("SUPERIOR"), "Niñez", "08:00-17:00", "Política", true)
         ));
 
-        mockMvc.perform(get("/donaciones/foundations")
+        mockMvc.perform(get("/api/v1/donations/foundations")
                         .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(3L));
@@ -420,13 +420,13 @@ class SecurityRbacIntegrationTest {
         );
         when(getPartnerFoundationsUseCase.getFoundationByRepresentativeId(24L)).thenReturn(foundation);
 
-        mockMvc.perform(get("/donaciones/foundations/me")
+        mockMvc.perform(get("/api/v1/donations/foundations/me")
                         .header("Authorization", "Bearer " + msAuthFoundationJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(3L))
                 .andExpect(jsonPath("$.representanteId").value(24L));
 
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/donaciones/foundations")
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/v1/donations/foundations")
                         .header("Origin", "https://styleradar-front.azurewebsites.net")
                         .header("Access-Control-Request-Method", "GET")
                         .header("Access-Control-Request-Headers", "Authorization"))

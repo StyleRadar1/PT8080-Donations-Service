@@ -44,7 +44,7 @@ class PhotoUploadControllerTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("POST /api/v1/segunda-mano/fotos/upload - Debe subir foto exitosamente y responder 201 Created")
+    @DisplayName("POST /api/v1/second-hand/photos - Debe subir foto exitosamente y responder 201 Created")
     void shouldUploadPhotoSuccessfully() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -57,7 +57,7 @@ class PhotoUploadControllerTest {
         when(uploadGarmentPhotoUseCase.uploadPhoto(any(), eq("chaqueta.jpg"), eq("image/jpeg")))
                 .thenReturn(expectedUrl);
 
-        mockMvc.perform(multipart("/segunda-mano/fotos/upload").file(file))
+        mockMvc.perform(multipart("/api/v1/second-hand/photos").file(file))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.photoUrl").value(expectedUrl))
                 .andExpect(jsonPath("$.filename").value("garment_9b83b9c0.jpg"))
@@ -66,7 +66,7 @@ class PhotoUploadControllerTest {
 
     @Test
     @WithMockUser(roles = "FOUNDATION")
-    @DisplayName("POST /api/v1/segunda-mano/fotos/upload - Debe permitir carga para rol FOUNDATION y responder 201")
+    @DisplayName("POST /api/v1/second-hand/photos - Debe permitir carga para rol FOUNDATION y responder 201")
     void shouldUploadPhotoUnderDonationsAlias() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -79,14 +79,14 @@ class PhotoUploadControllerTest {
         when(uploadGarmentPhotoUseCase.uploadPhoto(any(), eq("pantalon.png"), eq("image/png")))
                 .thenReturn(expectedUrl);
 
-        mockMvc.perform(multipart("/segunda-mano/fotos/upload").file(file))
+        mockMvc.perform(multipart("/api/v1/second-hand/photos").file(file))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.photoUrl").value(expectedUrl));
     }
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("POST /api/v1/segunda-mano/fotos/upload - Debe responder 400 Bad Request cuando el archivo está vacío")
+    @DisplayName("POST /api/v1/second-hand/photos - Debe responder 400 Bad Request cuando el archivo está vacío")
     void shouldReturn400WhenFileIsEmpty() throws Exception {
         MockMultipartFile emptyFile = new MockMultipartFile(
                 "file",
@@ -95,14 +95,14 @@ class PhotoUploadControllerTest {
                 new byte[0]
         );
 
-        mockMvc.perform(multipart("/segunda-mano/fotos/upload").file(emptyFile))
+        mockMvc.perform(multipart("/api/v1/second-hand/photos").file(emptyFile))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.title").value("Solicitud inválida"));
     }
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("POST /api/v1/segunda-mano/fotos/upload - Debe responder 400 cuando el caso de uso rechaza tipo de archivo")
+    @DisplayName("POST /api/v1/second-hand/photos - Debe responder 400 cuando el caso de uso rechaza tipo de archivo")
     void shouldReturn400WhenUseCaseRejectsFileType() throws Exception {
         MockMultipartFile pdfFile = new MockMultipartFile(
                 "file",
@@ -114,13 +114,13 @@ class PhotoUploadControllerTest {
         when(uploadGarmentPhotoUseCase.uploadPhoto(any(), eq("documento.pdf"), eq("application/pdf")))
                 .thenThrow(new InvalidPublicationException("Tipo de archivo no permitido"));
 
-        mockMvc.perform(multipart("/segunda-mano/fotos/upload").file(pdfFile))
+        mockMvc.perform(multipart("/api/v1/second-hand/photos").file(pdfFile))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("Tipo de archivo no permitido"));
     }
 
     @Test
-    @DisplayName("POST /api/v1/segunda-mano/fotos/upload - Debe responder 401 Unauthorized sin autenticación")
+    @DisplayName("POST /api/v1/second-hand/photos - Debe responder 401 Unauthorized sin autenticación")
     void shouldReturn401WhenNotAuthenticated() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -129,7 +129,7 @@ class PhotoUploadControllerTest {
                 "bytes".getBytes()
         );
 
-        mockMvc.perform(multipart("/segunda-mano/fotos/upload").file(file))
+        mockMvc.perform(multipart("/api/v1/second-hand/photos").file(file))
                 .andExpect(status().isUnauthorized());
     }
 }

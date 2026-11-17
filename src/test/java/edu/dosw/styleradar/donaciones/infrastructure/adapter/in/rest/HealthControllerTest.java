@@ -24,7 +24,7 @@ class HealthControllerTest {
     @Test
     @DisplayName("Debe retornar estado UP, versión, commitSha y puerto 8520 con código HTTP 200")
     void shouldReturnHealthStatusUp() throws Exception {
-        mockMvc.perform(get("/health")
+        mockMvc.perform(get("/api/v1/health")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
@@ -41,7 +41,7 @@ class HealthControllerTest {
         HealthController customController = new HealthController("1.0.0", "c3b9f4a123");
         MockMvc customMvc = MockMvcBuilders.standaloneSetup(customController).build();
 
-        customMvc.perform(get("/health")
+        customMvc.perform(get("/api/v1/health")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))

@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
  * En producción (prod) este bean NO se carga, garantizando la seguridad perimetral.
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Profile({"local", "test", "dev", "qa"})
 @Tag(
