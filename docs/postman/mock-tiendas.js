@@ -54,7 +54,7 @@ const server = http.createServer((req, res) => {
     return sendJson(res, 200, { mode: "fail-next-list", remaining: failNextListCount });
   }
 
-  if (req.method === "GET" && url.pathname === "/api/v1/admin/fundaciones") {
+  if (req.method === "GET" && url.pathname === "/api/v1/admin/foundations") {
     if (failNextListCount > 0) {
       failNextListCount -= 1;
       return sendJson(res, 503, { error: "Simulated ms-tiendas unavailability (503)" });
@@ -62,7 +62,7 @@ const server = http.createServer((req, res) => {
     return sendJson(res, 200, foundations);
   }
 
-  const match = url.pathname.match(/^\/api\/v1\/admin\/fundaciones\/(\d+)$/);
+  const match = url.pathname.match(/^\/api\/v1\/admin\/foundations\/(\d+)$/);
   if (req.method === "GET" && match) {
     const id = Number(match[1]);
     if (id === 503) {

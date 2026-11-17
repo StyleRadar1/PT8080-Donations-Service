@@ -19,7 +19,8 @@ public class TiendasProperties {
     private String foundationsPath;
     private String foundationByIdPath;
     private boolean validationEnabled = true;
-    private boolean forwardBearerToken = true;
+    private String serviceBearerToken = "";
+    private boolean forwardBearerToken = false;
     private String serviceRolesHeaderName = "X-User-Roles";
     private String serviceRolesHeaderValue = "ROLE_ADMIN_STYLERADAR";
     private int connectTimeoutMs = 3000;

@@ -88,10 +88,11 @@ styleradar:
       duration: ${JWT_DURATION:PT24H}
   tiendas:
     base-url: ${TIENDAS_SERVICE_URL:http://localhost:8140}
-    foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/admin/fundaciones}
-    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/admin/fundaciones/{id}}
+    foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/admin/foundations}
+    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/admin/foundations/{id}}
     validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
-    forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:true}
+    service-bearer-token: ${TIENDAS_SERVICE_TOKEN:}
+    forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:false}
     service-roles-header-name: ${TIENDAS_SERVICE_ROLES_HEADER:X-User-Roles}
     service-roles-header-value: ${TIENDAS_SERVICE_ROLES_VALUE:ROLE_ADMIN_STYLERADAR}
     connect-timeout-ms: ${TIENDAS_CONNECT_TIMEOUT_MS:3000}

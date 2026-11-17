@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -27,10 +28,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.headerDoesNotExist;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withResourceNotFound;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @DisplayName("Pruebas Unitarias - TiendasFoundationCatalogAdapter")
@@ -46,8 +49,8 @@ class TiendasFoundationCatalogAdapterTest {
     void setUp() {
         properties = new TiendasProperties();
         properties.setBaseUrl(BASE_URL);
-        properties.setFoundationsPath("/api/v1/admin/fundaciones");
-        properties.setFoundationByIdPath("/api/v1/admin/fundaciones/{id}");
+        properties.setFoundationsPath("/api/v1/admin/foundations");
+        properties.setFoundationByIdPath("/api/v1/admin/foundations/{id}");
         properties.setValidationEnabled(true);
         properties.setConnectTimeoutMs(1000);
         properties.setReadTimeoutMs(1000);
@@ -92,7 +95,7 @@ class TiendasFoundationCatalogAdapterTest {
                 ]
                 """;
 
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("X-User-Roles", "ROLE_ADMIN_STYLERADAR"))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
@@ -117,7 +120,7 @@ class TiendasFoundationCatalogAdapterTest {
                 }
                 """;
 
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones/3"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("X-User-Roles", "ROLE_ADMIN_STYLERADAR"))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
@@ -129,7 +132,7 @@ class TiendasFoundationCatalogAdapterTest {
     @Test
     @DisplayName("Debe lanzar ResourceNotFoundException cuando ms-tiendas responde 404 para el ID")
     void shouldThrowNotFoundWhenTiendasReturns404() {
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones/999"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/999"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withResourceNotFound());
 
@@ -149,7 +152,7 @@ class TiendasFoundationCatalogAdapterTest {
                 }
                 """;
 
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones/4"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/4"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
@@ -161,7 +164,7 @@ class TiendasFoundationCatalogAdapterTest {
     @Test
     @DisplayName("Debe lanzar ExternalServiceUnavailableException cuando ms-tiendas falla con error 500")
     void shouldThrowExternalServiceUnavailableOnServerError() {
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones/3"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withServerError());
 
@@ -205,7 +208,7 @@ class TiendasFoundationCatalogAdapterTest {
                 }
                 """;
 
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones/3"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
@@ -213,7 +216,7 @@ class TiendasFoundationCatalogAdapterTest {
         mockServer.verify();
 
         mockServer.reset();
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones/3"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
@@ -227,7 +230,7 @@ class TiendasFoundationCatalogAdapterTest {
                 .isInstanceOf(InvalidDonationRequestException.class);
 
         mockServer.reset();
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("null", MediaType.APPLICATION_JSON));
         assertThat(adapter.findAllActiveFoundations()).isEmpty();
@@ -238,13 +241,13 @@ class TiendasFoundationCatalogAdapterTest {
     }
 
     @Test
-    @DisplayName("Debe propagar el token Bearer JWT entrante hacia ms-tiendas y respetar la configuración de cabeceras")
-    void shouldForwardIncomingBearerTokenToTiendas() {
-        MockHttpServletRequest incomingRequest = new MockHttpServletRequest();
-        incomingRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer jwt-ms-auth-123");
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(incomingRequest));
+    @DisplayName("Por defecto NO debe propagar el Bearer del donante hacia /api/v1/admin/foundations y sí enviar serviceBearerToken cuando está configurado")
+    void shouldUseServiceAuthWithoutLeakingDonorBearerToken() {
+        MockHttpServletRequest donorRequest = new MockHttpServletRequest();
+        donorRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer donor-user-jwt");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(donorRequest));
 
-        String json = """
+        String listJson = """
                 [
                   {
                     "id": 3,
@@ -254,27 +257,86 @@ class TiendasFoundationCatalogAdapterTest {
                   }
                 ]
                 """;
+        String byIdJson = """
+                {
+                  "id": 3,
+                  "nombre": "Fundación Abrigo Solidario",
+                  "activa": true,
+                  "representanteId": 24
+                }
+                """;
 
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones"))
+        // 1. Por defecto (forwardBearerToken=false, serviceBearerToken vacío): nunca propaga el token del donante
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
                 .andExpect(method(HttpMethod.GET))
-                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer jwt-ms-auth-123"))
+                .andExpect(headerDoesNotExist(HttpHeaders.AUTHORIZATION))
                 .andExpect(header("X-User-Roles", "ROLE_ADMIN_STYLERADAR"))
-                .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(listJson, MediaType.APPLICATION_JSON));
 
-        List<FoundationSummary> result = adapter.findAllActiveFoundations();
-        assertThat(result).hasSize(1);
+        assertThat(adapter.findAllActiveFoundations()).hasSize(1);
         mockServer.verify();
 
-        // Con forwardBearerToken=false y cabecera de rol vacía, no envía ni Authorization ni X-User-Roles
+        // 2. Con serviceBearerToken configurado: tiene precedencia sobre cualquier token del donante
         mockServer.reset();
-        properties.setForwardBearerToken(false);
-        properties.setServiceRolesHeaderValue("");
+        properties.setForwardBearerToken(true);
+        properties.setServiceBearerToken("svc-admin-jwt-999");
 
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/fundaciones"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer svc-admin-jwt-999"))
+                .andExpect(header("X-User-Roles", "ROLE_ADMIN_STYLERADAR"))
+                .andRespond(withSuccess(byIdJson, MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.findFoundationById(3L)).isPresent();
+        mockServer.verify();
+
+        // 3. Con forwardBearerToken=true explícito y sin serviceBearerToken: reenvía el token entrante
+        mockServer.reset();
+        properties.setServiceBearerToken("");
+        properties.setForwardBearerToken(true);
+
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer donor-user-jwt"))
                 .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
 
         assertThat(adapter.findAllActiveFoundations()).isEmpty();
+        mockServer.verify();
+
+        // 4. Con cabecera de rol vacía y forwardBearerToken=false: no envía Authorization ni X-User-Roles
+        mockServer.reset();
+        properties.setForwardBearerToken(false);
+        properties.setServiceBearerToken("Bearer explicit-prefixed-token");
+        properties.setServiceRolesHeaderValue("");
+
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer explicit-prefixed-token"))
+                .andExpect(headerDoesNotExist("X-User-Roles"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.findAllActiveFoundations()).isEmpty();
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("Debe mapear 401 y 403 de ms-tiendas a ExternalServiceUnavailableException (503) sin falsos 404")
+    void shouldMapUnauthorizedAndForbiddenFromTiendasTo503() {
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+
+        assertThatThrownBy(() -> adapter.findAllActiveFoundations())
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+
+        assertThatThrownBy(() -> adapter.findFoundationById(3L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
         mockServer.verify();
     }
 }

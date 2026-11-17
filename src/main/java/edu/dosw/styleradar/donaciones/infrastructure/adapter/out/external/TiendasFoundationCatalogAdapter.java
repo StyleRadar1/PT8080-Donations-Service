@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
@@ -61,9 +62,8 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
                     .filter(FoundationSummary::activa)
                     .toList();
         } catch (RestClientException ex) {
-            log.error("Error consultando el catálogo de fundaciones en ms-tiendas ({})",
-                    tiendasProperties.getBaseUrl(), ex);
-            throw new ExternalServiceUnavailableException(
+            throw handleTiendasFailure(
+                    "el catálogo de fundaciones",
                     "No fue posible obtener el listado de fundaciones desde ms-tiendas. Intente nuevamente más tarde.",
                     ex);
         }
@@ -87,16 +87,35 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
             log.warn("Fundación ID: {} no encontrada en ms-tiendas", foundationId);
             return Optional.empty();
         } catch (RestClientException ex) {
-            log.error("Error consultando la fundación ID: {} en ms-tiendas ({})",
-                    foundationId, tiendasProperties.getBaseUrl(), ex);
-            throw new ExternalServiceUnavailableException(
+            throw handleTiendasFailure(
+                    "la fundación ID: " + foundationId,
                     "No fue posible validar la fundación con ms-tiendas. Intente nuevamente más tarde.",
                     ex);
         }
     }
 
+    private ExternalServiceUnavailableException handleTiendasFailure(
+            String target,
+            String publicMessage,
+            RestClientException ex) {
+        if (ex instanceof HttpClientErrorException httpEx
+                && (httpEx.getStatusCode() == HttpStatus.UNAUTHORIZED
+                || httpEx.getStatusCode() == HttpStatus.FORBIDDEN)) {
+            log.error("Acceso rechazado ({}) al consultar {} en ms-tiendas ({}). "
+                            + "Verifique el token o mecanismo de autenticación acordado entre microservicios.",
+                    httpEx.getStatusCode().value(), target, tiendasProperties.getBaseUrl(), ex);
+        } else {
+            log.error("Error consultando {} en ms-tiendas ({})",
+                    target, tiendasProperties.getBaseUrl(), ex);
+        }
+        return new ExternalServiceUnavailableException(publicMessage, ex);
+    }
+
     private void applyAuthHeaders(HttpHeaders headers) {
-        if (tiendasProperties.isForwardBearerToken()) {
+        Optional<String> serviceToken = resolveServiceBearerHeader();
+        if (serviceToken.isPresent()) {
+            headers.set(HttpHeaders.AUTHORIZATION, serviceToken.get());
+        } else if (tiendasProperties.isForwardBearerToken()) {
             extractIncomingBearerHeader().ifPresent(token -> headers.set(HttpHeaders.AUTHORIZATION, token));
         }
         String rolesHeaderName = tiendasProperties.getServiceRolesHeaderName();
@@ -104,6 +123,18 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         if (hasText(rolesHeaderName) && hasText(rolesHeaderValue)) {
             headers.set(rolesHeaderName, rolesHeaderValue);
         }
+    }
+
+    private Optional<String> resolveServiceBearerHeader() {
+        String raw = tiendasProperties.getServiceBearerToken();
+        if (!hasText(raw)) {
+            return Optional.empty();
+        }
+        String trimmed = raw.trim();
+        if (trimmed.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+            return trimmed.length() > BEARER_PREFIX.length() ? Optional.of(trimmed) : Optional.empty();
+        }
+        return Optional.of(BEARER_PREFIX + trimmed);
     }
 
     private Optional<String> extractIncomingBearerHeader() {

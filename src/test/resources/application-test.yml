@@ -38,9 +38,10 @@ styleradar:
     publication-by-id-path: /api/v1/second-hand/publications/{id}
   tiendas:
     base-url: http://localhost:8140
-    foundations-path: /api/v1/admin/fundaciones
-    foundation-by-id-path: /api/v1/admin/fundaciones/{id}
+    foundations-path: /api/v1/admin/foundations
+    foundation-by-id-path: /api/v1/admin/foundations/{id}
     validation-enabled: false
-    forward-bearer-token: true
+    service-bearer-token: ""
+    forward-bearer-token: false
     service-roles-header-name: X-User-Roles
     service-roles-header-value: ROLE_ADMIN_STYLERADAR
