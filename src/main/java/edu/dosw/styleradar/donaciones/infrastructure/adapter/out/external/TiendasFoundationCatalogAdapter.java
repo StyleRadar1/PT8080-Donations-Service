@@ -29,8 +29,6 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
     private static final Logger log = LoggerFactory.getLogger(TiendasFoundationCatalogAdapter.class);
     private static final String HEADER_USER_ROLES = "X-User-Roles";
     private static final String ROLE_ADMIN_STYLERADAR = "ROLE_ADMIN_STYLERADAR";
-    private static final String ADMIN_FOUNDATIONS_PATH = "/api/v1/admin/fundaciones";
-    private static final String ADMIN_FOUNDATION_BY_ID_PATH = "/api/v1/admin/fundaciones/{id}";
 
     private final RestClient tiendasRestClient;
     private final TiendasProperties tiendasProperties;
@@ -44,7 +42,7 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
     public List<FoundationSummary> findAllActiveFoundations() {
         try {
             TiendasFoundationResponseDTO[] response = tiendasRestClient.get()
-                    .uri(ADMIN_FOUNDATIONS_PATH)
+                    .uri(tiendasProperties.getFoundationsPath())
                     .header(HEADER_USER_ROLES, ROLE_ADMIN_STYLERADAR)
                     .retrieve()
                     .body(TiendasFoundationResponseDTO[].class);
@@ -74,7 +72,7 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
 
         try {
             TiendasFoundationResponseDTO response = tiendasRestClient.get()
-                    .uri(ADMIN_FOUNDATION_BY_ID_PATH, foundationId)
+                    .uri(tiendasProperties.getFoundationByIdPath(), foundationId)
                     .header(HEADER_USER_ROLES, ROLE_ADMIN_STYLERADAR)
                     .retrieve()
                     .body(TiendasFoundationResponseDTO.class);

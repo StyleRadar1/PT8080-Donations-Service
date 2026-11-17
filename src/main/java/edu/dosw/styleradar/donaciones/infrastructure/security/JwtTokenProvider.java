@@ -196,31 +196,52 @@ public class JwtTokenProvider {
 
     public Role getRole(String token) {
         Claims claims = getClaims(token);
-        Object rawRoles = claims.get("roles");
-        if (rawRoles == null) {
-            rawRoles = claims.get("authorities");
-        }
-        if (rawRoles == null) {
-            rawRoles = claims.get("role");
-        }
-
-        if (rawRoles instanceof Collection<?> collection) {
-            for (Object item : collection) {
-                Role resolved = resolveSingleRole(item != null ? item.toString() : null);
-                if (resolved != null) {
-                    return resolved;
-                }
-            }
-        } else if (rawRoles instanceof String rawStr) {
-            for (String tokenRole : rawStr.split(",")) {
-                Role resolved = resolveSingleRole(tokenRole);
-                if (resolved != null) {
-                    return resolved;
-                }
-            }
+        Object rawRoles = extractRawRolesClaim(claims);
+        Role resolved = resolveRoleFromClaim(rawRoles);
+        if (resolved != null) {
+            return resolved;
         }
 
         throw new IllegalArgumentException("El token JWT no contiene un rol reconocido por StyleRadar: " + rawRoles);
+    }
+
+    private static Object extractRawRolesClaim(Claims claims) {
+        Object rawRoles = claims.get("roles");
+        if (rawRoles != null) {
+            return rawRoles;
+        }
+        Object authorities = claims.get("authorities");
+        return authorities != null ? authorities : claims.get("role");
+    }
+
+    private static Role resolveRoleFromClaim(Object rawRoles) {
+        if (rawRoles instanceof Collection<?> collection) {
+            return resolveRoleFromCollection(collection);
+        }
+        if (rawRoles instanceof String rawStr) {
+            return resolveRoleFromString(rawStr);
+        }
+        return null;
+    }
+
+    private static Role resolveRoleFromCollection(Collection<?> collection) {
+        for (Object item : collection) {
+            Role resolved = item != null ? resolveSingleRole(item.toString()) : null;
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+        return null;
+    }
+
+    private static Role resolveRoleFromString(String rawStr) {
+        for (String tokenRole : rawStr.split(",")) {
+            Role resolved = resolveSingleRole(tokenRole);
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+        return null;
     }
 
     public String getName(String token) {

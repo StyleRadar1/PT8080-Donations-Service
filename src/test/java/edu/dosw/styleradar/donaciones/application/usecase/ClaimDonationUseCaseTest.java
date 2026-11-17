@@ -36,6 +36,7 @@ import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -247,7 +248,7 @@ class ClaimDonationUseCaseTest {
 
         when(publicationRepositoryPort.findById(10L)).thenReturn(Optional.of(donationPublication));
         when(donationRequestRepositoryPort.existsActiveRequestForPublication(10L)).thenReturn(false);
-        org.mockito.Mockito.doThrow(new InvalidDonationRequestException("Fundación inactiva"))
+        doThrow(new InvalidDonationRequestException("Fundación inactiva"))
                 .when(foundationCatalogPort).validateActiveFoundation(501L);
 
         assertThatThrownBy(() -> claimDonationUseCase.claimDonation(command))

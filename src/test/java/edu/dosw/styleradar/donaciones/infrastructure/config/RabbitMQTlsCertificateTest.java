@@ -64,7 +64,6 @@ class RabbitMQTlsCertificateTest {
     private static String computeSha256Fingerprint(Certificate cert) throws Exception {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         byte[] digest = md.digest(cert.getEncoded());
-        String hex = HexFormat.ofDelimiter(":").withUpperCase().formatHex(digest);
-        return hex;
+        return HexFormat.ofDelimiter(":").withUpperCase().formatHex(digest);
     }
 }

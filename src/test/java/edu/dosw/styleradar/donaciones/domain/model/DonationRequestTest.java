@@ -111,8 +111,9 @@ class DonationRequestTest {
                 () -> request.schedulePickup(" ", start, end));
         assertThrows(InvalidDonationRequestException.class,
                 () -> request.schedulePickup("Sede Norte", null, end));
+        LocalDateTime pastStart = LocalDateTime.now().minusDays(1);
         assertThrows(InvalidDonationRequestException.class,
-                () -> request.schedulePickup("Sede Norte", LocalDateTime.now().minusDays(1), end)); // en el pasado
+                () -> request.schedulePickup("Sede Norte", pastStart, end)); // en el pasado
         assertThrows(InvalidDonationRequestException.class,
                 () -> request.schedulePickup("Sede Norte", end, start)); // fin antes de inicio
 

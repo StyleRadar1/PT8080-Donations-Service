@@ -226,15 +226,16 @@ class AzureBlobStorageAdapterTest {
         String urlFromDevWithIoFallback = devAdapter.storePhoto("bytes".getBytes(), "missing-subdir/ignored.png", "image/png");
         assertThat(urlFromDevWithIoFallback).isEqualTo("/uploads/garments/missing-subdir/ignored.png");
 
+        byte[] threeArgPayload = "bytes".getBytes();
         AzureBlobStorageAdapter threeArgAdapter = new AzureBlobStorageAdapter(null, "donaciones-fotos", "https://endpoint");
-        assertThatThrownBy(() -> threeArgAdapter.storePhoto("bytes".getBytes(), "foto.jpg", "image/jpeg"))
+        assertThatThrownBy(() -> threeArgAdapter.storePhoto(threeArgPayload, "foto.jpg", "image/jpeg"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("AZURE_STORAGE_CONNECTION_STRING es obligatoria");
 
         MockEnvironment defaultLocalEnv = new MockEnvironment();
         defaultLocalEnv.setDefaultProfiles("local");
         AzureBlobStorageAdapter defaultLocalAdapter = new AzureBlobStorageAdapter("", "donaciones-fotos", "https://endpoint", defaultLocalEnv);
-        assertThat(defaultLocalAdapter.storePhoto("bytes".getBytes(), "default_local.png", "image/png"))
+        assertThat(defaultLocalAdapter.storePhoto(threeArgPayload, "default_local.png", "image/png"))
                 .isEqualTo("/uploads/garments/default_local.png");
     }
 }

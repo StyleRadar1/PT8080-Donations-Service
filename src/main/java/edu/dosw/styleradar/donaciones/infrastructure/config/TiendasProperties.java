@@ -16,6 +16,8 @@ import lombok.Setter;
 public class TiendasProperties {
 
     private String baseUrl = "http://localhost:8140";
+    private String foundationsPath = "/api/v1/admin/fundaciones";
+    private String foundationByIdPath = "/api/v1/admin/fundaciones/{id}";
     private boolean validationEnabled = true;
     private int connectTimeoutMs = 3000;
     private int readTimeoutMs = 5000;

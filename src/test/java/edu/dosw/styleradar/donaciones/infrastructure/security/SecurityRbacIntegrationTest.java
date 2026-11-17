@@ -46,7 +46,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -370,7 +369,7 @@ class SecurityRbacIntegrationTest {
                 .publishedAt(LocalDateTime.now())
                 .build();
 
-        when(managePublicationUseCase.markAsSold(eq(202L), eq(10L), eq(303L))).thenReturn(sold);
+        when(managePublicationUseCase.markAsSold(202L, 10L, 303L)).thenReturn(sold);
 
         mockMvc.perform(patch("/api/v1/second-hand/publications/10/sale")
                         .header("Authorization", "Bearer " + storeToken)

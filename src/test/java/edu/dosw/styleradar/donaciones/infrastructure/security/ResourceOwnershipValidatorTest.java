@@ -16,11 +16,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
-import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ResourceOwnershipValidatorTest {
 
@@ -198,7 +199,7 @@ class ResourceOwnershipValidatorTest {
     @Test
     @DisplayName("validateFoundationOwnership y validateDonationRequestAccess deben autorizar al representanteId registrado en ms-tiendas")
     void shouldAllowFoundationAccessViaRepresentativeIdFromTiendas() {
-        FoundationCatalogPort foundationCatalogPort = Mockito.mock(FoundationCatalogPort.class);
+        FoundationCatalogPort foundationCatalogPort = mock(FoundationCatalogPort.class);
         ResourceOwnershipValidator representativeValidator = new ResourceOwnershipValidator(foundationCatalogPort);
 
         Authentication repAuth = new UsernamePasswordAuthenticationToken(
@@ -208,8 +209,8 @@ class ResourceOwnershipValidatorTest {
         );
         SecurityContextHolder.getContext().setAuthentication(repAuth);
 
-        Mockito.when(foundationCatalogPort.isFoundationRepresentative(24L, 3L)).thenReturn(true);
-        Mockito.when(foundationCatalogPort.isFoundationRepresentative(24L, 99L)).thenReturn(false);
+        when(foundationCatalogPort.isFoundationRepresentative(24L, 3L)).thenReturn(true);
+        when(foundationCatalogPort.isFoundationRepresentative(24L, 99L)).thenReturn(false);
 
         assertThatCode(() -> representativeValidator.validateFoundationOwnership(3L)).doesNotThrowAnyException();
         assertThatThrownBy(() -> representativeValidator.validateFoundationOwnership(99L))
