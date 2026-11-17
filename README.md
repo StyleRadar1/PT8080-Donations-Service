@@ -1,7 +1,7 @@
 <!-- ==============================================================================
   STYLE RADAR · PLANTILLA MAESTRA DE README PARA MICROSERVICIOS
   Asignatura: DOSW (Diseño y Operación de Soluciones Web) · 2026
-  Estándar obligatorio unificado para los 13 microservicios del proyecto StyleRadar.
+  Estándar obligatorio unificado para los microservicios del proyecto StyleRadar.
   Microservicio: PT8080-Donations-Service (ms-segunda-vida-donaciones)
   Squad Asignado: Portal8080 (PT8080)
 ============================================================================== -->
@@ -31,8 +31,8 @@
     <a href="#4-endpoints-y-enlace-a-swagger"><img src="https://img.shields.io/badge/PROD_CLOUD-Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="PROD Cloud Active" /></a>
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions"><img src="https://img.shields.io/badge/CI_MASTER-passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Master Status" /></a>
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions"><img src="https://img.shields.io/badge/CI_DEVELOP-passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Develop Status" /></a>
-    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/Tests-242_Passing-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Tests 242 Passing" /></a>
-    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/JaCoCo_Coverage-95.92%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" /></a>
+    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/Tests-245_Passing-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Tests 245 Passing" /></a>
+    <a href="#9-pruebas-y-cobertura"><img src="https://img.shields.io/badge/JaCoCo_Coverage-96.78%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" /></a>
   </p>
 
   <p align="center">
@@ -263,11 +263,11 @@ src/main/java/edu/dosw/styleradar/donaciones/
 
 ### 3.5 Diagrama de Componentes General del Ecosistema (`StyleRadar`)
 
-Vista global de integración del ecosistema completo de **13 microservicios**, **API Gateway**, caché **Redis**, buses **RabbitMQ**, bases de datos aisladas y sistemas externos (`Google OAuth`, `MercadoPago API`, `Azure Blob Storage`, `FASHN AI API`):
+Vista global de integración del ecosistema completo de **12 microservicios**, **API Gateway**, caché **Redis**, buses **RabbitMQ**, bases de datos aisladas y sistemas externos (`Google OAuth`, `MercadoPago API`, `Azure Blob Storage`, `FASHN AI API`):
 
 <div align="center">
   <img src="docs/diagramas/png/componentesGeneral.png" width="98%" alt="Diagrama de Componentes General del Ecosistema StyleRadar" />
-  <p><sub><b>Figura 3.4:</b> Diagrama de Componentes General de StyleRadar. Muestra la entrada desde <code>StyleRadar Client (Web App)</code> a través del <code>API Gateway</code> en notación <i>Lollipop</i> hacia los 13 microservicios, incluyendo <code>ms-segunda-vida</code> y sus dependencias con <code>segunda_vida_db</code>, <code>Azure Blob Storage</code>, <code>RabbitMQ</code> y <code>ms-tiendas</code> / <code>ms-chat</code> / <code>ms-notificaciones</code>.</sub></p>
+  <p><sub><b>Figura 3.4:</b> Diagrama de Componentes General de StyleRadar. Muestra la entrada desde <code>StyleRadar Client (Web App)</code> a través del <code>API Gateway</code> en notación <i>Lollipop</i> hacia los 12 microservicios, incluyendo <code>ms-segunda-vida</code> y sus dependencias con <code>segunda_vida_db</code>, <code>Azure Blob Storage</code>, <code>RabbitMQ</code> y <code>ms-tiendas</code> / <code>ms-chat</code> / <code>ms-notificaciones</code>.</sub></p>
   <p>
     📁 <b>Archivo editable Draw.io:</b> <a href="docs/diagramas/drawio/componentesGeneralSR.drawio"><code>docs/diagramas/drawio/componentesGeneralSR.drawio</code></a>
   </p>
@@ -275,13 +275,13 @@ Vista global de integración del ecosistema completo de **13 microservicios**, *
 
 **Descripción arquitectónica del Diagrama de Componentes General:**
 
-1. **Plano de Entrada y Enrutamiento (`API Gateway`):** `StyleRadar Client (Web App)` centraliza todas las peticiones hacia un único `API Gateway`, el cual expone e interconecta los puertos/interfaces *Lollipop* de los 13 microservicios del ecosistema (`ms-auth`, `ms-usuarios`, `ms-tiendas`, `ms-notificaciones`, `ms-inventario`, `ms-itemcatalogo`, `ms-segunda-vida`, `ms-chat`, `ms-playlist`, `ms-pagos`, `ms-geolocalizacion`, `ms-probador-virtual` y `ms-estadisticas`).
-2. **Aislamiento de Persistencia (*Database-per-Service*):** Cada microservicio opera sobre su propio motor o esquema dedicado (`usuarios_db`, `tiendas_db`, `notificaciones_db`, `inventario_db`, `catalogo_db`, `segunda_vida_db`, `chat_db`, `playlist_db`, `pagos_db`, `geo_db`, `probador_db` y `estadisticas_db`), evitando acoplamiento directo en base de datos.
+1. **Plano de Entrada y Enrutamiento (`API Gateway`):** `StyleRadar Client (Web App)` centraliza todas las peticiones hacia un único `API Gateway`, el cual expone e interconecta los puertos/interfaces *Lollipop* de los 12 microservicios activos del ecosistema (`ms-auth`, `ms-usuarios`, `ms-tiendas`, `ms-notificaciones`, `ms-inventario`, `ms-itemcatalogo`, `ms-segunda-vida`, `ms-chat`, `ms-playlist`, `ms-pagos`, `ms-geolocalizacion` y `ms-probador-virtual`).
+2. **Aislamiento de Persistencia (*Database-per-Service*):** Cada microservicio opera sobre su propio motor o esquema dedicado (`usuarios_db`, `tiendas_db`, `notificaciones_db`, `inventario_db`, `catalogo_db`, `segunda_vida_db`, `chat_db`, `playlist_db`, `pagos_db`, `geo_db` y `probador_db`), evitando acoplamiento directo en base de datos.
 3. **Ubicación e Integraciones de `ms-segunda-vida`:**
    * Persiste publicaciones y solicitudes de donación en **`segunda_vida_db`**.
    * Consume **`Azure Blob Storage`** para el almacenamiento de fotografías de prendas cargadas desde `POST /api/v1/second-hand/photos`.
    * Interactúa de forma síncrona/lógica en la malla del backend con **`ms-tiendas`** (validación de fundaciones aliadas y representantes), **`ms-chat`** (acuerdos C2C) y **`ms-notificaciones`**.
-   * Emite eventos asíncronos mediante los buses **`RabbitMQ`** (`RabbitMQ Notificaciones`, `RabbitMQ Pagos` y `RabbitMQ Estadisticas`) junto con caché compartida **`Redis`** para el ecosistema.
+   * Emite eventos asíncronos mediante los buses **`RabbitMQ`** (`RabbitMQ Notificaciones` y `RabbitMQ Pagos`) junto con caché compartida **`Redis`** para el ecosistema.
 4. **Sistemas Externos Conectados:** Además de `Azure Blob Storage` para almacenamiento multimedia, el ecosistema integra **`Google OAuth`** (en `ms-auth`), **`MercadoPago API`** (en `ms-pagos`) y **`FASHN AI API`** (en `ms-probador-virtual`).
 
 ---
@@ -303,11 +303,11 @@ Distribución física y topología de despliegue de los microservicios en **Cont
 **Descripción arquitectónica del Diagrama de Despliegue General:**
 
 1. **Cliente y Puerta de Enlace (`API Gateway :8080`):** El artefacto `«Artifact» Web Application` interactúa únicamente con el contenedor `«Container Apps» API Gateway (8080)`, que actúa como punto único de entrada y enrutador interno hacia todos los contenedores del entorno.
-2. **Nodos de Microservicios (`«Container App»`):** El plano de ejecución contiene los 13 contenedores aislados con su asignación oficial de puertos internos: `Auth (8100)`, `User (8120)`, `Store (8140)`, `Inventory (8200)`, `Item Catalog (8220)`, `Geolocation (8240)`, `Playlist (8260)`, `Notification (8300)`, `Chat (8320)`, `Payments (8400)`, `Analytics (8420)` y **`Donations (8520)`** (correspondiente a este microservicio `ms-segunda-vida-donaciones`), además de `Virtual Try-on (8520)`.
-3. **Capa de Infraestructura de Datos (`«Device» Postgres Database`):** Agrupa las bases de datos dedicadas por microservicio (`Auth`, `User`, `Store`, `Inventory`, `Item Catalog`, `Payments`, `Analytics`, `Chat`, `Playlist`, `Geolocation`, `Virtual Try-on` y **`Donations`**), garantizando aislamiento transaccional en PostgreSQL.
+2. **Nodos de Microservicios (`«Container App»`):** El plano de ejecución contiene los 12 contenedores activos con su asignación oficial de puertos internos: `Auth (8100)`, `User (8120)`, `Store (8140)`, `Inventory (8200)`, `Item Catalog (8220)`, `Geolocation (8240)`, `Playlist (8260)`, `Notification (8300)`, `Chat (8320)`, `Payments (8400)` y **`Donations (8520)`** (correspondiente a este microservicio `ms-segunda-vida-donaciones`), además de `Virtual Try-on (8520)`.
+3. **Capa de Infraestructura de Datos (`«Device» Postgres Database`):** Agrupa las bases de datos dedicadas por microservicio (`Auth`, `User`, `Store`, `Inventory`, `Item Catalog`, `Payments`, `Chat`, `Playlist`, `Geolocation`, `Virtual Try-on` y **`Donations`**), garantizando aislamiento transaccional en PostgreSQL.
 4. **Mensajería y Caché Distribuida (`RabbitMQAdapter` y `Redis`):**
-   * **`«Device» Redis`:** Provee caché en memoria y gestión de sesiones/tokens para `Auth`, `Payments`, `Notification`, `Chat` y `Analytics`.
-   * **`«Device» RabbitMQAdapter`:** Actúa como bus central de mensajería asíncrona AMQP entre los contenedores productores y consumidores (`Donations`, `Notification`, `Chat`, `Payments`, `Analytics`, entre otros).
+   * **`«Device» Redis`:** Provee caché en memoria y gestión de sesiones/tokens para `Auth`, `Payments`, `Notification` y `Chat`.
+   * **`«Device» RabbitMQAdapter`:** Actúa como bus central de mensajería asíncrona AMQP entre los contenedores productores y consumidores (`Donations`, `Notification`, `Chat` y `Payments`, entre otros).
 
 ---
 
@@ -347,7 +347,7 @@ Todos los endpoints responden bajo el estándar **RFC 7807 (`application/problem
 | **Economía Circular** | `DELETE` | `/api/v1/second-hand/publications/{id}` | `SR-RF-39` | Retirar publicación activa de la vitrina (bloquea `SOLD`/`DONATED`) | Propietario, `ADMIN` | `204`, `401`, `403`, `404`, `409`, `500` |
 | **Economía Circular** | `PATCH` | `/api/v1/second-hand/publications/{id}/donation` | `SR-RF-42` | Marcar prenda para canal benéfico (`IN_DONATION`, precio `0 COP`) | Propietario, `ADMIN` | `200`, `401`, `403`, `404`, `409`, `500` |
 | **Vitrina Benéfica** | `GET` | `/api/v1/donations/foundations` | `SR-RF-44` | Listar fundaciones aliadas activas desde `ms-tiendas` (filtro opcional `?category=`) | `USER`, `STORE`, `FOUNDATION`, `ADMIN` | `200`, `401`, `503` |
-| **Vitrina Benéfica** | `GET` | `/api/v1/donations/foundations/me` | `SR-RF-44` | Obtener la fundación asociada al representante autenticado (`sub` ↔ `representanteId`) | `FOUNDATION`, `ADMIN` | `200`, `401`, `403`, `404`, `503` |
+| **Vitrina Benéfica** | `GET` | `/api/v1/donations/foundations/representative` | `SR-RF-44` | Obtener la fundación asociada al representante autenticado (`sub` ↔ `representanteId`) | `FOUNDATION`, `ADMIN` | `200`, `401`, `403`, `404`, `503` |
 | **Vitrina Benéfica** | `GET` | `/api/v1/donations/foundations/{foundationId}` | `SR-RF-44` | Consultar detalle institucional de una fundación activa en `ms-tiendas` | `USER`, `STORE`, `FOUNDATION`, `ADMIN` | `200`, `400`, `401`, `404`, `503` |
 | **Vitrina Benéfica** | `POST` | `/api/v1/donations/claims` | `SR-RF-44` | Reclamar donación desde Vitrina Abierta con bloqueo optimista y validación `ms-tiendas` | `FOUNDATION`, `ADMIN` | `201`, `400`, `401`, `403`, `404`, `409`, `503` |
 | **Vitrina Benéfica** | `POST` | `/api/v1/donations` | `SR-RF-44..45` | Radicar solicitud directa validando fundación activa en `ms-tiendas` | `USER`, `STORE`, `ADMIN` | `201`, `400`, `401`, `403`, `404`, `409`, `503` |
@@ -398,8 +398,8 @@ El stack tecnológico de `PT8080-Donations-Service` cumple con el estándar unif
 | **Broker de Mensajería** | RabbitMQ (Spring AMQP) | `3.12` | Topic Exchanges durables con confirmaciones de publicación (*Publisher Confirms*). |
 | **Mapeo y Boilerplate** | MapStruct + Lombok | `1.5.5` / `1.18.38` | Reducción de código repetitivo compatible con JDK 21. |
 | **Documentación API** | SpringDoc OpenAPI | `2.5.0` | Especificación OpenAPI 3.0 con Swagger UI, esquemas RFC 7807 y ejemplos interactivos. |
-| **Testing Automatizado** | JUnit 5 + Mockito + H2 | `5.10.3` | **242 pruebas ejecutadas en verde** (unitarias, integración, storage, cliente REST y seguridad RBAC; 1 prueba PG omitida sin Docker). |
-| **Métricas de Cobertura** | JaCoCo Maven Plugin | `0.8.12` | Verificación estricta de cobertura mínima (≥ 85%) alcanzando **95.92% líneas / 95.71% instrucciones**. |
+| **Testing Automatizado** | JUnit 5 + Mockito + H2 | `5.10.3` | **245 pruebas ejecutadas en verde** (unitarias, integración, storage, cliente REST y seguridad RBAC; 1 prueba PG omitida sin Docker). |
+| **Métricas de Cobertura** | JaCoCo Maven Plugin | `0.8.12` | Verificación estricta de cobertura mínima (≥ 85%) alcanzando **96.78% líneas / 96.51% instrucciones**. |
 
 ---
 
@@ -482,10 +482,10 @@ El proyecto exige una cobertura de código mínima del **85%** verificada autom�
 
 | Métrica | Valor Alcanzado | Umbral Exigido | Estado |
 | :--- | :---: | :---: | :---: |
-| **Pruebas Automatizadas Ejecutadas** | **242 pasando** *(243 total, 1 PG sin Docker)* | Suite completa | ✅ **0 fallos, 0 errores** |
-| **Cobertura de Instrucciones (JaCoCo)** | **95.71%** | `≥ 85.00%` | ✅ **Aprobado (+10.71%)** |
-| **Cobertura de Líneas (JaCoCo)** | **95.92%** | `≥ 85.00%` | ✅ **Aprobado (+10.92%)** |
-| **Cobertura de Métodos (JaCoCo)** | **96.35%** | `≥ 85.00%` | ✅ **Aprobado (+11.35%)** |
+| **Pruebas Automatizadas Ejecutadas** | **245 pasando** *(246 total, 1 PG sin Docker)* | Suite completa | ✅ **0 fallos, 0 errores** |
+| **Cobertura de Instrucciones (JaCoCo)** | **96.51%** | `≥ 85.00%` | ✅ **Aprobado (+11.51%)** |
+| **Cobertura de Líneas (JaCoCo)** | **96.78%** | `≥ 85.00%` | ✅ **Aprobado (+11.78%)** |
+| **Cobertura de Métodos (JaCoCo)** | **96.66%** | `≥ 85.00%` | ✅ **Aprobado (+11.66%)** |
 | **Auditoría SonarQube** | **Quality Gate Passed (Rating A)** | 0 Bugs, 0 Vuln, 0 Smells | ✅ **Calificación A** |
 
 ### Pirámide de Pruebas Implementada
@@ -510,15 +510,15 @@ El ciclo de integración y despliegue continuo está automatizado en **GitHub Ac
 
 | Pipeline | Rama / Entorno | Trigger | Quality Gate Requerido | Estado |
 | :--- | :---: | :---: | :--- | :---: |
-| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR | 242 Tests + JaCoCo ≥ 85% + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-passing-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
-| **CI - Master** | `master` / `main`<br>*(Producción)* | Push / PR | 242 Tests + JaCoCo ≥ 85% + Docker Build | [![CI Master](https://img.shields.io/badge/master-passing-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
+| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR | 245 Tests + JaCoCo ≥ 85% + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-passing-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
+| **CI - Master** | `master` / `main`<br>*(Producción)* | Push / PR | 245 Tests + JaCoCo ≥ 85% + Docker Build | [![CI Master](https://img.shields.io/badge/master-passing-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions) |
 | **CD - Despliegue QA** | Azure QA (`rg-styleradar`) | Push / Merge a `develop` | Deploy Web App + Smoke Test `/health` | [![Deploy QA](https://img.shields.io/badge/Deploy_QA-Azure_Active-5600EF?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
 | **CD - Despliegue PROD** | Azure PROD (`rg-styleradar`) | Push / Merge a `master` (CMV) | Aprobación CMV + Smoke Test `/health` | [![Deploy PROD](https://img.shields.io/badge/Deploy_PROD-Azure_Active-16A34A?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/swagger-ui/index.html) |
 
 ```mermaid
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
-    B --> C["242 Tests & JaCoCo<br>(95.92% ≥ 85%)"]
+    B --> C["245 Tests & JaCoCo<br>(96.78% ≥ 85%)"]
     C --> D["Empaquetado JAR &<br>Docker OCI Image"]
     D -->|Rama develop| E["Deploy Automático QA<br>(Azure App Service QA)"]
     D -->|Rama main + CMV| F["Deploy Producción PROD<br>(Azure App Service PROD)"]
@@ -555,8 +555,8 @@ master / main                           <-- Producción (Azure PROD · Requiere 
 
 - [x] La rama parte de la versión más reciente de `develop`.
 - [x] El código compila limpiamente sin advertencias críticas con `mvn clean compile`.
-- [x] Todas las pruebas automatizadas pasan en verde (`mvn -B test jacoco:report` con 242 passing / 1 PG sin Docker).
-- [x] La cobertura en JaCoCo supera el 85% obligatorio (alcanzado **95.92% líneas / 95.71% instrucciones**).
+- [x] Todas las pruebas automatizadas pasan en verde (`mvn -B test jacoco:report` con 245 passing / 1 PG sin Docker).
+- [x] La cobertura en JaCoCo supera el 85% obligatorio (alcanzado **96.78% líneas / 96.51% instrucciones**).
 - [x] Diagramas de arquitectura actualizados en `docs/diagramas/drawio` y `docs/diagramas/png`.
 - [x] No se introducen credenciales ni secretos en el código (uso de variables de entorno).
 - [x] El PR cuenta con la revisión y aprobación del líder técnico del squad.
@@ -584,7 +584,7 @@ master / main                           <-- Producción (Azure PROD · Requiere 
 | `SR-RF-38` | Marcar prenda como vendida | `PATCH /api/v1/second-hand/publications/{id}/sale` (`ManagePublicationUseCaseImpl.markAsSold`), con `compradorId` obligatorio hacia `ms-chat`. | ✅ Completado |
 | `SR-RF-39` | Retirar publicación de segunda mano | `DELETE /api/v1/second-hand/publications/{id}` (`ManagePublicationUseCaseImpl.retire`). | ✅ Completado |
 | `SR-RF-42` | Marcar prenda para donación | `PATCH /api/v1/second-hand/publications/{id}/donation` (`ManagePublicationUseCaseImpl.markForDonation`). | ✅ Completado |
-| `SR-RF-44` | Vitrina Abierta y Selección de Fundación | `GET /api/v1/donations/foundations`, `/foundations/me`, validación contra `ms-tiendas` (`activa == true`, `representanteId`) y `POST /api/v1/donations/claims` con `@Version`. | ✅ Completado |
+| `SR-RF-44` | Vitrina Abierta y Selección de Fundación | `GET /api/v1/donations/foundations`, `/foundations/representative`, validación contra `ms-tiendas` (`activa == true`, `representanteId`) y `POST /api/v1/donations/claims` con `@Version`. | ✅ Completado |
 | `SR-RF-45` | Enviar solicitud de donación | `POST /api/v1/donations` (`CreateDonationRequestUseCaseImpl`) con evento post-commit en RabbitMQ. | ✅ Completado |
 | `SR-RF-46` | Consultar solicitudes de donación | `GET /api/v1/donations/{id}` (con validación BOLA/IDOR), `/donors/{donorId}` y `/foundations/{foundationId}/requests`. | ✅ Completado |
 | `SR-RF-47` | Aceptar o rechazar donación | `PATCH /api/v1/donations/{id}/decision` (`DecideDonationRequestUseCaseImpl`) con motivo obligatorio al rechazar y retorno automático a `AVAILABLE`. | ✅ Completado |
