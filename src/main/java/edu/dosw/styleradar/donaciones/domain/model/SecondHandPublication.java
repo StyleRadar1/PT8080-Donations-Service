@@ -171,6 +171,9 @@ public class SecondHandPublication {
         if (status == PublicationStatus.RETIRED) {
             throw new InvalidStateTransitionException("La publicación ya se encuentra retirada");
         }
+        if (status == PublicationStatus.SOLD) {
+            throw new InvalidStateTransitionException("No se puede retirar una publicación que ya fue vendida");
+        }
         if (status == PublicationStatus.DONATED) {
             throw new InvalidStateTransitionException("No se puede retirar una prenda que ya fue donada");
         }
@@ -180,7 +183,7 @@ public class SecondHandPublication {
     }
 
     /**
-     * Destina la prenda hacia el canal benéfico de donaciones a fundaciones aliadas.
+     * Destina la prenda hacia el canal benéfico de donaciones a fundaciones aliadas con valor cero.
      */
     public void markForDonation() {
         if (status != PublicationStatus.AVAILABLE) {
@@ -188,7 +191,24 @@ public class SecondHandPublication {
                     "Solo una publicación disponible en vitrina puede destinarse a donación. Estado actual: " + status);
         }
 
+        this.esDonacion = true;
+        this.price = BigDecimal.ZERO;
         this.status = PublicationStatus.IN_DONATION;
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
+    }
+
+    /**
+     * Devuelve la prenda en proceso de donación a vitrina abierta tras el rechazo de una solicitud.
+     */
+    public void revertToAvailableDonation() {
+        if (status != PublicationStatus.IN_DONATION) {
+            throw new InvalidStateTransitionException(
+                    "Solo una prenda en estado IN_DONATION puede regresar a vitrina disponible. Estado actual: " + status);
+        }
+
+        this.esDonacion = true;
+        this.price = BigDecimal.ZERO;
+        this.status = PublicationStatus.AVAILABLE;
         this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 

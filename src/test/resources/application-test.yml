@@ -1,7 +1,5 @@
 server:
   port: 8520
-  servlet:
-    context-path: /api/v1
 
 spring:
   application:
@@ -34,3 +32,16 @@ management:
     web:
       exposure:
         include: health, info
+
+styleradar:
+  security:
+    publication-by-id-path: /api/v1/second-hand/publications/{id}
+  tiendas:
+    base-url: http://localhost:8140
+    foundations-path: /api/v1/admin/foundations
+    foundation-by-id-path: /api/v1/admin/foundations/{id}
+    validation-enabled: false
+    service-bearer-token: ""
+    forward-bearer-token: false
+    service-roles-header-name: X-User-Roles
+    service-roles-header-value: ROLE_ADMIN_STYLERADAR

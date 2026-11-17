@@ -46,7 +46,7 @@ class AuthControllerTest {
     void shouldLoginNormalUser() throws Exception {
         LoginRequestDTO request = new LoginRequestDTO("user@styleradar.com", "User123*");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -61,7 +61,7 @@ class AuthControllerTest {
     void shouldRejectInvalidCredentials() throws Exception {
         LoginRequestDTO request = new LoginRequestDTO("user@styleradar.com", "clave-invalida");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -70,7 +70,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("GET /auth/quick-token - Debe retornar token inmediato para ADMIN")
     void shouldGetQuickTokenAdmin() throws Exception {
-        mockMvc.perform(get("/auth/quick-token")
+        mockMvc.perform(get("/api/v1/auth/quick-token")
                         .param("role", Role.ADMIN.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("ADMIN"))
@@ -81,7 +81,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("GET /auth/quick-token - Debe retornar token inmediato para FOUNDATION")
     void shouldGetQuickTokenFoundation() throws Exception {
-        mockMvc.perform(get("/auth/quick-token")
+        mockMvc.perform(get("/api/v1/auth/quick-token")
                         .param("role", Role.FOUNDATION.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("FOUNDATION"))
@@ -92,7 +92,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("GET /auth/demo-users - Debe listar los 3 usuarios demo del sistema")
     void shouldListDemoUsers() throws Exception {
-        mockMvc.perform(get("/auth/demo-users"))
+        mockMvc.perform(get("/api/v1/auth/demo-users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[0].email").value("admin@styleradar.com"))

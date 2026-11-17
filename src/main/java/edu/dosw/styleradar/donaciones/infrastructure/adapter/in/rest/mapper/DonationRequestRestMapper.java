@@ -9,7 +9,9 @@ import edu.dosw.styleradar.donaciones.application.dto.request.ClaimDonationReque
 import edu.dosw.styleradar.donaciones.application.dto.request.CreateDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.response.DonationRequestResponseDTO;
+import edu.dosw.styleradar.donaciones.application.dto.response.FoundationResponseDTO;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
+import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
 import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.SchedulePickupCommand;
@@ -29,7 +31,11 @@ public class DonationRequestRestMapper {
                 dto.donorId(),
                 dto.publicationId(),
                 dto.foundationId(),
-                dto.message()
+                dto.message(),
+                dto.deliveryMode(),
+                dto.deliveryPoint(),
+                dto.startTime(),
+                dto.endTime()
         );
     }
 
@@ -72,13 +78,15 @@ public class DonationRequestRestMapper {
                 domain.getMessage(),
                 domain.getStatus(),
                 domain.getRejectionReason(),
+                domain.getDeliveryMode(),
                 domain.getDeliveryPoint(),
                 domain.getPickupStartTime(),
                 domain.getPickupEndTime(),
                 domain.getVersion(),
                 domain.getRequestedAt(),
                 domain.getDecidedAt(),
-                domain.getReceivedAt()
+                domain.getReceivedAt(),
+                DonationRequestResponseDTO.generateReceiptCode(domain.getId(), domain.getStatus())
         );
     }
 
@@ -87,5 +95,33 @@ public class DonationRequestRestMapper {
             return Collections.emptyList();
         }
         return list.stream().map(this::toResponse).toList();
+    }
+
+    public FoundationResponseDTO toFoundationResponse(FoundationSummary foundation) {
+        if (foundation == null) {
+            return null;
+        }
+        return new FoundationResponseDTO(
+                foundation.id(),
+                foundation.nombre(),
+                foundation.barrio(),
+                foundation.descripcion(),
+                foundation.direccion(),
+                foundation.telefono(),
+                foundation.email(),
+                foundation.categoriasAceptadas(),
+                foundation.causasApoyadas(),
+                foundation.horarioAtencion(),
+                foundation.politicasDonacion(),
+                foundation.activa(),
+                foundation.representanteId()
+        );
+    }
+
+    public List<FoundationResponseDTO> toFoundationResponseList(List<FoundationSummary> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        return list.stream().map(this::toFoundationResponse).toList();
     }
 }

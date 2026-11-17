@@ -28,6 +28,11 @@ RUN addgroup -g 10001 -S appgroup && \
 
 WORKDIR /app
 
+# Importar la CA raíz de RabbitMQ de StyleRadar en el almacén de certificados del sistema Java (AMQPS TLS Puerto 5671)
+COPY src/main/resources/certs/rabbitmq-ca.pem /tmp/rabbitmq-ca.pem
+RUN keytool -importcert -trustcacerts -cacerts -storepass changeit -noprompt -alias styleradar-rabbitmq-ca -file /tmp/rabbitmq-ca.pem && \
+    rm /tmp/rabbitmq-ca.pem
+
 # Copy executable jar from builder stage with proper ownership
 COPY --from=builder --chown=appuser:appgroup /build/target/*.jar app.jar
 
@@ -40,6 +45,10 @@ ENV PORT=8520 \
 
 # Official microservice assigned port
 EXPOSE 8520
+
+# Verificación de salud del contenedor en ejecución
+HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
+    CMD wget -qO- http://localhost:8520/api/v1/health || exit 1
 
 # Microservice entrypoint
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

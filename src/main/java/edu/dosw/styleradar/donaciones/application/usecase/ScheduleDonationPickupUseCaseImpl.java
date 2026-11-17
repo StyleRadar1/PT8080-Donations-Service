@@ -3,6 +3,7 @@ package edu.dosw.styleradar.donaciones.application.usecase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -12,6 +13,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCa
 import edu.dosw.styleradar.donaciones.domain.port.in.SchedulePickupCommand;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -25,8 +27,10 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
 
     private final DonationRequestRepositoryPort donationRequestRepositoryPort;
     private final DonationEventPublisherPort eventPublisherPort;
+    private final FoundationCatalogPort foundationCatalogPort;
 
     @Override
+    @Transactional
     public DonationRequest schedulePickup(SchedulePickupCommand command) {
         log.info("Programando recogida para la solicitud ID: {} por usuario ID: {}",
                 command.requestId(), command.userId());
@@ -36,7 +40,7 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
                         "No existe solicitud de donación con ID: " + command.requestId()));
 
         boolean isParticipant = request.getDonorId().equals(command.userId())
-                || request.getFoundationId().equals(command.userId());
+                || foundationCatalogPort.isFoundationRepresentative(command.userId(), request.getFoundationId());
         if (!isParticipant) {
             throw new InvalidDonationRequestException("El usuario no participa en esta solicitud de donación");
         }
@@ -46,7 +50,8 @@ public class ScheduleDonationPickupUseCaseImpl implements ScheduleDonationPickup
         DonationRequest saved = donationRequestRepositoryPort.save(request);
         log.info("Recogida programada con éxito para la solicitud ID: {}", saved.getId());
 
-        eventPublisherPort.publishEvent(
+        TransactionEventHelper.publishAfterCommitOrImmediate(
+                eventPublisherPort,
                 new PickupScheduledEvent(
                         saved.getId(),
                         saved.getDonorId(),

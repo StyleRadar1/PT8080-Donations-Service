@@ -40,9 +40,12 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -110,7 +113,7 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
-    @DisplayName("POST /segunda-mano - Debe crear una publicación y responder 201 Created")
+    @DisplayName("POST /api/v1/second-hand/publications - Debe crear una publicación y responder 201 Created")
     void shouldCreatePublicationSuccessfully() throws Exception {
         CreatePublicationRequestDTO request = new CreatePublicationRequestDTO(
                 101L, "Chaqueta Denim", "Estilo 90s", GarmentType.UPPER, "Levi's", "Azul",
@@ -121,24 +124,24 @@ class SecondHandPublicationControllerTest {
         SecondHandPublication created = buildSamplePublication(1L, 101L);
         when(createPublicationUseCase.create(any())).thenReturn(created);
 
-        mockMvc.perform(post("/segunda-mano")
+        mockMvc.perform(post("/api/v1/second-hand/publications")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/v1/segunda-mano/1"))
+                .andExpect(header().string("Location", "/api/v1/second-hand/publications/1"))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.garmentName").value("Chaqueta Denim"))
                 .andExpect(jsonPath("$.status").value("AVAILABLE"));
     }
 
     @Test
-    @DisplayName("POST /segunda-mano - Debe responder 400 Bad Request cuando faltan datos obligatorios")
+    @DisplayName("POST /api/v1/second-hand/publications - Debe responder 400 Bad Request cuando faltan datos obligatorios")
     void shouldFailCreationWhenInvalidData() throws Exception {
         CreatePublicationRequestDTO invalidRequest = new CreatePublicationRequestDTO(
                 null, "", null, null, "", "", null, null, null, null, null
         );
 
-        mockMvc.perform(post("/segunda-mano")
+        mockMvc.perform(post("/api/v1/second-hand/publications")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -147,56 +150,59 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
-    @DisplayName("GET /segunda-mano/{id} - Debe responder 200 OK cuando existe la publicación")
+    @DisplayName("GET /api/v1/second-hand/publications/{id} - Debe responder 200 OK cuando existe la publicación")
     void shouldGetPublicationById() throws Exception {
         SecondHandPublication publication = buildSamplePublication(1L, 101L);
         when(getPublicationsUseCase.getById(1L)).thenReturn(publication);
 
-        mockMvc.perform(get("/segunda-mano/1"))
+        mockMvc.perform(get("/api/v1/second-hand/publications/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.garmentName").value("Chaqueta Denim"));
     }
 
     @Test
-    @DisplayName("GET /segunda-mano/{id} - Debe responder 404 Not Found cuando no existe")
+    @DisplayName("GET /api/v1/second-hand/publications/{id} - Debe responder 404 Not Found cuando no existe")
     void shouldReturn404WhenPublicationNotFound() throws Exception {
         when(getPublicationsUseCase.getById(999L)).thenThrow(new ResourceNotFoundException("No existe publicación con ID 999"));
 
-        mockMvc.perform(get("/segunda-mano/999"))
+        mockMvc.perform(get("/api/v1/second-hand/publications/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("Recurso no encontrado"))
                 .andExpect(jsonPath("$.detail").value("No existe publicación con ID 999"));
     }
 
     @Test
-    @DisplayName("GET /segunda-mano/user/{userId} - Debe responder 200 OK con lista de publicaciones")
+    @DisplayName("GET /api/v1/second-hand/publications/users/{userId} - Debe responder 200 OK con lista de publicaciones")
     void shouldGetPublicationsByUserId() throws Exception {
         SecondHandPublication publication = buildSamplePublication(1L, 101L);
         when(getPublicationsUseCase.getByUserId(101L)).thenReturn(List.of(publication));
 
-        mockMvc.perform(get("/segunda-mano/user/101"))
+        mockMvc.perform(get("/api/v1/second-hand/publications/users/101"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L))
                 .andExpect(jsonPath("$[0].userId").value(101L));
     }
 
     @Test
-    @DisplayName("GET /segunda-mano - Debe buscar con filtros y responder 200 OK")
+    @DisplayName("GET /api/v1/second-hand/publications - Debe buscar con filtros y responder 200 OK")
     void shouldSearchPublicationsWithFilters() throws Exception {
         SecondHandPublication publication = buildSamplePublication(1L, 101L);
         when(getPublicationsUseCase.search(any())).thenReturn(List.of(publication));
 
-        mockMvc.perform(get("/segunda-mano")
+        mockMvc.perform(get("/api/v1/second-hand/publications")
                         .param("brand", "Levi's")
                         .param("garmentType", "UPPER")
                         .param("status", "AVAILABLE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].brand").value("Levi's"));
+
+        verify(getPublicationsUseCase).search(argThat(criteria ->
+                criteria.getType() == GarmentType.UPPER && "Levi's".equals(criteria.getBrand())));
     }
 
     @Test
-    @DisplayName("PUT /segunda-mano/{id} - Debe editar y responder 200 OK")
+    @DisplayName("PUT /api/v1/second-hand/publications/{id} - Debe editar y responder 200 OK")
     void shouldEditPublication() throws Exception {
         EditPublicationRequestDTO request = new EditPublicationRequestDTO(
                 101L, "Chaqueta Modificada", "Nueva desc", GarmentType.UPPER, "Levi's", "Azul Oscuro",
@@ -208,7 +214,7 @@ class SecondHandPublicationControllerTest {
         updated.getGarment().setName("Chaqueta Modificada");
         when(managePublicationUseCase.edit(any())).thenReturn(updated);
 
-        mockMvc.perform(put("/segunda-mano/1")
+        mockMvc.perform(put("/api/v1/second-hand/publications/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -216,13 +222,13 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /segunda-mano/{id}/sell - Debe marcar como vendida con compradorId obligatorio y responder 200 OK")
+    @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe marcar como vendida con compradorId obligatorio y responder 200 OK")
     void shouldMarkAsSold() throws Exception {
         SecondHandPublication sold = buildSamplePublication(1L, 101L);
         sold.setStatus(PublicationStatus.SOLD);
         when(managePublicationUseCase.markAsSold(101L, 1L, 102L)).thenReturn(sold);
 
-        mockMvc.perform(patch("/segunda-mano/1/sell")
+        mockMvc.perform(patch("/api/v1/second-hand/publications/1/sale")
                         .param("userId", "101")
                         .param("compradorId", "102"))
                 .andExpect(status().isOk())
@@ -230,20 +236,20 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /segunda-mano/{id}/sell - Debe responder 400 Bad Request cuando falta compradorId")
+    @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe responder 400 Bad Request cuando falta compradorId")
     void shouldFailWhenCompradorIdIsMissing() throws Exception {
-        mockMvc.perform(patch("/segunda-mano/1/sell")
+        mockMvc.perform(patch("/api/v1/second-hand/publications/1/sale")
                         .param("userId", "101"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("PATCH /segunda-mano/{id}/sell - Debe responder 409 Conflict si el usuario no es el propietario")
+    @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe responder 409 Conflict si el usuario no es el propietario")
     void shouldReturnConflictWhenUserIsNotOwner() throws Exception {
         when(managePublicationUseCase.markAsSold(999L, 1L, 102L))
                 .thenThrow(new DomainConflictException("Solo el propietario puede modificar el estado de la publicación"));
 
-        mockMvc.perform(patch("/segunda-mano/1/sell")
+        mockMvc.perform(patch("/api/v1/second-hand/publications/1/sale")
                         .param("userId", "999")
                         .param("compradorId", "102"))
                 .andExpect(status().isConflict())
@@ -251,35 +257,35 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /segunda-mano/{id}/retire - Debe retirar publicación y responder 204 No Content")
+    @DisplayName("DELETE /api/v1/second-hand/publications/{id} - Debe retirar publicación y responder 204 No Content")
     void shouldRetirePublication() throws Exception {
         doNothing().when(managePublicationUseCase).retire(101L, 1L);
 
-        mockMvc.perform(patch("/segunda-mano/1/retire")
+        mockMvc.perform(delete("/api/v1/second-hand/publications/1")
                         .param("userId", "101"))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    @DisplayName("PATCH /segunda-mano/{id}/donate - Debe destinar a donación y responder 200 OK")
+    @DisplayName("PATCH /api/v1/second-hand/publications/{id}/donation - Debe destinar a donación y responder 200 OK")
     void shouldDonatePublication() throws Exception {
         SecondHandPublication inDonation = buildSamplePublication(1L, 101L);
         inDonation.setStatus(PublicationStatus.IN_DONATION);
         when(managePublicationUseCase.markForDonation(101L, 1L)).thenReturn(inDonation);
 
-        mockMvc.perform(patch("/segunda-mano/1/donate")
+        mockMvc.perform(patch("/api/v1/second-hand/publications/1/donation")
                         .param("userId", "101"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("IN_DONATION"));
     }
 
     @Test
-    @DisplayName("PATCH /segunda-mano/{id}/retire - Debe retornar 403 Forbidden cuando el usuario no es el propietario ni admin")
+    @DisplayName("DELETE /api/v1/second-hand/publications/{id} - Debe retornar 403 Forbidden cuando el usuario no es el propietario ni admin")
     void shouldReturn403WhenUserIsNotOwner() throws Exception {
         doThrow(new AccessDeniedException("Acceso denegado: El usuario no es propietario"))
                 .when(resourceOwnershipValidator).validateOwnerOrAdmin(999L);
 
-        mockMvc.perform(patch("/segunda-mano/1/retire")
+        mockMvc.perform(delete("/api/v1/second-hand/publications/1")
                         .param("userId", "999"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))

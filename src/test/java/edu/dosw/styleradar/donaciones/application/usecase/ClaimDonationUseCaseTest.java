@@ -30,11 +30,13 @@ import edu.dosw.styleradar.donaciones.domain.model.Style;
 import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationCommand;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,6 +54,9 @@ class ClaimDonationUseCaseTest {
 
     @Mock
     private DonationEventPublisherPort eventPublisherPort;
+
+    @Mock
+    private FoundationCatalogPort foundationCatalogPort;
 
     @InjectMocks
     private ClaimDonationUseCaseImpl claimDonationUseCase;
@@ -234,5 +239,22 @@ class ClaimDonationUseCaseTest {
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
         }
+    }
+
+    @Test
+    @DisplayName("Debe impedir el reclamo en vitrina si la fundación está inactiva en ms-tiendas")
+    void shouldFailClaimWhenFoundationIsInactiveInTiendas() {
+        ClaimDonationCommand command = new ClaimDonationCommand(10L, 501L, "Reclamo");
+
+        when(publicationRepositoryPort.findById(10L)).thenReturn(Optional.of(donationPublication));
+        when(donationRequestRepositoryPort.existsActiveRequestForPublication(10L)).thenReturn(false);
+        doThrow(new InvalidDonationRequestException("Fundación inactiva"))
+                .when(foundationCatalogPort).validateActiveFoundation(501L);
+
+        assertThatThrownBy(() -> claimDonationUseCase.claimDonation(command))
+                .isInstanceOf(InvalidDonationRequestException.class);
+
+        verify(publicationRepositoryPort, never()).save(any());
+        verify(donationRequestRepositoryPort, never()).save(any());
     }
 }

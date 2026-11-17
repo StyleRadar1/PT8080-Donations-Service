@@ -14,7 +14,7 @@ import java.time.ZoneOffset;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/health")
+@RequestMapping("/api/v1/health")
 @Tag(name = "Health Check", description = "Monitoreo del estado operativo del microservicio")
 public class HealthController {
 

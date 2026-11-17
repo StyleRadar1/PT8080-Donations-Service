@@ -14,7 +14,7 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: StyleRadar-Donations-PROD-HikariPool
-      maximum-pool-size: 20
+      maximum-pool-size: 30
       minimum-idle: 5
       idle-timeout: 300000
       connection-timeout: 30000
@@ -40,32 +40,50 @@ spring:
   rabbitmq:
     host: ${RABBITMQ_HOST:}
     port: ${RABBITMQ_PORT:5671}
-    username: ${RABBITMQ_USERNAME:}
+    username: ${RABBITMQ_USER:${RABBITMQ_USERNAME:}}
     password: ${RABBITMQ_PASSWORD:}
     virtual-host: ${RABBITMQ_VHOST:/}
     ssl:
       enabled: ${RABBITMQ_SSL_ENABLED:true}
+      trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
+      trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
+      trust-store-type: ${RABBITMQ_TRUSTSTORE_TYPE:PKCS12}
+      verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
     publisher-confirm-type: correlated
     publisher-returns: true
 
-# Configuración de mensajería asíncrona en PROD
+# Configuración de mensajería asíncrona y almacenamiento en PROD
 app:
   rabbitmq:
     exchange:
-      donations: ${RABBITMQ_DONATIONS_EXCHANGE:donaciones.exchange}
+      main: ${RABBITMQ_EXCHANGE:styleradar.exchange}
+      chat: ${RABBITMQ_CHAT_EXCHANGE:styleradar.events}
+      dlx: ${RABBITMQ_DLX:styleradar.dlx}
+      donations: ${RABBITMQ_DONATIONS_EXCHANGE:${RABBITMQ_EXCHANGE:styleradar.exchange}}
+    routing-keys:
+      donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
+      second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:segunda-mano.prenda.vendida}
+      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
     queues:
+      dlq: ${RABBITMQ_DLQ:styleradar.donaciones.dlq}
       notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
       simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
     simulator:
       enabled: false
 
+azure:
+  storage:
+    connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
+    container-name: ${AZURE_STORAGE_CONTAINER_NAME:donaciones-fotos}
+    blob-endpoint: ${AZURE_STORAGE_BLOB_ENDPOINT:https://srdonacionesjmunar.blob.core.windows.net}
+
 # Documentación OpenAPI en Producción
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /api/v1/v3/api-docs
     enabled: true
   swagger-ui:
-    path: /swagger-ui.html
+    path: /api/v1/swagger-ui.html
     enabled: true
     tryItOutEnabled: false
     operationsSorter: method
@@ -86,3 +104,9 @@ logging:
     edu.dosw.styleradar.donaciones: WARN
     org.springframework.web: WARN
     org.springframework.security: ERROR
+
+# Integración con ms-tiendas (Catálogo maestro de fundaciones aliadas)
+styleradar:
+  tiendas:
+    base-url: ${TIENDAS_SERVICE_URL:https://styleradar-tiendas-prod.azurewebsites.net}
+    validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}

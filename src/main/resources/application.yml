@@ -1,11 +1,11 @@
 server:
   port: ${PORT:8520}
-  servlet:
-    context-path: /api/v1
 
 spring:
   application:
     name: ms-segunda-vida-donaciones
+  profiles:
+    default: local
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:styleradar_donations}${DB_SSLMODE:}}
@@ -42,7 +42,7 @@ spring:
       enabled: ${RABBITMQ_SSL_ENABLED:false}
       trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
       trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
-      trust-store-type: JKS
+      trust-store-type: ${RABBITMQ_TRUSTSTORE_TYPE:PKCS12}
       verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
     publisher-confirm-type: correlated
     publisher-returns: true
@@ -79,12 +79,24 @@ app:
     simulator:
       enabled: ${RABBITMQ_SIMULATOR_ENABLED:false}
 
-# Configuración de Seguridad y JWT
+# Configuración de Seguridad, JWT e Integraciones Externas
 styleradar:
   security:
+    publication-by-id-path: ${SECOND_HAND_PUBLICATION_BY_ID_PATH:/api/v1/second-hand/publications/{id}}
     jwt:
       secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:}}
       duration: ${JWT_DURATION:PT24H}
+  tiendas:
+    base-url: ${TIENDAS_SERVICE_URL:http://localhost:8140}
+    foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/admin/foundations}
+    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/admin/foundations/{id}}
+    validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
+    service-bearer-token: ${TIENDAS_SERVICE_TOKEN:}
+    forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:false}
+    service-roles-header-name: ${TIENDAS_SERVICE_ROLES_HEADER:X-User-Roles}
+    service-roles-header-value: ${TIENDAS_SERVICE_ROLES_VALUE:ROLE_ADMIN_STYLERADAR}
+    connect-timeout-ms: ${TIENDAS_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${TIENDAS_READ_TIMEOUT_MS:5000}
 
 # Configuración de Azure Blob Storage (Carga de Fotografías de Prendas)
 azure:
@@ -96,10 +108,10 @@ azure:
 # Configuración explícita de Springdoc OpenAPI
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /api/v1/v3/api-docs
     enabled: true
   swagger-ui:
-    path: /swagger-ui.html
+    path: /api/v1/swagger-ui.html
     operationsSorter: method
     tagsSorter: alpha
     tryItOutEnabled: true

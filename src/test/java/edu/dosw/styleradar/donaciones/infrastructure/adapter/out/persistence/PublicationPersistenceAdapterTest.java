@@ -136,4 +136,29 @@ class PublicationPersistenceAdapterTest {
         assertThat(adapter.existsById(saved.getId())).isFalse();
         assertThat(adapter.findById(saved.getId())).isEmpty();
     }
+
+    @Test
+    @DisplayName("Debe cubrir filtros vacíos, esDonacion y localidad en PublicationSpecifications")
+    void shouldFilterByCircularEconomyBlankStringsAndNullCriteriaFields() {
+        SecondHandPublication donation = buildSamplePublication(101L, "Abrigo Chapinero", BigDecimal.ZERO);
+        donation.setEsDonacion(true);
+        donation.setLocalidad(edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota.USAQUEN);
+        adapter.save(donation);
+        adapter.save(buildSamplePublication(102L, "Jean Comercial", new BigDecimal("65000.00")));
+
+        PublicationSearchCriteria circularCriteria = PublicationSearchCriteria.builder()
+                .searchTerm("   ")
+                .color(" ")
+                .brand("")
+                .esDonacion(true)
+                .localidad(edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota.USAQUEN)
+                .build();
+
+        List<SecondHandPublication> circularResults = adapter.findByCriteria(circularCriteria);
+        assertThat(circularResults).hasSize(1);
+        assertThat(circularResults.get(0).isEsDonacion()).isTrue();
+
+        PublicationSearchCriteria emptyCriteria = PublicationSearchCriteria.builder().build();
+        assertThat(adapter.findByCriteria(emptyCriteria)).hasSize(2);
+    }
 }

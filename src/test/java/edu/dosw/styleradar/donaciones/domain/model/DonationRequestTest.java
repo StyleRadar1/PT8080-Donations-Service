@@ -16,27 +16,42 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Pruebas Unitarias - Entidad DonationRequest")
 class DonationRequestTest {
 
-    @Test
-    @DisplayName("Debe iniciar solicitud con estado PENDING e invariantes válidas")
-    void shouldInitiateDonationRequestSuccessfully() {
-        DonationRequest request = DonationRequest.builder()
+    private DonationRequest.DonationRequestBuilder validProposalBuilder() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        return DonationRequest.builder()
                 .publicationId(100L)
                 .donorId(1L)
                 .foundationId(50L)
                 .message("Ropa en perfecto estado para niños")
-                .build();
+                .deliveryMode(DeliveryMode.DROP_OFF_POINT)
+                .deliveryPoint("  Calle 85 # 15-32, Bogotá  ")
+                .pickupStartTime(start)
+                .pickupEndTime(start.plusHours(2));
+    }
+
+    @Test
+    @DisplayName("Debe iniciar solicitud con estado PENDING, propuesta de entrega e invariantes válidas")
+    void shouldInitiateDonationRequestSuccessfully() {
+        DonationRequest request = validProposalBuilder().build();
 
         request.initiate();
 
         assertEquals(DonationRequestStatus.PENDING, request.getStatus());
+        assertEquals(DeliveryMode.DROP_OFF_POINT, request.getDeliveryMode());
+        assertEquals("Calle 85 # 15-32, Bogotá", request.getDeliveryPoint());
+        assertNotNull(request.getPickupStartTime());
+        assertNotNull(request.getPickupEndTime());
         assertNotNull(request.getRequestedAt());
         assertTrue(request.getStatus().isInProgress());
         assertFalse(request.getStatus().isFinished());
     }
 
     @Test
-    @DisplayName("Debe fallar al iniciar solicitud con campos obligatorios faltantes")
+    @DisplayName("Debe fallar al iniciar solicitud cuando faltan identificadores o propuesta de entrega")
     void shouldFailWhenInitialInvariantsMissing() {
+        LocalDateTime futureStart = LocalDateTime.now().plusDays(1);
+        LocalDateTime futureEnd = futureStart.plusHours(2);
+
         DonationRequest request = DonationRequest.builder().build();
         assertThrows(InvalidDonationRequestException.class, request::initiate);
 
@@ -45,12 +60,32 @@ class DonationRequestTest {
 
         request.setDonorId(2L);
         assertThrows(InvalidDonationRequestException.class, request::initiate);
+
+        request.setFoundationId(3L);
+        assertThrows(InvalidDonationRequestException.class, request::initiate);
+
+        request.setDeliveryMode(DeliveryMode.HOME_PICKUP);
+        assertThrows(InvalidDonationRequestException.class, request::initiate);
+
+        request.setDeliveryPoint(" ");
+        assertThrows(InvalidDonationRequestException.class, request::initiate);
+
+        request.setDeliveryPoint("Carrera 7 # 45-10, Bogotá");
+        request.setPickupStartTime(futureStart);
+        assertThrows(InvalidDonationRequestException.class, request::initiate);
+
+        request.setPickupEndTime(futureStart.minusHours(1));
+        assertThrows(InvalidDonationRequestException.class, request::initiate);
+
+        request.setPickupStartTime(LocalDateTime.now().minusDays(1));
+        request.setPickupEndTime(futureEnd);
+        assertThrows(InvalidDonationRequestException.class, request::initiate);
     }
 
     @Test
     @DisplayName("Debe aprobar y rechazar solicitud en estado PENDING")
     void shouldApproveAndRejectRequest() {
-        DonationRequest requestToApprove = DonationRequest.builder()
+        DonationRequest requestToApprove = validProposalBuilder()
                 .publicationId(10L)
                 .donorId(2L)
                 .foundationId(3L)
@@ -66,7 +101,7 @@ class DonationRequestTest {
         assertThrows(InvalidStateTransitionException.class, requestToApprove::accept);
 
         // Rechazo
-        DonationRequest requestToReject = DonationRequest.builder()
+        DonationRequest requestToReject = validProposalBuilder()
                 .publicationId(11L)
                 .donorId(2L)
                 .foundationId(3L)
@@ -90,7 +125,7 @@ class DonationRequestTest {
     @Test
     @DisplayName("Debe programar recogida cuando la solicitud está aprobada")
     void shouldSchedulePickupCorrectly() {
-        DonationRequest request = DonationRequest.builder()
+        DonationRequest request = validProposalBuilder()
                 .publicationId(10L)
                 .donorId(2L)
                 .foundationId(3L)
@@ -111,6 +146,9 @@ class DonationRequestTest {
                 () -> request.schedulePickup(" ", start, end));
         assertThrows(InvalidDonationRequestException.class,
                 () -> request.schedulePickup("Sede Norte", null, end));
+        LocalDateTime pastStart = LocalDateTime.now().minusDays(1);
+        assertThrows(InvalidDonationRequestException.class,
+                () -> request.schedulePickup("Sede Norte", pastStart, end)); // en el pasado
         assertThrows(InvalidDonationRequestException.class,
                 () -> request.schedulePickup("Sede Norte", end, start)); // fin antes de inicio
 
@@ -125,7 +163,7 @@ class DonationRequestTest {
     @Test
     @DisplayName("Debe confirmar entrega cuando la solicitud está en recogida")
     void shouldConfirmDeliveryCorrectly() {
-        DonationRequest request = DonationRequest.builder()
+        DonationRequest request = validProposalBuilder()
                 .publicationId(10L)
                 .donorId(2L)
                 .foundationId(3L)

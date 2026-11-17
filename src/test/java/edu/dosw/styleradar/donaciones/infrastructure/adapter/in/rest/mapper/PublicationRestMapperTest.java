@@ -99,5 +99,25 @@ class PublicationRestMapperTest {
         assertThat(resp.id()).isEqualTo(1L);
         assertThat(resp.garmentName()).isEqualTo("Chaqueta");
         assertThat(resp.photos()).containsExactly("https://cdn.test/1.jpg");
+
+        SecondHandPublication domainNoGarmentNoPhotos = SecondHandPublication.builder()
+                .id(2L)
+                .userId(10L)
+                .garment(null)
+                .photos(null)
+                .esDonacion(true)
+                .build();
+        PublicationResponseDTO emptyResp = mapper.toResponse(domainNoGarmentNoPhotos);
+        assertThat(emptyResp.garmentName()).isNull();
+        assertThat(emptyResp.photos()).isEmpty();
+        assertThat(mapper.toResponseList(List.of(domain))).hasSize(1);
+
+        CreatePublicationRequestDTO createNoPhotos = new CreatePublicationRequestDTO(
+                101L, "Camisa", "Desc", GarmentType.UPPER, "Zara", "Blanco",
+                Style.CASUAL, Size.S, ConservationStatus.GOOD_CONDITION, BigDecimal.ZERO, true, null, null
+        );
+        CreatePublicationCommand createCmd = mapper.toCommand(createNoPhotos);
+        assertThat(createCmd.photos()).isEmpty();
+        assertThat(createCmd.esDonacion()).isTrue();
     }
 }

@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * Implementa el adaptador de entrada en la arquitectura hexagonal para Azure Blob Storage.
  */
 @RestController
-@RequestMapping("/segunda-mano/fotos")
+@RequestMapping("/api/v1/second-hand/photos")
 @Tag(
         name = "Carga de Fotografías (Azure Blob Storage)",
         description = "Endpoints para la subida de imágenes de prendas hacia Azure Blob Storage y obtención de URLs públicas CDN para el catálogo de Economía Circular"
@@ -46,7 +46,7 @@ public class PhotoUploadController {
 
     @Operation(
             summary = "Subir fotografía de prenda a Azure Blob Storage",
-            description = "Carga un archivo binario de imagen (formatos JPEG, PNG, WEBP, tamaño máximo 5 MB) al contenedor 'donaciones-fotos' de Azure Blob Storage en el Resource Group 'rg-styleradar'. Retorna la URL pública permanente para asociarla a la prenda en el endpoint POST /api/v1/segunda-mano.",
+            description = "Carga un archivo binario de imagen (formatos JPEG, PNG, WEBP, tamaño máximo 5 MB) al contenedor 'donaciones-fotos' de Azure Blob Storage en el Resource Group 'rg-styleradar'. Retorna la URL pública permanente para asociarla a la prenda en el endpoint POST /api/v1/second-hand/publications.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
@@ -82,7 +82,7 @@ public class PhotoUploadController {
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "Tipo de archivo no permitido: text/plain. Solo se admiten formatos JPEG, PNG y WEBP.",
-                                      "instance": "/api/v1/segunda-mano/fotos/upload",
+                                      "instance": "/api/v1/second-hand/photos",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -103,7 +103,7 @@ public class PhotoUploadController {
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente, expirado o con firma no válida.",
-                                      "instance": "/api/v1/segunda-mano/fotos/upload",
+                                      "instance": "/api/v1/second-hand/photos",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -124,7 +124,7 @@ public class PhotoUploadController {
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: Se requiere rol USER, STORE, FOUNDATION o ADMIN para subir fotos.",
-                                      "instance": "/api/v1/segunda-mano/fotos/upload",
+                                      "instance": "/api/v1/second-hand/photos",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -145,7 +145,7 @@ public class PhotoUploadController {
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error de entrada/salida al transferir el flujo binario de la imagen hacia Azure Blob Storage.",
-                                      "instance": "/api/v1/segunda-mano/fotos/upload",
+                                      "instance": "/api/v1/second-hand/photos",
                                       "timestamp": "2026-11-11T23:20:00Z"
                                     }
                                     """
@@ -153,7 +153,7 @@ public class PhotoUploadController {
                     )
             )
     })
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<PhotoUploadResponseDTO> uploadPhoto(
             @Parameter(description = "Archivo binario de imagen (JPEG, PNG, WEBP, máx 5MB)", required = true)

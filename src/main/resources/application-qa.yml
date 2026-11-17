@@ -46,7 +46,7 @@ spring:
       enabled: ${RABBITMQ_SSL_ENABLED:true}
       trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
       trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
-      trust-store-type: JKS
+      trust-store-type: ${RABBITMQ_TRUSTSTORE_TYPE:PKCS12}
       verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
     publisher-confirm-type: correlated
     publisher-returns: true
@@ -80,10 +80,10 @@ azure:
 # Swagger OpenAPI Público para QA
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /api/v1/v3/api-docs
     enabled: true
   swagger-ui:
-    path: /swagger-ui.html
+    path: /api/v1/swagger-ui.html
     enabled: true
     tryItOutEnabled: true
     operationsSorter: method
@@ -104,3 +104,9 @@ logging:
     edu.dosw.styleradar.donaciones: INFO
     org.springframework.web: INFO
     org.springframework.security: WARN
+
+# Integración con ms-tiendas (Catálogo maestro de fundaciones aliadas)
+styleradar:
+  tiendas:
+    base-url: ${TIENDAS_SERVICE_URL:https://styleradar-tiendas-qa.azurewebsites.net}
+    validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}

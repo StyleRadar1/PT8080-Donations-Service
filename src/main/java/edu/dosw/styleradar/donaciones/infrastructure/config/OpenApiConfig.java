@@ -2,7 +2,6 @@ package edu.dosw.styleradar.donaciones.infrastructure.config;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,14 +24,11 @@ public class OpenApiConfig {
 
     private static final String SECURITY_SCHEME_NAME = "bearerAuth";
 
-    @Value("${server.servlet.context-path:/api/v1}")
-    private String contextPath;
-
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .servers(List.of(
-                        new Server().url(contextPath).description("Servidor Local / Staging - Context Path")
+                        new Server().url("/").description("Servidor StyleRadar (Local / QA / PROD)")
                 ))
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()
@@ -43,7 +39,7 @@ public class OpenApiConfig {
                                 .description("""
                                         Autenticación Bearer JWT.
                                         Para autenticarse en Swagger:
-                                        1. Obtenga un token llamando a `GET /auth/quick-token?role=ADMIN|USER|FOUNDATION` o `POST /auth/login`.
+                                        1. Obtenga un token llamando a `GET /api/v1/auth/quick-token?role=ADMIN|USER|FOUNDATION` o `POST /api/v1/auth/login`.
                                         2. Copie el token del campo `token`.
                                         3. Haga clic en el botón verde **Authorize** arriba a la derecha.
                                         4. Pegue el token en el campo `Value` y presione **Authorize**.

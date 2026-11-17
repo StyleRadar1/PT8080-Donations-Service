@@ -23,7 +23,7 @@ import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event
 /**
  * Adaptador de salida RabbitMQ para la publicación asíncrona hacia 'styleradar.exchange' (puerto 5671 TLS / 5672).
  * Ambos flujos pertenecen a 'ms-segunda-vida-donaciones':
- * 1) 'styleradar.donaciones.estado.cambiado' hacia ms-notificaciones y ms-estadisticas.
+ * 1) 'styleradar.donaciones.estado.cambiado' hacia ms-notificaciones.
  * 2) 'styleradar.segundavida.prenda.vendida' hacia ms-chat (cola 'q.chat.segunda-mano') para cierre de salas.
  */
 @Component("donacionEventPublisherAdapter")
@@ -31,8 +31,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private static final Logger log = LoggerFactory.getLogger(DonationEventPublisherAdapter.class);
 
-    private static final String ESTADO_EN_RECOGIDA = "EN_RECOGIDA";
-    private static final String ESTADO_ENTREGADA = "ENTREGADA";
+    private static final String STATUS_IN_PICKUP = "EN_RECOGIDA";
+    private static final String STATUS_DELIVERED = "ENTREGADA";
 
     private final RabbitTemplate rabbitTemplate;
     private final String exchangeName;
@@ -117,7 +117,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     }
 
     private void publishDonationDecided(DonationRequestDecidedEvent domainEvent) {
-        String nuevoEstado = domainEvent.approved() ? "APROBADA" : "RECHAZADA";
+        String newStatus = domainEvent.approved() ? "APROBADA" : "RECHAZADA";
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
                 SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
                         .donacionId(domainEvent.requestId())
@@ -128,9 +128,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .fundacionId(domainEvent.foundationId())
                         .foundationId(domainEvent.foundationId())
                         .estadoAnterior("PENDIENTE")
-                        .nuevoEstado(nuevoEstado)
-                        .estado(nuevoEstado)
-                        .status(nuevoEstado)
+                        .nuevoEstado(newStatus)
+                        .estado(newStatus)
+                        .status(newStatus)
                         .motivo(domainEvent.rejectionReason())
                         .mensaje(domainEvent.rejectionReason())
                         .build();
@@ -144,9 +144,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .fundacionId(domainEvent.foundationId())
                 .foundationId(domainEvent.foundationId())
                 .estadoAnterior("PENDIENTE")
-                .nuevoEstado(nuevoEstado)
-                .estado(nuevoEstado)
-                .status(nuevoEstado)
+                .nuevoEstado(newStatus)
+                .estado(newStatus)
+                .status(newStatus)
                 .motivo(domainEvent.rejectionReason())
                 .mensaje(domainEvent.rejectionReason())
                 .data(data)
@@ -168,8 +168,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .donanteId(domainEvent.donorId())
                         .donorId(domainEvent.donorId())
                         .estadoAnterior("ACEPTADA")
-                        .nuevoEstado(ESTADO_EN_RECOGIDA)
-                        .estado(ESTADO_EN_RECOGIDA)
+                        .nuevoEstado(STATUS_IN_PICKUP)
+                        .estado(STATUS_IN_PICKUP)
                         .status("SCHEDULED")
                         .puntoEntrega(domainEvent.deliveryPoint())
                         .deliveryPoint(domainEvent.deliveryPoint())
@@ -184,8 +184,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .donanteId(domainEvent.donorId())
                 .donorId(domainEvent.donorId())
                 .estadoAnterior("ACEPTADA")
-                .nuevoEstado(ESTADO_EN_RECOGIDA)
-                .estado(ESTADO_EN_RECOGIDA)
+                .nuevoEstado(STATUS_IN_PICKUP)
+                .estado(STATUS_IN_PICKUP)
                 .status("SCHEDULED")
                 .puntoEntrega(domainEvent.deliveryPoint())
                 .deliveryPoint(domainEvent.deliveryPoint())
@@ -210,9 +210,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .publicationId(domainEvent.publicationId())
                         .fundacionId(domainEvent.foundationId())
                         .foundationId(domainEvent.foundationId())
-                        .estadoAnterior(ESTADO_EN_RECOGIDA)
-                        .nuevoEstado(ESTADO_ENTREGADA)
-                        .estado(ESTADO_ENTREGADA)
+                        .estadoAnterior(STATUS_IN_PICKUP)
+                        .nuevoEstado(STATUS_DELIVERED)
+                        .estado(STATUS_DELIVERED)
                         .status("COMPLETED")
                         .build();
 
@@ -226,9 +226,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .publicationId(domainEvent.publicationId())
                 .fundacionId(domainEvent.foundationId())
                 .foundationId(domainEvent.foundationId())
-                .estadoAnterior(ESTADO_EN_RECOGIDA)
-                .nuevoEstado(ESTADO_ENTREGADA)
-                .estado(ESTADO_ENTREGADA)
+                .estadoAnterior(STATUS_IN_PICKUP)
+                .nuevoEstado(STATUS_DELIVERED)
+                .estado(STATUS_DELIVERED)
                 .status("COMPLETED")
                 .data(data)
                 .build();

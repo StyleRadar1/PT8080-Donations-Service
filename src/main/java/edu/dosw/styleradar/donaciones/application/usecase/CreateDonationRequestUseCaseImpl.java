@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
@@ -22,6 +20,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestComman
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +29,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(CreateDonationRequestUseCaseImpl.class);
@@ -37,8 +37,10 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
     private final DonationRequestRepositoryPort donationRequestRepositoryPort;
     private final PublicationRepositoryPort publicationRepositoryPort;
     private final DonationEventPublisherPort eventPublisherPort;
+    private final FoundationCatalogPort foundationCatalogPort;
 
     @Override
+    @Transactional
     public DonationRequest create(CreateDonationRequestCommand command) {
         log.info("Creando solicitud de donación del donante: {} para la fundación: {}",
                 command.donorId(), command.foundationId());
@@ -61,11 +63,17 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
             throw new DomainConflictException("La prenda ya tiene una solicitud de donación en curso");
         }
 
+        foundationCatalogPort.validateActiveFoundation(command.foundationId());
+
         DonationRequest request = DonationRequest.builder()
                 .publicationId(command.publicationId())
                 .donorId(command.donorId())
                 .foundationId(command.foundationId())
                 .message(command.message())
+                .deliveryMode(command.deliveryMode())
+                .deliveryPoint(command.deliveryPoint())
+                .pickupStartTime(command.startTime())
+                .pickupEndTime(command.endTime())
                 .build();
 
         request.initiate();
@@ -81,22 +89,9 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
                 saved.getStatus() != null ? saved.getStatus().name() : "PENDING"
         );
 
-        publishAfterCommitOrImmediate(event);
+        TransactionEventHelper.publishAfterCommitOrImmediate(eventPublisherPort, event);
 
         return saved;
-    }
-
-    private void publishAfterCommitOrImmediate(DonationRequestCreatedEvent event) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    eventPublisherPort.publishEvent(event);
-                }
-            });
-        } else {
-            eventPublisherPort.publishEvent(event);
-        }
     }
 
     @Override

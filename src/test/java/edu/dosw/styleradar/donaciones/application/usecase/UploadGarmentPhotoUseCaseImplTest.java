@@ -123,5 +123,39 @@ class UploadGarmentPhotoUseCaseImplTest {
         assertThatThrownBy(() -> useCase.uploadPhoto(content, "script.sh", "text/plain"))
                 .isInstanceOf(InvalidPublicationException.class)
                 .hasMessageContaining("Tipo de archivo no permitido");
+
+        assertThatThrownBy(() -> useCase.uploadPhoto(content, "sin_tipo.jpg", null))
+                .isInstanceOf(InvalidPublicationException.class)
+                .hasMessageContaining("Tipo de archivo no permitido");
+    }
+
+    @Test
+    @DisplayName("Debe derivar extensiones desde contentType o filename cuando falte extensión y rechazar firmas parciales")
+    void shouldHandleExtensionExtractionAndPartialImageSignatures() {
+        byte[] jpegNoExt = new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 16, 'J', 'F', 'I', 'F', 0, 1};
+        byte[] pngNoExt = new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13};
+        byte[] webpNoExt = new byte[] {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'};
+
+        when(photoStoragePort.storePhoto(any(), any(), any())).thenReturn("https://cdn/img");
+
+        assertThat(useCase.uploadPhoto(jpegNoExt, null, "image/jpeg")).isEqualTo("https://cdn/img");
+        assertThat(useCase.uploadPhoto(pngNoExt, "sin_extension", "image/png")).isEqualTo("https://cdn/img");
+        assertThat(useCase.uploadPhoto(webpNoExt, "archivo.unknown", "image/webp")).isEqualTo("https://cdn/img");
+        assertThat(useCase.uploadPhoto(jpegNoExt, "archivo.jpeg", "image/jpg")).isEqualTo("https://cdn/img");
+
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(null)).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {1, 2, 3})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {(byte) 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {(byte) 0xFF, (byte) 0xD8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {(byte) 0x89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {(byte) 0x89, 0x50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {(byte) 0x89, 0x50, 0x4E, 0, 0, 0, 0, 0, 0, 0, 0, 0})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {'R', 0, 0, 0, 0, 0, 0, 0, 'W', 'E', 'B', 'P'})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {'R', 'I', 0, 0, 0, 0, 0, 0, 'W', 'E', 'B', 'P'})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {'R', 'I', 'F', 0, 0, 0, 0, 0, 'W', 'E', 'B', 'P'})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {'R', 'I', 'F', 'F', 0, 0, 0, 0, 0, 'E', 'B', 'P'})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 0, 'B', 'P'})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 0, 'P'})).isFalse();
+        assertThat(UploadGarmentPhotoUseCaseImpl.isValidImageBinarySignature(new byte[] {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 0})).isFalse();
     }
 }
