@@ -41,6 +41,8 @@ class TiendasFoundationCatalogAdapterTest {
     void setUp() {
         properties = new TiendasProperties();
         properties.setBaseUrl(BASE_URL);
+        properties.setFoundationsPath("/api/v1/admin/fundaciones");
+        properties.setFoundationByIdPath("/api/v1/admin/fundaciones/{id}");
         properties.setValidationEnabled(true);
         properties.setConnectTimeoutMs(1000);
         properties.setReadTimeoutMs(1000);

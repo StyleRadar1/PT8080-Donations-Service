@@ -82,11 +82,14 @@ app:
 # Configuración de Seguridad, JWT e Integraciones Externas
 styleradar:
   security:
+    publication-by-id-path: ${SECOND_HAND_PUBLICATION_BY_ID_PATH:/api/v1/second-hand/publications/{id}}
     jwt:
       secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:}}
       duration: ${JWT_DURATION:PT24H}
   tiendas:
     base-url: ${TIENDAS_SERVICE_URL:http://localhost:8140}
+    foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/admin/fundaciones}
+    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/admin/fundaciones/{id}}
     validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
     connect-timeout-ms: ${TIENDAS_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${TIENDAS_READ_TIMEOUT_MS:5000}

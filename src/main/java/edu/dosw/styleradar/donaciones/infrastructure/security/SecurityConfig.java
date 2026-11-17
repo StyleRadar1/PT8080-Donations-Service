@@ -31,13 +31,15 @@ public class SecurityConfig {
     private static final String ROLE_USER = "USER";
     private static final String ROLE_FOUNDATION = "FOUNDATION";
     private static final String ROLE_STORE = "STORE";
-    private static final String PUBLICATION_BY_ID_PATH = "/api/v1/second-hand/publications/{id}";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final SecurityErrorHandler securityErrorHandler;
 
     @Value("${styleradar.cors.allowed-origins:*}")
     private String allowedOrigins = "*";
+
+    @Value("${styleradar.security.publication-by-id-path}")
+    private String publicationByIdPath;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                           SecurityErrorHandler securityErrorHandler) {
@@ -82,13 +84,13 @@ public class SecurityConfig {
                         .hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN)
 
                         // Catálogo público de segunda mano (lectura)
-                        .requestMatchers(HttpMethod.GET, "/api/v1/second-hand/publications", PUBLICATION_BY_ID_PATH).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/second-hand/publications", publicationByIdPath).permitAll()
 
                         // Operaciones sobre publicaciones (Crear, Editar, Vender, Retirar, Donar, Listar por usuario)
                         .requestMatchers(HttpMethod.POST, "/api/v1/second-hand/publications").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, PUBLICATION_BY_ID_PATH).hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PUT, publicationByIdPath).hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/second-hand/publications/{id}/sale").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, PUBLICATION_BY_ID_PATH).hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, publicationByIdPath).hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/second-hand/publications/{id}/donation").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/api/v1/second-hand/publications/users/{userId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN)
 

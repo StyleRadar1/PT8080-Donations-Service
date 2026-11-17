@@ -34,6 +34,10 @@ management:
         include: health, info
 
 styleradar:
+  security:
+    publication-by-id-path: /api/v1/second-hand/publications/{id}
   tiendas:
     base-url: http://localhost:8140
+    foundations-path: /api/v1/admin/fundaciones
+    foundation-by-id-path: /api/v1/admin/fundaciones/{id}
     validation-enabled: false
