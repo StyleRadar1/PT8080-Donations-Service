@@ -59,7 +59,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Tag(
         name = "Donaciones - Vitrina Benéfica y Logística",
-        description = "Endpoints para el flujo de donaciones de ropa a fundaciones aliadas en Bogotá D.C., reclamo en Vitrina Abierta y logística de entrega (SR-RF-44 a SR-RF-49)"
+        description = "Endpoints para el flujo de donaciones de ropa a fundaciones aliadas en Bogotá D.C., reclamo en Vitrina Abierta y logística de entrega (SR-RF-45, SR-P5-N05, SR-RF-46, SR-RF-47, SR-RF-49)"
 )
 public class DonationRequestController {
 
@@ -73,8 +73,8 @@ public class DonationRequestController {
     private final ResourceOwnershipValidator resourceOwnershipValidator;
 
     @Operation(
-            summary = "Listar fundaciones aliadas activas para donación (SR-RF-44)",
-            description = "Consulta el catálogo de fundaciones activas en ms-tiendas para poblar el selector desplegable de donaciones en Frontend, con filtro opcional por categoría de prenda (SUPERIOR, INFERIOR, CALZADO, ACCESORIOS o valores de GarmentType como UPPER, LOWER, FOOTWEAR, ACCESSORY).",
+            summary = "Listar fundaciones aliadas activas para donación (SR-RF-45)",
+            description = "Consulta el catálogo de fundaciones activas en ms-tiendas para poblar el selector desplegable de donaciones en Frontend, con filtro opcional por categoría de prenda (Camisas, Camisetas, Suéteres, Chaquetas, Pantalones, Faldas, Vestidos, Calzado, Accesorios o SUPERIOR/INFERIOR/CALZADO/ACCESORIOS).",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
@@ -132,7 +132,7 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Consultar detalle de una fundación aliada activa por ID (SR-RF-44)",
+            summary = "Consultar detalle de una fundación aliada activa por ID (SR-RF-45)",
             description = "Consulta en ms-tiendas el detalle institucional de una fundación aliada y valida que se encuentre activa.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -168,7 +168,7 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Reclamar donación desde la Vitrina Abierta (Fundaciones aliadas)",
+            summary = "Reclamar prenda disponible desde la Vitrina Abierta (SR-P5-N05)",
             description = "Permite a una fundación registrada reclamar directamente una prenda disponible en la Vitrina Benéfica (esDonacion=true). Bloqueo optimista (@Version): si dos fundaciones reclaman al mismo tiempo, solo una gana y la otra recibe 409 Conflict. Una fundación no puede reclamar su propia donación. Requiere rol FOUNDATION o ADMIN.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -341,8 +341,8 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Crear solicitud directa de donación (SR-RF-44, SR-RF-45)",
-            description = "El donante postula una prenda al canal benéfico dirigiéndola hacia una fundación específica. Queda en estado PENDING y dispara evento de integración. Requiere rol USER, STORE o ADMIN.",
+            summary = "Crear solicitud de donación con fundación y propuesta de entrega (SR-RF-45)",
+            description = "El donante postula una prenda al canal benéfico dirigiéndola hacia una fundación activa y registrando su propuesta de entrega (deliveryMode, deliveryPoint, startTime, endTime). Queda en estado PENDING y dispara evento de integración. Requiere rol USER, STORE o ADMIN.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
@@ -515,8 +515,9 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Consultar solicitud de donación por ID",
-            description = "Devuelve el estado, fechas y detalles logísticos de una solicitud de donación."
+            summary = "Consultar solicitud de donación por ID (SR-RF-46)",
+            description = "Devuelve el estado, fechas y detalles logísticos de una solicitud de donación.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -602,7 +603,7 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Evaluar solicitud de donación (Fundación - SR-RF-46)",
+            summary = "Aceptar o rechazar solicitud de donación (SR-RF-47)",
             description = "Permite a la fundación receptora aceptar (APPROVED) o rechazar (REJECTED con motivo) la solicitud. Requiere rol FOUNDATION o ADMIN.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -780,7 +781,7 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Programar recogida o entrega logística (SR-RF-47, SR-RF-48)",
+            summary = "Programar o reprogramar recogida y entrega logística (SR-RF-45, SR-P5-N05)",
             description = "Fija el punto de entrega en Bogotá D.C. y la franja horaria para recibir las prendas aprobadas (estado IN_PICKUP). Publica evento en RabbitMQ.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -1106,7 +1107,7 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Consultar historial de donaciones del donante",
+            summary = "Consultar historial de donaciones del donante (SR-RF-46)",
             description = "Lista todas las solicitudes originadas por un usuario o tienda donante.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -1217,7 +1218,7 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Consultar bandeja de solicitudes de la fundación",
+            summary = "Consultar bandeja de solicitudes de la fundación (SR-RF-46)",
             description = "Lista solicitudes dirigidas a una fundación aliada con filtro opcional de estado.",
             security = @SecurityRequirement(name = "bearerAuth")
     )

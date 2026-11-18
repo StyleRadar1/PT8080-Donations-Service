@@ -29,10 +29,11 @@ public record EditPublicationRequestDTO(
         String garmentName,
 
         @Schema(description = "Descripción detallada del estado o características", example = "Chaqueta denim estilo retro de los 90s con botones originales")
+        @NotBlank(message = "La descripción de la prenda es obligatoria")
         @jakarta.validation.constraints.Size(max = 1000, message = "La descripción no puede exceder 1000 caracteres")
         String description,
 
-        @Schema(description = "Categoría o tipo de prenda textil", example = "UPPER")
+        @Schema(description = "Categoría o tipo de prenda textil", example = "Chaquetas")
         @NotNull(message = "El tipo de prenda es obligatorio")
         GarmentType garmentType,
 

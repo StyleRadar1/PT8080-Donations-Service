@@ -60,7 +60,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Tag(
         name = "Publicaciones - Economía Circular",
-        description = "Endpoints para la gestión de prendas de Segunda Mano C2C y Donaciones Benéficas en Bogotá D.C. (SR-RF-33 a SR-RF-42)"
+        description = "Endpoints para la gestión de prendas de Segunda Mano C2C y Donaciones Benéficas en Bogotá D.C. (SR-RF-33, SR-RF-36, SR-P5-N04, SR-RF-37, SR-RF-38, SR-RF-39, SR-RF-42)"
 )
 public class SecondHandPublicationController {
 
@@ -71,8 +71,8 @@ public class SecondHandPublicationController {
     private final ResourceOwnershipValidator resourceOwnershipValidator;
 
     @Operation(
-            summary = "Crear publicación (Segunda Mano o Donación)",
-            description = "Publica una prenda en la plataforma StyleRadar para reventa C2C (esDonacion=false, precio > 0) o para Donación Benéfica (esDonacion=true, precio forzoso 0 COP). Requiere ubicación en una de las 20 localidades oficiales de Bogotá D.C. y hasta 4 fotografías. Requiere rol USER, STORE, FOUNDATION o ADMIN.",
+            summary = "Crear publicación de segunda mano o donación (SR-RF-33)",
+            description = "Publica una prenda en la plataforma StyleRadar para reventa C2C (esDonacion=false, precio > 0) o para Donación Benéfica (esDonacion=true, precio forzoso 0 COP). Unifica atributos, estado de conservación y precio en Bogotá D.C. con hasta 4 fotografías. Requiere rol USER, STORE o ADMIN.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
@@ -211,8 +211,8 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Buscar y filtrar publicaciones en catálogo de Bogotá D.C.",
-            description = "Consulta pública del catálogo unificado. Permite combinar múltiples filtros: texto libre, tipo de prenda, color, talla, estado de conservación, rango de precio, marca, estilo, estado de publicación, filtro de donación (esDonacion=true para Vitrina Abierta benéfica; esDonacion=false para Segunda Mano C2C), y localidad oficial de Bogotá D.C."
+            summary = "Explorar y buscar prendas del catálogo general (SR-RF-36)",
+            description = "Consulta pública del catálogo unificado (por defecto AVAILABLE). Permite combinar múltiples filtros: texto libre (search o searchTerm), categoría de prenda, color, talla, estado de conservación, rango de precio, marca, estilo, estado de publicación, filtro de donación (esDonacion) y localidad oficial de Bogotá D.C."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -318,9 +318,11 @@ public class SecondHandPublicationController {
     public ResponseEntity<List<PublicationResponseDTO>> searchPublications(
             @Parameter(description = "Término textual para buscar en nombre, marca y descripción", example = "chaqueta")
             @RequestParam(required = false) String searchTerm,
-            @Parameter(description = "Categoría de prenda textil", example = "UPPER")
+            @Parameter(description = "Alias de búsqueda por texto libre", example = "chaqueta")
+            @RequestParam(required = false) String search,
+            @Parameter(description = "Categoría de prenda textil", example = "Chaquetas")
             @RequestParam(required = false) GarmentType type,
-            @Parameter(description = "Alias opcional para categoría de prenda textil", example = "UPPER")
+            @Parameter(description = "Alias opcional para categoría de prenda textil", example = "Chaquetas")
             @RequestParam(required = false) GarmentType garmentType,
             @Parameter(description = "Color predominante", example = "Azul")
             @RequestParam(required = false) String color,
@@ -343,8 +345,9 @@ public class SecondHandPublicationController {
             @Parameter(description = "Localidad de Bogotá D.C.", example = "CHAPINERO")
             @RequestParam(required = false) LocalidadBogota localidad) {
 
+        String effectiveSearch = (searchTerm != null && !searchTerm.isBlank()) ? searchTerm : search;
         PublicationSearchCriteria criteria = PublicationSearchCriteria.builder()
-                .searchTerm(searchTerm)
+                .searchTerm(effectiveSearch)
                 .type(type != null ? type : garmentType)
                 .color(color)
                 .size(size)
@@ -363,7 +366,7 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Obtener detalle de publicación por ID",
+            summary = "Obtener detalle de publicación por ID (SR-RF-36)",
             description = "Consulta individual de una prenda con todos sus metadatos (prenda, talla, estado, fotos, vendedor, precio y localidad en Bogotá)."
     )
     @ApiResponses(value = {
@@ -452,7 +455,7 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Listar publicaciones por usuario",
+            summary = "Consultar y gestionar publicaciones propias por usuario (SR-P5-N04)",
             description = "Consulta el historial de prendas publicadas por un usuario o entidad en el módulo de economía circular. Requiere autenticación y propiedad del usuario o rol ADMIN.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -567,8 +570,8 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Editar publicación",
-            description = "Permite al propietario actualizar datos de la prenda, fotografías, precio o localidad siempre que la publicación se encuentre en estado editable (no vendida, ni retirada, ni donada). Requiere rol USER, STORE, FOUNDATION o ADMIN.",
+            summary = "Editar publicación de segunda mano (SR-RF-37)",
+            description = "Permite al propietario actualizar datos de la prenda, fotografías, precio o localidad siempre que la publicación se encuentre en estado editable (no vendida, ni retirada, ni en donación ni donada). Requiere rol USER, STORE o ADMIN.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
@@ -745,7 +748,7 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Marcar prenda de segunda mano como VENDIDA (C2C)",
+            summary = "Marcar prenda de segunda mano como VENDIDA (SR-RF-38)",
             description = "Transiciona el estado de la publicación a SOLD al concretarse la venta pactada por chat. Publica el evento de integración RabbitMQ hacia ms-chat (exchange styleradar.events, routing key segunda-mano.prenda.vendida) con compradorId para preservar la conversación con el comprador y cerrar las demás. Requiere ser el vendedor propietario.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -925,8 +928,8 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Retirar publicación de la vitrina",
-            description = "El usuario retira su prenda del catálogo público (estado RETIRED). Requiere rol USER, STORE o ADMIN.",
+            summary = "Retirar publicación de la vitrina (SR-RF-39)",
+            description = "El usuario retira su prenda del catálogo público (estado RETIRED), bloqueando si ya fue vendida, donada o está en proceso de donación. Requiere rol USER, STORE o ADMIN.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
@@ -1050,8 +1053,8 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Destinar prenda hacia canal de donación",
-            description = "Transiciona una prenda disponible de segunda mano al estado IN_DONATION para iniciar su postulación benéfica hacia una fundación aliada. Requiere ser propietario.",
+            summary = "Convertir publicación existente en donación (SR-RF-42)",
+            description = "Transiciona una prenda disponible de segunda mano al estado IN_DONATION con precio cero para iniciar su postulación benéfica hacia una fundación aliada. Requiere ser propietario.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
