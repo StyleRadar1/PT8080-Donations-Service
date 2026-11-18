@@ -158,6 +158,10 @@ class SecondHandPublicationTest {
         pub.setStatus(PublicationStatus.DONATED);
         assertThrows(InvalidStateTransitionException.class,
                 () -> pub.edit(validGarment, Size.M, ConservationStatus.LIKE_NEW, newPrice, null));
+
+        pub.setStatus(PublicationStatus.IN_DONATION);
+        assertThrows(InvalidStateTransitionException.class,
+                () -> pub.edit(validGarment, Size.M, ConservationStatus.LIKE_NEW, newPrice, null));
     }
 
     @Test
@@ -207,6 +211,9 @@ class SecondHandPublicationTest {
         assertThrows(InvalidStateTransitionException.class, pub::retire);
 
         pub.setStatus(PublicationStatus.DONATED);
+        assertThrows(InvalidStateTransitionException.class, pub::retire);
+
+        pub.setStatus(PublicationStatus.IN_DONATION);
         assertThrows(InvalidStateTransitionException.class, pub::retire);
     }
 

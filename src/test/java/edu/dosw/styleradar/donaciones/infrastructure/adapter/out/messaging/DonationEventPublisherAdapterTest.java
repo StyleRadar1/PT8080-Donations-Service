@@ -97,6 +97,7 @@ class DonationEventPublisherAdapterTest {
                 ArgumentCaptor.forClass(CorrelationData.class);
 
         verify(rabbitTemplate).convertAndSend(eq(CHAT_EXCHANGE), eq(ROUTING_KEY_SOLD), captor.capture(), correlationCaptor.capture());
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq("styleradar." + ROUTING_KEY_SOLD), any(SegundaVidaDonacionPrendaVendidaIntegrationEvent.class), any(CorrelationData.class));
 
         SegundaVidaDonacionPrendaVendidaIntegrationEvent published = captor.getValue();
         assertThat(published).isNotNull();
@@ -107,6 +108,7 @@ class DonationEventPublisherAdapterTest {
         assertThat(published.getPublicacionId()).isEqualTo(50L);
         assertThat(published.getVendedorId()).isEqualTo(101L);
         assertThat(published.getCompradorId()).isEqualTo(102L);
+        assertThat(published.getInteresadosIds()).isEmpty();
         assertThat(published.getEstado()).isEqualTo("VENDIDA");
 
         // Envelope data para ms-chat
@@ -114,6 +116,7 @@ class DonationEventPublisherAdapterTest {
         assertThat(published.getData().getPublicacionId()).isEqualTo(50L);
         assertThat(published.getData().getVendedorId()).isEqualTo(101L);
         assertThat(published.getData().getCompradorId()).isEqualTo(102L);
+        assertThat(published.getData().getInteresadosIds()).isEmpty();
         assertThat(published.getData().getEstado()).isEqualTo("VENDIDA");
 
         CorrelationData correlationData = correlationCaptor.getValue();

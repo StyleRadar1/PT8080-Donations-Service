@@ -19,11 +19,18 @@ class DonationRequestCreatedIntegrationEventTest {
     @Test
     @DisplayName("Debe mapear correctamente el estado APROBADA cuando la donación proviene de un reclamo de vitrina")
     void shouldMapApprovedStatusCorrectly() {
-        DonationRequestCreatedEvent domainEvent = new DonationRequestCreatedEvent(101L, 202L, 303L, 501L, "APPROVED");
+        DonationRequestCreatedEvent domainEvent = new DonationRequestCreatedEvent(101L, 202L, 303L, 501L, "APPROVED", 77L);
         DonationRequestCreatedIntegrationEvent integrationEvent = DonationRequestCreatedIntegrationEvent.from(domainEvent);
 
+        assertThat(integrationEvent.getEventoId()).isEqualTo(integrationEvent.getEventId());
+        assertThat(integrationEvent.getTipoEvento()).isEqualTo("donacion.solicitud.creada");
+        assertThat(integrationEvent.getRepresentanteId()).isEqualTo(77L);
+        assertThat(integrationEvent.getFundacionUsuarioId()).isEqualTo(77L);
+        assertThat(integrationEvent.getFundacionId()).isEqualTo(501L);
         assertThat(integrationEvent.getData().getStatus()).isEqualTo("APPROVED");
         assertThat(integrationEvent.getData().getEstado()).isEqualTo("APROBADA");
+        assertThat(integrationEvent.getData().getRepresentanteId()).isEqualTo(77L);
+        assertThat(integrationEvent.getData().getFundacionUsuarioId()).isEqualTo(77L);
     }
 
     @Test
