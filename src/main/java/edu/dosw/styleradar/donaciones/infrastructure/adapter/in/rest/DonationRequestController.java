@@ -58,8 +58,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/donations")
 @RequiredArgsConstructor
 @Tag(
-        name = "Donaciones - Vitrina Benéfica y Logística",
-        description = "Endpoints para el flujo de donaciones de ropa a fundaciones aliadas en Bogotá D.C., reclamo en Vitrina Abierta y logística de entrega (SR-RF-45, SR-P5-N05, SR-RF-46, SR-RF-47, SR-RF-49)"
+        name = "Charitable Donations & Logistics",
+        description = "Endpoints for garment donations to partner foundations in Bogota D.C., open showcase claims, and pickup logistics"
 )
 public class DonationRequestController {
 
@@ -73,14 +73,14 @@ public class DonationRequestController {
     private final ResourceOwnershipValidator resourceOwnershipValidator;
 
     @Operation(
-            summary = "Listar fundaciones aliadas activas para donación (SR-RF-45)",
-            description = "Consulta el catálogo de fundaciones activas en ms-tiendas para poblar el selector desplegable de donaciones en Frontend, con filtro opcional por categoría de prenda (Camisas, Camisetas, Suéteres, Chaquetas, Pantalones, Faldas, Vestidos, Calzado, Accesorios o SUPERIOR/INFERIOR/CALZADO/ACCESORIOS).",
+            summary = "List active partner foundations",
+            description = "Queries active partner foundations from ms-tiendas to populate the donation target selector, with optional garment category filtering (Camisas, Camisetas, Suéteres, Chaquetas, Pantalones, Faldas, Vestidos, Calzado, Accesorios, or SUPERIOR/INFERIOR/CALZADO/ACCESORIOS).",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Listado de fundaciones aliadas activas ordenadas alfabéticamente",
+                    description = "Alphabetically sorted list of active partner foundations",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = FoundationResponseDTO.class))
@@ -88,38 +88,38 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "503",
-                    description = "ms-tiendas no disponible temporalmente",
+                    description = "ms-tiendas temporarily unavailable",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     @GetMapping("/foundations")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<List<FoundationResponseDTO>> getActiveFoundations(
-            @Parameter(description = "Categoría opcional de prenda para filtrar fundaciones compatibles", example = "SUPERIOR")
+            @Parameter(description = "Optional garment category to filter compatible foundations", example = "Chaquetas")
             @RequestParam(required = false) String category) {
         List<FoundationSummary> foundations = getPartnerFoundationsUseCase.getActiveFoundations(category);
         return ResponseEntity.ok(donationRequestRestMapper.toFoundationResponseList(foundations));
     }
 
     @Operation(
-            summary = "Consultar la fundación asociada al representante autenticado",
-            description = "Resuelve desde ms-tiendas la fundación activa cuyo representanteId coincide con el usuario autenticado (sub del JWT de ms-auth), facilitando al Frontend obtener el foundationId tras el login.",
+            summary = "Get authenticated representative's foundation",
+            description = "Resolves the active partner foundation from ms-tiendas whose representanteId matches the authenticated user ID (JWT sub claim).",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Fundación aliada asociada al representante autenticado",
+                    description = "Partner foundation associated with the authenticated representative",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = FoundationResponseDTO.class))
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "No existe fundación activa vinculada a este usuario",
+                    description = "No active foundation linked to the authenticated user",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "503",
-                    description = "ms-tiendas no disponible temporalmente",
+                    description = "ms-tiendas temporarily unavailable",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
@@ -132,55 +132,55 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Consultar detalle de una fundación aliada activa por ID (SR-RF-45)",
-            description = "Consulta en ms-tiendas el detalle institucional de una fundación aliada y valida que se encuentre activa.",
+            summary = "Get active partner foundation details by ID",
+            description = "Queries ms-tiendas for the institutional details of a partner foundation and verifies that it is currently active.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Fundación aliada activa encontrada",
+                    description = "Active partner foundation found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = FoundationResponseDTO.class))
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "La fundación existe pero se encuentra inactiva",
+                    description = "Foundation exists but is inactive",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Fundación no encontrada en ms-tiendas",
+                    description = "Foundation not found in ms-tiendas",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "503",
-                    description = "ms-tiendas no disponible temporalmente",
+                    description = "ms-tiendas temporarily unavailable",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     @GetMapping("/foundations/{foundationId}")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<FoundationResponseDTO> getActiveFoundationById(
-            @Parameter(description = "ID de la fundación en ms-tiendas", example = "3")
+            @Parameter(description = "Foundation ID in ms-tiendas", example = "3")
             @PathVariable Long foundationId) {
         FoundationSummary foundation = getPartnerFoundationsUseCase.getActiveFoundationById(foundationId);
         return ResponseEntity.ok(donationRequestRestMapper.toFoundationResponse(foundation));
     }
 
     @Operation(
-            summary = "Reclamar prenda disponible desde la Vitrina Abierta (SR-P5-N05)",
-            description = "Permite a una fundación registrada reclamar directamente una prenda disponible en la Vitrina Benéfica (esDonacion=true). Bloqueo optimista (@Version): si dos fundaciones reclaman al mismo tiempo, solo una gana y la otra recibe 409 Conflict. Una fundación no puede reclamar su propia donación. Requiere rol FOUNDATION o ADMIN.",
+            summary = "Claim available garment from Open Showcase",
+            description = "Allows a registered partner foundation to directly claim an available garment in the Charitable Showcase (esDonacion=true). Uses optimistic locking (@Version): if two foundations claim simultaneously, only one succeeds and the other receives 409 Conflict. Prevents self-donation. Requires FOUNDATION or ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",
-                    description = "Donación reclamada exitosamente. Solicitud aprobada automáticamente para coordinar logística",
+                    description = "Donation successfully claimed; request automatically approved for pickup coordination",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = DonationRequestResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "ReclamoExitoso",
+                                    name = "ClaimSuccessSample",
                                     value = """
                                     {
                                       "id": 1,
@@ -204,12 +204,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Solicitud inválida: prenda no es de donación o intento de auto-donación",
+                    description = "Invalid request: garment is not marked for donation or self-donation attempt",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorAutoDonacion",
+                                    name = "SelfDonationError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -225,12 +225,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado o token JWT inválido",
+                    description = "Unauthenticated: missing or invalid JWT token",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -246,12 +246,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado: rol FOUNDATION requerido",
+                    description = "Forbidden: FOUNDATION or ADMIN role required",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "RolInsuficiente",
+                                    name = "InsufficientRoleError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -267,12 +267,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Publicación no encontrada",
+                    description = "Publication not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PublicacionNoEncontrada",
+                                    name = "PublicationNotFoundError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -288,12 +288,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "Conflicto concurrente: prenda ya reclamada por otra fundación",
+                    description = "Concurrency conflict: garment already claimed by another foundation",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ConflictoConcurrencia",
+                                    name = "ConcurrencyConflictError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -309,12 +309,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "ClaimServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -341,19 +341,19 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Crear solicitud de donación con fundación y propuesta de entrega (SR-RF-45)",
-            description = "El donante postula una prenda al canal benéfico dirigiéndola hacia una fundación activa y registrando su propuesta de entrega (deliveryMode, deliveryPoint, startTime, endTime). Queda en estado PENDING y dispara evento de integración. Requiere rol USER, STORE o ADMIN.",
+            summary = "Create donation request with target foundation and delivery proposal",
+            description = "Submits a garment to an active partner foundation including the initial delivery proposal (deliveryMode, deliveryPoint, startTime, endTime). Created in PENDING state and emits an integration event. Requires USER, STORE, or ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",
-                    description = "Solicitud de donación creada exitosamente",
+                    description = "Donation request created successfully",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = DonationRequestResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "SolicitudCreada",
+                                    name = "DonationRequestCreatedSample",
                                     value = """
                                     {
                                       "id": 1,
@@ -378,12 +378,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Datos de entrada inválidos",
+                    description = "Invalid input payload",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "DatosInvalidos",
+                                    name = "InvalidInputError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -399,12 +399,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -420,12 +420,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado: no es el donante autenticado",
+                    description = "Forbidden: user is not the authenticated donor",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "AccesoDenegado",
+                                    name = "ForbiddenError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -441,12 +441,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Publicación no encontrada",
+                    description = "Publication not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PublicacionNoEncontrada",
+                                    name = "PublicationNotFoundError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -462,12 +462,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "La prenda ya tiene una solicitud activa o no está marcada para donar",
+                    description = "Garment already has an active request or is not in donation state",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PrendaYaEnDonacion",
+                                    name = "DuplicateDonationConflict",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -483,12 +483,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "CreateDonationServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -515,19 +515,19 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Consultar solicitud de donación por ID (SR-RF-46)",
-            description = "Devuelve el estado, fechas y detalles logísticos de una solicitud de donación.",
+            summary = "Get donation request by ID",
+            description = "Returns the status, timestamps, and pickup details of a specific donation request for authorized participants.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Detalle de la solicitud encontrado",
+                    description = "Donation request details found",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = DonationRequestResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "SolicitudEncontrada",
+                                    name = "RequestFoundSample",
                                     value = """
                                     {
                                       "id": 1,
@@ -551,12 +551,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Solicitud no encontrada",
+                    description = "Donation request not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "SolicitudNoEncontrada",
+                                    name = "RequestNotFoundError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -572,12 +572,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "GetRequestServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -595,7 +595,7 @@ public class DonationRequestController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> getDonationRequestById(
-            @Parameter(description = "ID de la solicitud de donación", example = "1")
+            @Parameter(description = "Donation request ID", example = "1")
             @PathVariable Long id) {
         DonationRequest request = createDonationRequestUseCase.getById(id);
         resourceOwnershipValidator.validateDonationRequestAccess(request);
@@ -603,19 +603,19 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Aceptar o rechazar solicitud de donación (SR-RF-47)",
-            description = "Permite a la fundación receptora aceptar (APPROVED) o rechazar (REJECTED con motivo) la solicitud. Requiere rol FOUNDATION o ADMIN.",
+            summary = "Approve or reject donation request",
+            description = "Allows the target foundation to approve (APPROVED) or reject (REJECTED with mandatory reason) a pending donation request. Requires FOUNDATION or ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Decisión registrada exitosamente",
+                    description = "Decision recorded successfully",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = DonationRequestResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "DecisionAprobada",
+                                    name = "DecisionApprovedSample",
                                     value = """
                                     {
                                       "id": 1,
@@ -639,12 +639,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Motivo de rechazo faltante al declinar",
+                    description = "Missing rejection reason when declining",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "MotivoRechazoFaltante",
+                                    name = "MissingRejectionReasonError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -660,12 +660,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -681,12 +681,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "No es la fundación destinataria",
+                    description = "Forbidden: user does not represent the target foundation",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsFundacionDestinataria",
+                                    name = "NotTargetFoundationError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -702,12 +702,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Solicitud no encontrada",
+                    description = "Donation request not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "SolicitudNoEncontrada",
+                                    name = "RequestNotFoundError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -723,12 +723,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "La solicitud no se encuentra en estado PENDING",
+                    description = "Conflict: request is not in PENDING state",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "EstadoInvalidoParaEvaluar",
+                                    name = "InvalidStateForDecisionError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -744,12 +744,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "DecisionServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -767,7 +767,7 @@ public class DonationRequestController {
     @PatchMapping("/{id}/decision")
     @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> decideDonationRequest(
-            @Parameter(description = "ID de la solicitud", example = "1")
+            @Parameter(description = "Donation request ID", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody DecideDonationRequestDTO requestDTO) {
         resourceOwnershipValidator.validateFoundationOwnership(requestDTO.foundationId());
@@ -781,19 +781,19 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Programar o reprogramar recogida y entrega logística (SR-RF-45, SR-P5-N05)",
-            description = "Fija el punto de entrega en Bogotá D.C. y la franja horaria para recibir las prendas aprobadas (estado IN_PICKUP). Publica evento en RabbitMQ.",
+            summary = "Schedule or reschedule donation pickup logistics",
+            description = "Sets the delivery point in Bogota D.C. and pickup time slot for an approved or claimed donation request (transitions to IN_PICKUP). Publishes a RabbitMQ integration event.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Cita de recogida programada exitosamente",
+                    description = "Pickup appointment scheduled successfully",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = DonationRequestResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "RecogidaProgramada",
+                                    name = "PickupScheduledSample",
                                     value = """
                                     {
                                       "id": 1,
@@ -817,12 +817,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Franja horaria o punto de entrega inválidos",
+                    description = "Invalid time slot or delivery point",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "FranjaHorariaInvalida",
+                                    name = "InvalidTimeSlotError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -838,12 +838,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -859,12 +859,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "No autorizado",
+                    description = "Forbidden: user is not authorized for this donation request",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutorizadoParaCita",
+                                    name = "UnauthorizedForPickupError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -880,12 +880,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Solicitud no encontrada",
+                    description = "Donation request not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "SolicitudNoEncontrada",
+                                    name = "RequestNotFoundError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -901,12 +901,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "La solicitud no está en estado APPROVED o IN_PICKUP",
+                    description = "Conflict: request is not in APPROVED or IN_PICKUP status",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "EstadoInvalidoParaRecogida",
+                                    name = "InvalidStateForPickupError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -922,12 +922,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "PickupServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -945,7 +945,7 @@ public class DonationRequestController {
     @PatchMapping("/{id}/pickup")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> schedulePickup(
-            @Parameter(description = "ID de la solicitud", example = "1")
+            @Parameter(description = "Donation request ID", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody SchedulePickupRequestDTO requestDTO) {
         resourceOwnershipValidator.validateOwnerOrAdmin(requestDTO.userId());
@@ -955,19 +955,19 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Confirmar entrega física de la donación (SR-RF-49)",
-            description = "La fundación confirma la recepción de la prenda (estado DELIVERED), actualizando la publicación a DONATED y cerrando el ciclo benéfico con evento RabbitMQ.",
+            summary = "Confirm physical delivery of donation",
+            description = "Allows the receiving foundation to confirm physical garment reception (DELIVERED), transitioning the publication to DONATED and publishing a completion RabbitMQ event.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Entrega física confirmada exitosamente",
+                    description = "Physical delivery confirmed successfully",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = DonationRequestResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "EntregaConfirmada",
+                                    name = "DeliveryConfirmedSample",
                                     value = """
                                     {
                                       "id": 1,
@@ -991,12 +991,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -1012,12 +1012,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "No es la fundación receptora",
+                    description = "Forbidden: user does not represent the receiving foundation",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsFundacionReceptora",
+                                    name = "NotReceivingFoundationError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -1033,12 +1033,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Solicitud no encontrada",
+                    description = "Donation request not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "SolicitudNoEncontrada",
+                                    name = "RequestNotFoundError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -1054,12 +1054,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "La solicitud no se encuentra en estado IN_PICKUP",
+                    description = "Conflict: request is not in IN_PICKUP state",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "EstadoInvalidoParaConfirmar",
+                                    name = "InvalidStateForConfirmationError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -1075,12 +1075,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "ConfirmationServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -1098,7 +1098,7 @@ public class DonationRequestController {
     @PatchMapping("/{id}/confirmation")
     @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> confirmReceipt(
-            @Parameter(description = "ID de la solicitud", example = "1")
+            @Parameter(description = "Donation request ID", example = "1")
             @PathVariable Long id,
             @Valid @RequestBody ConfirmReceiptRequestDTO requestDTO) {
         resourceOwnershipValidator.validateFoundationOwnership(requestDTO.foundationId());
@@ -1107,19 +1107,19 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Consultar historial de donaciones del donante (SR-RF-46)",
-            description = "Lista todas las solicitudes originadas por un usuario o tienda donante.",
+            summary = "Get donor's donation history",
+            description = "Lists all donation requests created by a specific donor user or partner store.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Historial del donante",
+                    description = "Donor's donation history",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class)),
                             examples = @ExampleObject(
-                                    name = "HistorialDonante",
+                                    name = "DonorHistorySample",
                                     value = """
                                     [
                                       {
@@ -1145,12 +1145,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -1166,12 +1166,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "No es el donante autenticado",
+                    description = "Forbidden: user is not the authenticated donor",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsDonante",
+                                    name = "NotDonorOwnerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -1187,12 +1187,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "DonorHistoryServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -1210,7 +1210,7 @@ public class DonationRequestController {
     @GetMapping("/donors/{donorId}")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<List<DonationRequestResponseDTO>> getByDonorId(
-            @Parameter(description = "ID del donante", example = "101")
+            @Parameter(description = "Donor ID", example = "101")
             @PathVariable Long donorId) {
         resourceOwnershipValidator.validateOwnerOrAdmin(donorId);
         List<DonationRequest> list = createDonationRequestUseCase.getByDonorId(donorId);
@@ -1218,19 +1218,19 @@ public class DonationRequestController {
     }
 
     @Operation(
-            summary = "Consultar bandeja de solicitudes de la fundación (SR-RF-46)",
-            description = "Lista solicitudes dirigidas a una fundación aliada con filtro opcional de estado.",
+            summary = "Get foundation's donation request inbox",
+            description = "Lists donation requests directed to an allied foundation with an optional status filter.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Bandeja de la fundación",
+                    description = "Foundation donation request inbox",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class)),
                             examples = @ExampleObject(
-                                    name = "BandejaFundacion",
+                                    name = "FoundationInboxSample",
                                     value = """
                                     [
                                       {
@@ -1256,12 +1256,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -1277,12 +1277,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "No es la fundación autenticada",
+                    description = "Forbidden: user does not represent the queried foundation",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsFundacionAutenticada",
+                                    name = "NotAuthenticatedFoundationError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -1298,12 +1298,12 @@ public class DonationRequestController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "FoundationInboxServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -1321,9 +1321,9 @@ public class DonationRequestController {
     @GetMapping("/foundations/{foundationId}/requests")
     @PreAuthorize("hasAnyRole('FOUNDATION', 'ADMIN')")
     public ResponseEntity<List<DonationRequestResponseDTO>> getByFoundationId(
-            @Parameter(description = "ID de la fundación", example = "501")
+            @Parameter(description = "Foundation ID", example = "501")
             @PathVariable Long foundationId,
-            @Parameter(description = "Filtro de estado opcional", example = "PENDING")
+            @Parameter(description = "Optional status filter", example = "PENDING")
             @RequestParam(required = false) DonationRequestStatus status) {
         resourceOwnershipValidator.validateFoundationOwnership(foundationId);
         List<DonationRequest> list = createDonationRequestUseCase.getByFoundationId(foundationId, status);

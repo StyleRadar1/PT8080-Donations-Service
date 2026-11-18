@@ -28,7 +28,7 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .servers(List.of(
-                        new Server().url("/").description("Servidor StyleRadar (Local / QA / PROD)")
+                        new Server().url("/").description("StyleRadar Server (Local / QA / PROD)")
                 ))
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()
@@ -37,49 +37,49 @@ public class OpenApiConfig {
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
                                 .description("""
-                                        Autenticación Bearer JWT.
-                                        Para autenticarse en Swagger:
-                                        1. Obtenga un token llamando a `GET /api/v1/auth/quick-token?role=ADMIN|USER|FOUNDATION` o `POST /api/v1/auth/login`.
-                                        2. Copie el token del campo `token`.
-                                        3. Haga clic en el botón verde **Authorize** arriba a la derecha.
-                                        4. Pegue el token en el campo `Value` y presione **Authorize**.
+                                        Bearer JWT Authentication.
+                                        To authenticate in Swagger:
+                                        1. Obtain a token by calling `GET /api/v1/auth/quick-token?role=ADMIN|USER|FOUNDATION` or `POST /api/v1/auth/login`.
+                                        2. Copy the value of the `token` field.
+                                        3. Click the green **Authorize** button at the top right.
+                                        4. Paste the token into the `Value` field and click **Authorize**.
                                         """))
                 )
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .tags(List.of(
-                        new Tag().name("Autenticación & Usuarios Demo").description("Inicio de sesión y generación instantánea de tokens JWT para los roles del sistema"),
-                        new Tag().name("Publicaciones - Economía Circular").description("Catálogo unificado C2C (Segunda Mano) y Vitrina Abierta (Donaciones Benéficas) en las 20 localidades de Bogotá D.C. (SR-RF-33 a SR-RF-42)"),
-                        new Tag().name("Carga de Fotografías (Azure Blob Storage)").description("Subida binaria de fotos hacia Azure Blob Storage y obtención de URLs públicas CDN para asociar a prendas"),
-                        new Tag().name("Donaciones - Vitrina Benéfica y Logística").description("Reclamos de vitrina por fundaciones, aprobación y citas logísticas de recogida (SR-RF-44 a SR-RF-49)"),
-                        new Tag().name("Health Check").description("Monitoreo de disponibilidad y estado operativo del microservicio")
+                        new Tag().name("Demo Authentication & Users").description("Login endpoints and instant JWT token generation for testing system roles"),
+                        new Tag().name("Second-Hand & Circular Economy Publications").description("Unified C2C Second-Hand catalog and Open Donation Showcase across the 20 districts of Bogota D.C."),
+                        new Tag().name("Garment Photo Upload (Azure Blob Storage)").description("Binary image upload to Azure Blob Storage returning public CDN URLs for garment listings"),
+                        new Tag().name("Charitable Donations & Logistics").description("Open showcase claims by partner foundations, request evaluation, pickup scheduling, and delivery confirmation"),
+                        new Tag().name("Health Check").description("Service availability and operational health monitoring")
                 ))
                 .info(new Info()
                         .title("STYLE RADAR · ms-segunda-vida-donaciones API")
                         .version("v0.0.1-SNAPSHOT")
                         .description("""
-                                ### Microservicio de Donaciones y Economía Circular de StyleRadar (Paquete 5 · Puerto 8520)
-                                Unifica en la misma base de datos relacional PostgreSQL dos flujos complementarios de economía circular para prendas únicas en **Bogotá D.C.**:
+                                ### StyleRadar Donations & Circular Economy Microservice (Port 8520)
+                                Unifies two complementary circular textile economy workflows for unique garments in **Bogota D.C.** using a dedicated PostgreSQL database:
                                 
-                                1. **Segunda Mano C2C (`esDonacion = false`)**:
-                                   - Prendas con precio asignado por el usuario (> 0 COP).
-                                   - Botón *Chatear con el vendedor* para acordar entrega o precio mediante integración con `ms-chat`.
-                                   - Al concretar la venta, el vendedor la marca como `VENDIDA`, emitiendo el evento RabbitMQ `styleradar.segundavida.prenda.vendida`.
+                                1. **C2C Second-Hand Resale (`esDonacion = false`)**:
+                                   - Garments priced strictly above 0 COP by the owner.
+                                   - Direct buyer-seller coordination through `ms-chat`.
+                                   - Marking a garment as `SOLD` emits a RabbitMQ integration event (`segunda-mano.prenda.vendida`).
                                 
-                                2. **Donaciones Benéficas (`esDonacion = true`)**:
-                                   - Prendas con precio forzoso 0 COP para canal benéfico.
-                                   - Publicadas en la **Vitrina Abierta** donde fundaciones aliadas pueden reclamarlas directamente.
-                                   - Control de concurrencia optimista (`@Version`): si dos fundaciones reclaman al tiempo, solo una gana (409 Conflict).
-                                   - Regla anti-auto-donación: una fundación no puede reclamar su propia prenda.
-                                   - Tras el reclamo, se coordina la logística de recogida y entrega física con eventos `styleradar.donaciones.estado.cambiado`.
+                                2. **Charitable Donations (`esDonacion = true`)**:
+                                   - Garments fixed at 0 COP for partner charities.
+                                   - Exposed in the **Open Donation Showcase** where verified partner foundations can claim items directly.
+                                   - Optimistic locking (`@Version`): concurrent foundation claims resolve atomically (409 Conflict for losers).
+                                   - Anti-self-donation rule: a foundation cannot claim its own listing.
+                                   - Status transitions publish integration events (`styleradar.donaciones.solicitud.creada` and `styleradar.donaciones.estado.cambiado`).
                                 
-                                3. **Restricción Territorial Bogotá D.C.**:
-                                   - StyleRadar opera exclusivamente en las 20 localidades oficiales de Bogotá D.C.
+                                3. **Territorial Restriction (Bogota D.C.)**:
+                                   - StyleRadar operates exclusively across the 20 official districts (localidades) of Bogota D.C.
                                 
-                                #### Roles de Usuario (RBAC):
-                                - **ADMIN (ROLE_ADMIN)**: Acceso total para supervisión y moderación.
-                                - **USER (ROLE_USER)**: Venta C2C de ropa usada y donación benéfica.
-                                - **STORE (ROLE_STORE)**: Tiendas que destinan excedentes a donación benéfica.
-                                - **FOUNDATION (ROLE_FOUNDATION)**: Fundaciones receptoras que reclaman prendas de la vitrina, deciden y confirman entregas.
+                                #### User Roles (RBAC):
+                                - **ADMIN (ROLE_ADMIN)**: Full administrative oversight and moderation access.
+                                - **USER (ROLE_USER)**: C2C garment resale and charitable donation requests.
+                                - **STORE (ROLE_STORE)**: Partner stores donating surplus inventory.
+                                - **FOUNDATION (ROLE_FOUNDATION)**: Verified charities claiming garments, evaluating requests, and confirming physical delivery.
                                 """)
                         .contact(new Contact()
                                 .name("Squad StyleRadar - DOSW 2026")

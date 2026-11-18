@@ -59,8 +59,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/second-hand/publications")
 @RequiredArgsConstructor
 @Tag(
-        name = "Publicaciones - Economía Circular",
-        description = "Endpoints para la gestión de prendas de Segunda Mano C2C y Donaciones Benéficas en Bogotá D.C. (SR-RF-33, SR-RF-36, SR-P5-N04, SR-RF-37, SR-RF-38, SR-RF-39, SR-RF-42)"
+        name = "Second-Hand & Circular Economy Publications",
+        description = "Endpoints for managing C2C second-hand garments and charitable donations in Bogota D.C."
 )
 public class SecondHandPublicationController {
 
@@ -71,27 +71,27 @@ public class SecondHandPublicationController {
     private final ResourceOwnershipValidator resourceOwnershipValidator;
 
     @Operation(
-            summary = "Crear publicación de segunda mano o donación (SR-RF-33)",
-            description = "Publica una prenda en la plataforma StyleRadar para reventa C2C (esDonacion=false, precio > 0) o para Donación Benéfica (esDonacion=true, precio forzoso 0 COP). Unifica atributos, estado de conservación y precio en Bogotá D.C. con hasta 4 fotografías. Requiere rol USER, STORE o ADMIN.",
+            summary = "Create second-hand or donation publication",
+            description = "Publishes a garment on StyleRadar for C2C resale (esDonacion=false, price > 0) or charitable donation (esDonacion=true, price forced to 0 COP). Unifies garment details, conservation status, and price in Bogota D.C. with up to 4 photos. Requires USER, STORE, or ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",
-                    description = "Publicación creada exitosamente en la vitrina",
+                    description = "Publication successfully created in the showcase",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = PublicationResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "PrendaSegundaManoCreada",
-                                    summary = "Ejemplo de publicación de segunda mano C2C creada",
+                                    name = "SecondHandCreated",
+                                    summary = "Sample created C2C second-hand publication",
                                     value = """
                                     {
                                       "id": 1,
                                       "userId": 101,
                                       "garmentName": "Chaqueta Denim Vintage",
                                       "description": "Chaqueta de mezclilla estilo retro de los 90s con botones metálicos originales",
-                                      "garmentType": "UPPER",
+                                      "garmentType": "Chaquetas",
                                       "brand": "Levi's",
                                       "color": "Azul",
                                       "style": "URBAN",
@@ -115,13 +115,13 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Solicitud inválida: precio inválido o localidad fuera de Bogotá D.C.",
+                    description = "Bad request: invalid price, missing fields, or invalid Bogota district",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorValidacionBogota",
-                                    summary = "Error de localidad no perteneciente a Bogotá",
+                                    name = "ValidationError",
+                                    summary = "District outside Bogota D.C. error",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -137,12 +137,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado: token JWT ausente o expirado",
+                    description = "Unauthenticated: missing or expired JWT token",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "Error401",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -158,12 +158,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado: permisos insuficientes",
+                    description = "Forbidden: insufficient permissions or ownership mismatch",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "Error403",
+                                    name = "ForbiddenError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -179,12 +179,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "Error500",
+                                    name = "InternalServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -211,19 +211,19 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Explorar y buscar prendas del catálogo general (SR-RF-36)",
-            description = "Consulta pública del catálogo unificado (por defecto AVAILABLE). Permite combinar múltiples filtros: texto libre (search o searchTerm), categoría de prenda, color, talla, estado de conservación, rango de precio, marca, estilo, estado de publicación, filtro de donación (esDonacion) y localidad oficial de Bogotá D.C."
+            summary = "Explore and search garments in the general catalog",
+            description = "Public query of the unified catalog (defaults to AVAILABLE status). Supports combining multiple filters: free text (search or searchTerm), garment category, color, size, conservation status, price range, brand, style, lifecycle status, donation flag (esDonacion), and Bogota D.C. district."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Listado de prendas encontradas según los filtros aplicados",
+                    description = "List of matching garments retrieved successfully",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = PublicationResponseDTO.class)),
                             examples = @ExampleObject(
-                                    name = "ListadoPrendasVitrina",
-                                    summary = "Ejemplo de catálogo de prendas encontradas en Chapinero",
+                                    name = "CatalogListSample",
+                                    summary = "Sample catalog listings in Chapinero and Usaquen",
                                     value = """
                                     [
                                       {
@@ -231,7 +231,7 @@ public class SecondHandPublicationController {
                                         "userId": 101,
                                         "garmentName": "Chaqueta Denim Vintage",
                                         "description": "Chaqueta de mezclilla estilo retro",
-                                        "garmentType": "UPPER",
+                                        "garmentType": "Chaquetas",
                                         "brand": "Levi's",
                                         "color": "Azul",
                                         "style": "URBAN",
@@ -251,12 +251,12 @@ public class SecondHandPublicationController {
                                         "userId": 102,
                                         "garmentName": "Abrigo Térmico de Invierno",
                                         "description": "Abrigo acolchado para donación a comunidad vulnerable",
-                                        "garmentType": "UPPER",
+                                        "garmentType": "Chaquetas",
                                         "brand": "Columbia",
                                         "color": "Negro",
                                         "style": "CASUAL",
                                         "size": "L",
-                                        "conservationStatus": "GOOD",
+                                        "conservationStatus": "GOOD_CONDITION",
                                         "price": 0.00,
                                         "esDonacion": true,
                                         "localidad": "USAQUEN",
@@ -273,12 +273,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Filtros con formato o tipos no válidos",
+                    description = "Invalid filter parameters or types",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorFiltros",
+                                    name = "FilterValidationError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -294,12 +294,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "Error500Busqueda",
+                                    name = "SearchServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -316,33 +316,33 @@ public class SecondHandPublicationController {
     })
     @GetMapping
     public ResponseEntity<List<PublicationResponseDTO>> searchPublications(
-            @Parameter(description = "Término textual para buscar en nombre, marca y descripción", example = "chaqueta")
+            @Parameter(description = "Free-text search term matching garment name, brand, or description", example = "chaqueta")
             @RequestParam(required = false) String searchTerm,
-            @Parameter(description = "Alias de búsqueda por texto libre", example = "chaqueta")
+            @Parameter(description = "Alias for free-text search parameter", example = "chaqueta")
             @RequestParam(required = false) String search,
-            @Parameter(description = "Categoría de prenda textil", example = "Chaquetas")
+            @Parameter(description = "Garment category filter", example = "Chaquetas")
             @RequestParam(required = false) GarmentType type,
-            @Parameter(description = "Alias opcional para categoría de prenda textil", example = "Chaquetas")
+            @Parameter(description = "Optional alias for garment category filter", example = "Chaquetas")
             @RequestParam(required = false) GarmentType garmentType,
-            @Parameter(description = "Color predominante", example = "Azul")
+            @Parameter(description = "Predominant color filter", example = "Azul")
             @RequestParam(required = false) String color,
-            @Parameter(description = "Talla estandarizada", example = "M")
+            @Parameter(description = "Standardized size filter", example = "M")
             @RequestParam(required = false) Size size,
-            @Parameter(description = "Estado de conservación", example = "LIKE_NEW")
+            @Parameter(description = "Conservation status filter", example = "LIKE_NEW")
             @RequestParam(required = false) ConservationStatus conservationStatus,
-            @Parameter(description = "Precio mínimo en COP", example = "20000.00")
+            @Parameter(description = "Minimum price in COP", example = "20000.00")
             @RequestParam(required = false) BigDecimal minPrice,
-            @Parameter(description = "Precio máximo en COP", example = "100000.00")
+            @Parameter(description = "Maximum price in COP", example = "100000.00")
             @RequestParam(required = false) BigDecimal maxPrice,
-            @Parameter(description = "Marca fabricante", example = "Levi's")
+            @Parameter(description = "Brand name filter", example = "Levi's")
             @RequestParam(required = false) String brand,
-            @Parameter(description = "Estilo clasificado", example = "URBAN")
+            @Parameter(description = "Fashion style filter", example = "URBAN")
             @RequestParam(required = false) Style style,
-            @Parameter(description = "Estado en el ciclo de vida", example = "AVAILABLE")
+            @Parameter(description = "Publication lifecycle status filter (defaults to AVAILABLE)", example = "AVAILABLE")
             @RequestParam(required = false) PublicationStatus status,
-            @Parameter(description = "Filtro de economía circular: TRUE para donaciones benéficas; FALSE para reventa segunda mano", example = "false")
+            @Parameter(description = "Circular economy filter: true for charitable donations, false for C2C second-hand resale", example = "false")
             @RequestParam(required = false) Boolean esDonacion,
-            @Parameter(description = "Localidad de Bogotá D.C.", example = "CHAPINERO")
+            @Parameter(description = "Bogota D.C. district (localidad) filter", example = "CHAPINERO")
             @RequestParam(required = false) LocalidadBogota localidad) {
 
         String effectiveSearch = (searchTerm != null && !searchTerm.isBlank()) ? searchTerm : search;
@@ -366,25 +366,25 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Obtener detalle de publicación por ID (SR-RF-36)",
-            description = "Consulta individual de una prenda con todos sus metadatos (prenda, talla, estado, fotos, vendedor, precio y localidad en Bogotá)."
+            summary = "Get publication details by ID",
+            description = "Retrieves individual garment metadata including details, size, status, photos, owner user ID, price, and Bogota D.C. district."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Publicación encontrada",
+                    description = "Publication found",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = PublicationResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "DetallePrenda",
+                                    name = "PublicationDetailsSample",
                                     value = """
                                     {
                                       "id": 10,
                                       "userId": 101,
                                       "garmentName": "Chaqueta Denim Vintage",
                                       "description": "Chaqueta denim estilo retro de los 90s con botones originales",
-                                      "garmentType": "UPPER",
+                                      "garmentType": "Chaquetas",
                                       "brand": "Levi's",
                                       "color": "Azul",
                                       "style": "URBAN",
@@ -405,12 +405,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Publicación no encontrada",
+                    description = "Publication not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PublicacionNoEncontrada",
+                                    name = "PublicationNotFound",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -426,12 +426,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "Error500Detalle",
+                                    name = "DetailServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -448,26 +448,26 @@ public class SecondHandPublicationController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<PublicationResponseDTO> getPublicationById(
-            @Parameter(description = "Identificador único de la publicación", example = "10")
+            @Parameter(description = "Unique publication identifier", example = "10")
             @PathVariable Long id) {
         SecondHandPublication publication = getPublicationsUseCase.getById(id);
         return ResponseEntity.ok(publicationRestMapper.toResponse(publication));
     }
 
     @Operation(
-            summary = "Consultar y gestionar publicaciones propias por usuario (SR-P5-N04)",
-            description = "Consulta el historial de prendas publicadas por un usuario o entidad en el módulo de economía circular. Requiere autenticación y propiedad del usuario o rol ADMIN.",
+            summary = "List user's own publications",
+            description = "Retrieves all second-hand and donation listings created by a specific user across all states. Requires authentication as the owner user or ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Listado de publicaciones del usuario",
+                    description = "List of user's publications",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = PublicationResponseDTO.class)),
                             examples = @ExampleObject(
-                                    name = "PublicacionesUsuario",
+                                    name = "UserPublicationsSample",
                                     value = """
                                     [
                                       {
@@ -475,7 +475,7 @@ public class SecondHandPublicationController {
                                         "userId": 101,
                                         "garmentName": "Chaqueta Denim Vintage",
                                         "description": "Chaqueta denim estilo retro de los 90s",
-                                        "garmentType": "UPPER",
+                                        "garmentType": "Chaquetas",
                                         "brand": "Levi's",
                                         "color": "Azul",
                                         "style": "URBAN",
@@ -497,12 +497,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated: missing or invalid JWT token",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -518,12 +518,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado: no es propietario ni ADMIN",
+                    description = "Forbidden: user is not the owner nor an administrator",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsPropietario",
+                                    name = "NotOwnerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -539,12 +539,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "Error500Usuario",
+                                    name = "UserPublicationsServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -562,7 +562,7 @@ public class SecondHandPublicationController {
     @GetMapping("/users/{userId}")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<List<PublicationResponseDTO>> getPublicationsByUserId(
-            @Parameter(description = "ID del usuario propietario", example = "101")
+            @Parameter(description = "Owner user ID", example = "101")
             @PathVariable Long userId) {
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
         List<SecondHandPublication> list = getPublicationsUseCase.getByUserId(userId);
@@ -570,26 +570,26 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Editar publicación de segunda mano (SR-RF-37)",
-            description = "Permite al propietario actualizar datos de la prenda, fotografías, precio o localidad siempre que la publicación se encuentre en estado editable (no vendida, ni retirada, ni en donación ni donada). Requiere rol USER, STORE o ADMIN.",
+            summary = "Edit second-hand publication",
+            description = "Allows the owner to update garment metadata, photos, price, or district when the publication is in an editable state (blocks SOLD, RETIRED, IN_DONATION, DONATED). Requires USER, STORE, or ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Publicación actualizada exitosamente",
+                    description = "Publication updated successfully",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = PublicationResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "PublicacionActualizada",
+                                    name = "PublicationUpdatedSample",
                                     value = """
                                     {
                                       "id": 10,
                                       "userId": 101,
                                       "garmentName": "Chaqueta Denim Vintage Premium",
                                       "description": "Chaqueta de mezclilla estilo retro de los 90s con botones originales",
-                                      "garmentType": "UPPER",
+                                      "garmentType": "Chaquetas",
                                       "brand": "Levi's",
                                       "color": "Azul Claro",
                                       "style": "URBAN",
@@ -610,12 +610,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Datos de entrada inválidos",
+                    description = "Invalid input payload",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "DatosEdicionInvalidos",
+                                    name = "InvalidEditInput",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -631,12 +631,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -652,12 +652,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "No es propietario de la publicación",
+                    description = "Forbidden: user is not the publication owner",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsPropietarioEdicion",
+                                    name = "NotOwnerEdit",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -673,12 +673,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Publicación no encontrada",
+                    description = "Publication not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PublicacionNoEncontradaEdicion",
+                                    name = "PublicationNotFoundEdit",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -694,12 +694,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "Estado bloqueante: publicación ya vendida, retirada o donada",
+                    description = "Blocking state conflict: publication already sold, retired, in donation, or donated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ConflictoEdicion",
+                                    name = "EditConflict",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -715,12 +715,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "Error500Edicion",
+                                    name = "EditServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -738,7 +738,7 @@ public class SecondHandPublicationController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> editPublication(
-            @Parameter(description = "ID de la publicación a editar", example = "10")
+            @Parameter(description = "ID of the publication to edit", example = "10")
             @PathVariable Long id,
             @Valid @RequestBody EditPublicationRequestDTO requestDTO) {
         resourceOwnershipValidator.validateOwnerOrAdmin(requestDTO.userId());
@@ -748,26 +748,26 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Marcar prenda de segunda mano como VENDIDA (SR-RF-38)",
-            description = "Transiciona el estado de la publicación a SOLD al concretarse la venta pactada por chat. Publica el evento de integración RabbitMQ hacia ms-chat (exchange styleradar.events, routing key segunda-mano.prenda.vendida) con compradorId para preservar la conversación con el comprador y cerrar las demás. Requiere ser el vendedor propietario.",
+            summary = "Mark second-hand garment as SOLD",
+            description = "Transitions the publication status to SOLD after finalizing the C2C sale agreed via chat. Publishes the RabbitMQ integration event toward ms-chat and ms-notificaciones with the mandatory compradorId. Requires owner authorization.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Prenda marcada como vendida y evento RabbitMQ publicado",
+                    description = "Garment marked as sold and RabbitMQ event published",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = PublicationResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "PrendaVendidaEjemplo",
+                                    name = "GarmentSoldSample",
                                     value = """
                                     {
                                       "id": 10,
                                       "userId": 101,
                                       "garmentName": "Chaqueta Denim Vintage",
                                       "description": "Chaqueta denim estilo retro de los 90s",
-                                      "garmentType": "UPPER",
+                                      "garmentType": "Chaquetas",
                                       "brand": "Levi's",
                                       "color": "Azul",
                                       "style": "URBAN",
@@ -788,12 +788,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Parámetro obligatorio faltante (compradorId)",
+                    description = "Missing mandatory parameter (compradorId)",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "FaltaCompradorId",
+                                    name = "MissingBuyerId",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -809,12 +809,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado o token JWT inválido",
+                    description = "Unauthenticated: missing or invalid JWT token",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -830,12 +830,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado: no es el vendedor propietario",
+                    description = "Forbidden: user is not the owner seller",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsVendedorPropietario",
+                                    name = "NotSellerOwner",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -851,12 +851,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Publicación no encontrada",
+                    description = "Publication not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PublicacionNoEncontradaVenta",
+                                    name = "PublicationNotFoundSale",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -872,12 +872,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "Conflicto: la publicación ya fue vendida, retirada o está en canal de donación",
+                    description = "Conflict: publication already sold, retired, or in donation workflow",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ConflictoVenta",
+                                    name = "SaleConflict",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -893,12 +893,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidorVenta",
+                                    name = "SaleServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -916,11 +916,11 @@ public class SecondHandPublicationController {
     @PatchMapping("/{id}/sale")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> markAsSold(
-            @Parameter(description = "ID de la publicación vendida", example = "10")
+            @Parameter(description = "ID of the sold publication", example = "10")
             @PathVariable Long id,
-            @Parameter(description = "ID del usuario vendedor autenticado", example = "101")
+            @Parameter(description = "ID of the authenticated seller user", example = "101")
             @RequestParam Long userId,
-            @Parameter(description = "ID del comprador en el chat C2C (obligatorio para preservar la conversación en ms-chat)", example = "102", required = true)
+            @Parameter(description = "ID of the buyer in the C2C chat (mandatory to coordinate chat closure)", example = "102", required = true)
             @RequestParam Long compradorId) {
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
         SecondHandPublication sold = managePublicationUseCase.markAsSold(userId, id, compradorId);
@@ -928,20 +928,20 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Retirar publicación de la vitrina (SR-RF-39)",
-            description = "El usuario retira su prenda del catálogo público (estado RETIRED), bloqueando si ya fue vendida, donada o está en proceso de donación. Requiere rol USER, STORE o ADMIN.",
+            summary = "Retire publication from catalog",
+            description = "Logically retires the owner's garment from the public catalog (RETIRED status), blocking listings already sold, in donation, or donated. Requires USER, STORE, or ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Publicación retirada exitosamente"),
+            @ApiResponse(responseCode = "204", description = "Publication retired successfully"),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -957,12 +957,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "No es propietario de la prenda",
+                    description = "Forbidden: user does not own the publication",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsPropietarioRetiro",
+                                    name = "NotOwnerRetire",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -978,12 +978,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Publicación no encontrada",
+                    description = "Publication not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PublicacionNoEncontradaRetiro",
+                                    name = "PublicationNotFoundRetire",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -999,12 +999,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "No se puede retirar una prenda ya donada",
+                    description = "Conflict: cannot retire an already sold, in-donation, or donated garment",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PrendaYaDonadaRetiro",
+                                    name = "RetireStateConflict",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -1020,12 +1020,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidorRetiro",
+                                    name = "RetireServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -1043,9 +1043,9 @@ public class SecondHandPublicationController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<Void> retirePublication(
-            @Parameter(description = "ID de la publicación a retirar", example = "10")
+            @Parameter(description = "ID of the publication to retire", example = "10")
             @PathVariable Long id,
-            @Parameter(description = "ID del usuario propietario", example = "101")
+            @Parameter(description = "ID of the owner user", example = "101")
             @RequestParam Long userId) {
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
         managePublicationUseCase.retire(userId, id);
@@ -1053,26 +1053,26 @@ public class SecondHandPublicationController {
     }
 
     @Operation(
-            summary = "Convertir publicación existente en donación (SR-RF-42)",
-            description = "Transiciona una prenda disponible de segunda mano al estado IN_DONATION con precio cero para iniciar su postulación benéfica hacia una fundación aliada. Requiere ser propietario.",
+            summary = "Convert existing publication to donation",
+            description = "Transitions an available second-hand listing to IN_DONATION status with price set to 0 COP so it can be donated to a partner foundation. Requires owner authorization.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Prenda destinada exitosamente al canal benéfico de donaciones",
+                    description = "Garment successfully moved to the charitable donation channel",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = PublicationResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "PrendaDestinadaDonacion",
+                                    name = "GarmentMovedToDonation",
                                     value = """
                                     {
                                       "id": 10,
                                       "userId": 101,
                                       "garmentName": "Chaqueta Denim Vintage",
                                       "description": "Chaqueta denim estilo retro para donación",
-                                      "garmentType": "UPPER",
+                                      "garmentType": "Chaquetas",
                                       "brand": "Levi's",
                                       "color": "Azul",
                                       "style": "URBAN",
@@ -1093,12 +1093,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
+                    description = "Unauthenticated",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "UnauthorizedError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -1114,12 +1114,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "No es propietario de la prenda",
+                    description = "Forbidden: user does not own the garment",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoEsPropietarioDonacion",
+                                    name = "NotOwnerDonation",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -1135,12 +1135,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Publicación no encontrada",
+                    description = "Publication not found",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "PublicacionNoEncontradaDonacion",
+                                    name = "PublicationNotFoundDonation",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/not-found",
@@ -1156,12 +1156,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "La publicación no está disponible para donar",
+                    description = "Publication is not available for donation conversion",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoDisponibleParaDonar",
+                                    name = "NotAvailableForDonation",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/conflict",
@@ -1177,12 +1177,12 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidorDonacion",
+                                    name = "DonationConversionServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -1200,9 +1200,9 @@ public class SecondHandPublicationController {
     @PatchMapping("/{id}/donation")
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<PublicationResponseDTO> markForDonation(
-            @Parameter(description = "ID de la publicación a donar", example = "10")
+            @Parameter(description = "ID of the publication to convert", example = "10")
             @PathVariable Long id,
-            @Parameter(description = "ID del usuario donante propietario", example = "101")
+            @Parameter(description = "ID of the owner donor user", example = "101")
             @RequestParam Long userId) {
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
         SecondHandPublication updated = managePublicationUseCase.markForDonation(userId, id);

@@ -3,24 +3,24 @@ package edu.dosw.styleradar.donaciones.application.dto.auth;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
-@Schema(description = "Perfil de usuario de prueba preconfigurado para pruebas en Swagger")
+@Schema(description = "Preconfigured demo user profile for Swagger testing")
 public record DemoUserDTO(
-        @Schema(description = "ID del usuario", example = "101")
+        @Schema(description = "User ID", example = "101")
         Long id,
 
-        @Schema(description = "Correo demo", example = "user@styleradar.com")
+        @Schema(description = "Demo email", example = "user@styleradar.com")
         String email,
 
-        @Schema(description = "Contraseña predeterminada", example = "User123*")
+        @Schema(description = "Default demo password", example = "User123*")
         String password,
 
-        @Schema(description = "Rol asignado", example = "USER")
+        @Schema(description = "Assigned role", example = "USER")
         String role,
 
-        @Schema(description = "Nombre o descripción de la cuenta", example = "Usuario Normal (Donante / Vendedor)")
+        @Schema(description = "Account display name", example = "Usuario Normal (Donante / Vendedor)")
         String name,
 
-        @Schema(description = "Acciones permitidas en la API", example = "Publicar ropa, editar, vender, retirar, solicitar donaciones, agendar recogida")
+        @Schema(description = "Allowed actions in the API", example = "Publish garments, edit, sell, retire, request donations, schedule pickup")
         List<String> allowedActions
 ) {
 }
