@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.Garment;
@@ -129,5 +130,25 @@ class GetPublicationsUseCaseTest {
 
         assertTrue(result.isEmpty());
         verify(publicationRepositoryPort).findByCriteria(expected);
+    }
+
+    @Test
+    @DisplayName("Debe rechazar búsqueda cuando minPrice es negativo, maxPrice es negativo o minPrice supera a maxPrice")
+    void shouldRejectInvalidPriceRangeInSearch() {
+        PublicationSearchCriteria negativeMin = PublicationSearchCriteria.builder()
+                .minPrice(BigDecimal.valueOf(-1))
+                .build();
+        PublicationSearchCriteria negativeMax = PublicationSearchCriteria.builder()
+                .maxPrice(BigDecimal.valueOf(-100))
+                .build();
+        PublicationSearchCriteria minGreaterThanMax = PublicationSearchCriteria.builder()
+                .minPrice(BigDecimal.valueOf(80000))
+                .maxPrice(BigDecimal.valueOf(50000))
+                .build();
+
+        assertThrows(InvalidPublicationException.class, () -> getPublicationsUseCase.search(negativeMin));
+        assertThrows(InvalidPublicationException.class, () -> getPublicationsUseCase.search(negativeMax));
+        assertThrows(InvalidPublicationException.class, () -> getPublicationsUseCase.search(minGreaterThanMax));
+        verify(publicationRepositoryPort, never()).findByCriteria(any());
     }
 }

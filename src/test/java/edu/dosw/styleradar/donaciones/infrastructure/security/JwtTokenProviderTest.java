@@ -288,6 +288,17 @@ class JwtTokenProviderTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(jwtTokenProvider.validateToken(missingClaimsToken)).isTrue();
 
+        MockEnvironment envWithJwtSecret = new MockEnvironment().withProperty("JWT_SECRET", "styleradar-utf8-shared-secret-key-2026-prod");
+        envWithJwtSecret.setActiveProfiles("prod");
+        JwtTokenProvider fromUtf8JwtSecret = new JwtTokenProvider("", Duration.ofHours(2), envWithJwtSecret);
+        String prodToken = fromUtf8JwtSecret.generateToken(88L, "prod@styleradar.com", Role.FOUNDATION, "Prod Foundation");
+        assertThat(fromUtf8JwtSecret.validateToken(prodToken)).isTrue();
+
+        MockEnvironment envWithJwtSecretKey = new MockEnvironment().withProperty("JWT_SECRET_KEY", testSecret);
+        envWithJwtSecretKey.setActiveProfiles("qa");
+        JwtTokenProvider fromJwtSecretKey = new JwtTokenProvider(null, Duration.ofHours(1), envWithJwtSecretKey);
+        assertThat(fromJwtSecretKey.getExpiresInSeconds()).isEqualTo(3600);
+
         String badStringRoleToken = Jwts.builder()
                 .subject("55")
                 .claim("roles", " ,NO_VALIDO")

@@ -14,6 +14,7 @@ import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationExcepti
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
+import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestCommand;
@@ -64,6 +65,9 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
         }
 
         foundationCatalogPort.validateActiveFoundation(command.foundationId());
+        Long representanteId = foundationCatalogPort.findFoundationById(command.foundationId())
+                .map(FoundationSummary::representanteId)
+                .orElse(null);
 
         DonationRequest request = DonationRequest.builder()
                 .publicationId(command.publicationId())
@@ -86,7 +90,8 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
                 saved.getPublicationId(),
                 saved.getDonorId(),
                 saved.getFoundationId(),
-                saved.getStatus() != null ? saved.getStatus().name() : "PENDING"
+                saved.getStatus() != null ? saved.getStatus().name() : "PENDING",
+                representanteId
         );
 
         TransactionEventHelper.publishAfterCommitOrImmediate(eventPublisherPort, event);

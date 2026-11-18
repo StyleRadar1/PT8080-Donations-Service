@@ -22,9 +22,10 @@ import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event
 
 /**
  * Adaptador de salida RabbitMQ para la publicación asíncrona hacia 'styleradar.exchange' (puerto 5671 TLS / 5672).
- * Ambos flujos pertenecen a 'ms-segunda-vida-donaciones':
- * 1) 'styleradar.donaciones.estado.cambiado' hacia ms-notificaciones.
- * 2) 'styleradar.segundavida.prenda.vendida' hacia ms-chat (cola 'q.chat.segunda-mano') para cierre de salas.
+ * Flujos de 'ms-segunda-vida-donaciones':
+ * 1) 'styleradar.donaciones.solicitud.creada' y 'styleradar.donaciones.estado.cambiado' hacia ms-notificaciones.
+ * 2) 'segunda-mano.prenda.vendida' hacia ms-chat para cierre de salas.
+ * 3) 'styleradar.segundavida.prenda.vendida' hacia ms-notificaciones para alertas de venta C2C.
  */
 @Component("donacionEventPublisherAdapter")
 public class DonationEventPublisherAdapter implements DonationEventPublisherPort {
@@ -33,28 +34,44 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private static final String STATUS_IN_PICKUP = "EN_RECOGIDA";
     private static final String STATUS_DELIVERED = "ENTREGADA";
+    private static final String DEFAULT_CHAT_SOLD_KEY = "segunda-mano.prenda.vendida";
+    private static final String DEFAULT_NOTIFICATIONS_SOLD_KEY = "styleradar.segundavida.prenda.vendida";
 
     private final RabbitTemplate rabbitTemplate;
     private final String exchangeName;
     private final String chatExchangeName;
     private final String donationStatusUpdatedRoutingKey;
     private final String secondHandSoldRoutingKey;
+    private final String notificationsSecondHandSoldRoutingKey;
     private final String donationRequestCreatedRoutingKey;
 
     @Autowired
     public DonationEventPublisherAdapter(
             RabbitTemplate rabbitTemplate,
             @Value("${app.rabbitmq.exchange.main:${app.rabbitmq.exchange.donations:styleradar.exchange}}") String exchangeName,
-            @Value("${app.rabbitmq.exchange.chat:styleradar.events}") String chatExchangeName,
+            @Value("${app.rabbitmq.exchange.chat:styleradar.exchange}") String chatExchangeName,
             @Value("${app.rabbitmq.routing-keys.donation-status-updated:styleradar.donaciones.estado.cambiado}") String donationStatusUpdatedRoutingKey,
             @Value("${app.rabbitmq.routing-keys.second-hand-sold:segunda-mano.prenda.vendida}") String secondHandSoldRoutingKey,
-            @Value("${app.rabbitmq.routing-keys.donation-request-created:styleradar.donaciones.estado.cambiado}") String donationRequestCreatedRoutingKey) {
+            @Value("${app.rabbitmq.routing-keys.notifications-second-hand-sold:styleradar.segundavida.prenda.vendida}") String notificationsSecondHandSoldRoutingKey,
+            @Value("${app.rabbitmq.routing-keys.donation-request-created:styleradar.donaciones.solicitud.creada}") String donationRequestCreatedRoutingKey) {
         this.rabbitTemplate = rabbitTemplate;
         this.exchangeName = exchangeName;
         this.chatExchangeName = chatExchangeName;
         this.donationStatusUpdatedRoutingKey = donationStatusUpdatedRoutingKey;
         this.secondHandSoldRoutingKey = secondHandSoldRoutingKey;
+        this.notificationsSecondHandSoldRoutingKey = notificationsSecondHandSoldRoutingKey;
         this.donationRequestCreatedRoutingKey = donationRequestCreatedRoutingKey;
+    }
+
+    public DonationEventPublisherAdapter(
+            RabbitTemplate rabbitTemplate,
+            String exchangeName,
+            String chatExchangeName,
+            String donationStatusUpdatedRoutingKey,
+            String secondHandSoldRoutingKey,
+            String donationRequestCreatedRoutingKey) {
+        this(rabbitTemplate, exchangeName, chatExchangeName, donationStatusUpdatedRoutingKey, secondHandSoldRoutingKey,
+                DEFAULT_NOTIFICATIONS_SOLD_KEY, donationRequestCreatedRoutingKey);
     }
 
     public DonationEventPublisherAdapter(
@@ -63,7 +80,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             String donationStatusUpdatedRoutingKey,
             String secondHandSoldRoutingKey,
             String donationRequestCreatedRoutingKey) {
-        this(rabbitTemplate, exchangeName, "styleradar.events", donationStatusUpdatedRoutingKey, secondHandSoldRoutingKey, donationRequestCreatedRoutingKey);
+        this(rabbitTemplate, exchangeName, "styleradar.exchange", donationStatusUpdatedRoutingKey, secondHandSoldRoutingKey,
+                DEFAULT_NOTIFICATIONS_SOLD_KEY, donationRequestCreatedRoutingKey);
     }
 
     public DonationEventPublisherAdapter(
@@ -71,7 +89,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             String exchangeName,
             String donationRequestCreatedRoutingKey,
             String donationStatusUpdatedRoutingKey) {
-        this(rabbitTemplate, exchangeName, "styleradar.events", donationStatusUpdatedRoutingKey, "segunda-mano.prenda.vendida", donationRequestCreatedRoutingKey);
+        this(rabbitTemplate, exchangeName, "styleradar.exchange", donationStatusUpdatedRoutingKey, DEFAULT_CHAT_SOLD_KEY,
+                DEFAULT_NOTIFICATIONS_SOLD_KEY, donationRequestCreatedRoutingKey);
     }
 
     @Override
@@ -114,6 +133,15 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 event.getEventType(), chatExchangeName, secondHandSoldRoutingKey);
 
         rabbitTemplate.convertAndSend(chatExchangeName, secondHandSoldRoutingKey, event, correlationData);
+
+        if (exchangeName != null && notificationsSecondHandSoldRoutingKey != null
+                && !notificationsSecondHandSoldRoutingKey.isBlank()
+                && (!exchangeName.equals(chatExchangeName)
+                || !notificationsSecondHandSoldRoutingKey.equals(secondHandSoldRoutingKey))) {
+            log.info(">>> [RabbitMQ PUBLISH] Publicando evento venta C2C hacia Exchange '{}' con Routing Key '{}' para ms-notificaciones",
+                    exchangeName, notificationsSecondHandSoldRoutingKey);
+            rabbitTemplate.convertAndSend(exchangeName, notificationsSecondHandSoldRoutingKey, event, correlationData);
+        }
     }
 
     private void publishDonationDecided(DonationRequestDecidedEvent domainEvent) {
@@ -255,5 +283,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     public String getSecondHandSoldRoutingKey() {
         return secondHandSoldRoutingKey;
+    }
+
+    public String getNotificationsSecondHandSoldRoutingKey() {
+        return notificationsSecondHandSoldRoutingKey;
     }
 }

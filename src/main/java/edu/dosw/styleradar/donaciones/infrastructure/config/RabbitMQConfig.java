@@ -33,15 +33,16 @@ public class RabbitMQConfig {
     private static final Logger log = LoggerFactory.getLogger(RabbitMQConfig.class);
 
     public static final String STYLERADAR_EXCHANGE_DEFAULT = "styleradar.exchange";
-    public static final String STYLERADAR_CHAT_EXCHANGE_DEFAULT = "styleradar.events";
+    public static final String STYLERADAR_CHAT_EXCHANGE_DEFAULT = STYLERADAR_EXCHANGE_DEFAULT;
     public static final String STYLERADAR_DLX_DEFAULT = "styleradar.dlx";
     public static final String DONACIONES_DLQ_DEFAULT = "styleradar.donaciones.dlq";
     public static final String DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT = "styleradar.donaciones.estado.cambiado";
     public static final String SEGUNDA_VIDA_PRENDA_VENDIDA_ROUTING_KEY_DEFAULT = "segunda-mano.prenda.vendida";
+    public static final String NOTIFICATIONS_PRENDA_VENDIDA_ROUTING_KEY_DEFAULT = "styleradar.segundavida.prenda.vendida";
 
     // Retrocompatibilidad con nombres previos de Sprint 2
     public static final String DONATIONS_EXCHANGE_DEFAULT = STYLERADAR_EXCHANGE_DEFAULT;
-    public static final String DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT = DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT;
+    public static final String DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT = "styleradar.donaciones.solicitud.creada";
     public static final String DONATION_STATUS_UPDATED_ROUTING_KEY_DEFAULT = DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT;
     public static final String NOTIFICATIONS_QUEUE_DEFAULT = "q.notificaciones.donacion-solicitud-creada";
     public static final String SIMULATOR_QUEUE_DEFAULT = "q.donaciones.simulador-notificaciones";
@@ -98,7 +99,7 @@ public class RabbitMQConfig {
     public Binding notificationsDonationCreatedBinding(
             Queue notificationsDonationCreatedQueue,
             TopicExchange donationsTopicExchange,
-            @Value("${app.rabbitmq.routing-keys.donation-status-updated:" + DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT + "}") String routingKey) {
+            @Value("${app.rabbitmq.routing-keys.donation-request-created:" + DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT + "}") String routingKey) {
         return BindingBuilder.bind(notificationsDonationCreatedQueue)
                 .to(donationsTopicExchange)
                 .with(routingKey);
@@ -120,7 +121,7 @@ public class RabbitMQConfig {
     public Binding simulatorNotificationsBinding(
             Queue simulatorNotificationsQueue,
             TopicExchange donationsTopicExchange,
-            @Value("${app.rabbitmq.routing-keys.donation-status-updated:" + DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT + "}") String routingKey) {
+            @Value("${app.rabbitmq.routing-keys.donation-request-created:" + DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT + "}") String routingKey) {
         return BindingBuilder.bind(simulatorNotificationsQueue)
                 .to(donationsTopicExchange)
                 .with(routingKey);
@@ -131,10 +132,12 @@ public class RabbitMQConfig {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
         DefaultClassMapper classMapper = new DefaultClassMapper();
         classMapper.setTrustedPackages(
-                "edu.dosw.styleradar.*",
-                "java.util.*",
-                "java.lang.*",
-                "java.time.*"
+                "edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event",
+                "edu.dosw.styleradar.donaciones.domain.event",
+                "edu.dosw.styleradar",
+                "java.util",
+                "java.lang",
+                "java.time"
         );
         converter.setClassMapper(classMapper);
         converter.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.INFERRED);

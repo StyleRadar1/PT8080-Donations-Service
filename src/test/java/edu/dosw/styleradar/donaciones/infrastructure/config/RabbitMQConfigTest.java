@@ -72,12 +72,12 @@ class RabbitMQConfigTest {
         Binding binding = rabbitMQConfig.notificationsDonationCreatedBinding(
                 queue,
                 exchange,
-                "styleradar.donaciones.estado.cambiado");
+                RabbitMQConfig.DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT);
 
         assertThat(binding).isNotNull();
         assertThat(binding.getDestination()).isEqualTo("q.notificaciones.donacion-solicitud-creada");
         assertThat(binding.getExchange()).isEqualTo("styleradar.exchange");
-        assertThat(binding.getRoutingKey()).isEqualTo("styleradar.donaciones.estado.cambiado");
+        assertThat(binding.getRoutingKey()).isEqualTo("styleradar.donaciones.solicitud.creada");
         assertThat(binding.getDestinationType()).isEqualTo(Binding.DestinationType.QUEUE);
     }
 
@@ -89,20 +89,23 @@ class RabbitMQConfigTest {
         assertThat(queue.getName()).isEqualTo("q.donaciones.simulador-notificaciones");
 
         TopicExchange exchange = rabbitMQConfig.donationsTopicExchange("styleradar.exchange");
-        Binding binding = rabbitMQConfig.simulatorNotificationsBinding(queue, exchange, "styleradar.donaciones.estado.cambiado");
+        Binding binding = rabbitMQConfig.simulatorNotificationsBinding(
+                queue,
+                exchange,
+                RabbitMQConfig.DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT);
 
         assertThat(binding).isNotNull();
         assertThat(binding.getDestination()).isEqualTo("q.donaciones.simulador-notificaciones");
-        assertThat(binding.getRoutingKey()).isEqualTo("styleradar.donaciones.estado.cambiado");
+        assertThat(binding.getRoutingKey()).isEqualTo("styleradar.donaciones.solicitud.creada");
     }
 
     @Test
-    @DisplayName("Debe crear TopicExchange durable styleradar.events para ms-chat")
+    @DisplayName("Debe crear TopicExchange durable styleradar.exchange para ms-chat")
     void shouldCreateChatEventsTopicExchange() {
         TopicExchange exchange = rabbitMQConfig.chatEventsExchange(RabbitMQConfig.STYLERADAR_CHAT_EXCHANGE_DEFAULT);
 
         assertThat(exchange).isNotNull();
-        assertThat(exchange.getName()).isEqualTo("styleradar.events");
+        assertThat(exchange.getName()).isEqualTo("styleradar.exchange");
         assertThat(exchange.isDurable()).isTrue();
     }
 

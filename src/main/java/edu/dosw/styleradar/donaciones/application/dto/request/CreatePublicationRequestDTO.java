@@ -18,60 +18,60 @@ import jakarta.validation.constraints.NotNull;
 /**
  * DTO para la solicitud de creación de una nueva publicación en StyleRadar (Segunda Mano C2C o Donación Benéfica).
  */
-@Schema(description = "Datos para crear una nueva publicación de economía circular en Bogotá D.C.")
+@Schema(description = "Request payload to create a new circular economy publication in Bogota D.C. (C2C resale or charitable donation)")
 public record CreatePublicationRequestDTO(
 
-        @Schema(description = "ID del usuario o entidad propietaria que publica la prenda", example = "101")
+        @Schema(description = "ID of the owner user or store creating the publication", example = "101")
         @NotNull(message = "El ID del usuario es obligatorio")
         Long userId,
 
-        @Schema(description = "Nombre o título descriptivo de la prenda", example = "Chaqueta Denim Vintage")
+        @Schema(description = "Garment title or descriptive name", example = "Chaqueta Denim Vintage")
         @NotBlank(message = "El nombre de la prenda es obligatorio")
         @jakarta.validation.constraints.Size(max = 120, message = "El nombre no puede exceder 120 caracteres")
         String garmentName,
 
-        @Schema(description = "Descripción detallada del estado o características", example = "Chaqueta denim estilo retro de los 90s en excelente estado")
+        @Schema(description = "Detailed description of garment condition and features", example = "Chaqueta denim estilo retro de los 90s en excelente estado")
         @NotBlank(message = "La descripción de la prenda es obligatoria")
         @jakarta.validation.constraints.Size(max = 1000, message = "La descripción no puede exceder 1000 caracteres")
         String description,
 
-        @Schema(description = "Categoría o tipo de prenda textil", example = "UPPER")
+        @Schema(description = "Garment category", example = "Chaquetas")
         @NotNull(message = "El tipo de prenda es obligatorio")
         GarmentType garmentType,
 
-        @Schema(description = "Marca fabricante de la prenda", example = "Levi's")
+        @Schema(description = "Garment brand", example = "Levi's")
         @NotBlank(message = "La marca es obligatoria")
         @jakarta.validation.constraints.Size(max = 80, message = "La marca no puede exceder 80 caracteres")
         String brand,
 
-        @Schema(description = "Color predominante", example = "Azul")
+        @Schema(description = "Predominant color", example = "Azul")
         @NotBlank(message = "El color es obligatorio")
         @jakarta.validation.constraints.Size(max = 50, message = "El color no puede exceder 50 caracteres")
         String color,
 
-        @Schema(description = "Estilo de moda clasificado", example = "URBAN")
+        @Schema(description = "Fashion style classification", example = "URBAN")
         @NotNull(message = "El estilo es obligatorio")
         Style style,
 
-        @Schema(description = "Talla estandarizada", example = "M")
+        @Schema(description = "Standardized size", example = "M")
         @NotNull(message = "La talla es obligatoria")
         Size size,
 
-        @Schema(description = "Grado o estado de conservación actual", example = "LIKE_NEW")
+        @Schema(description = "Current garment conservation status", example = "LIKE_NEW")
         @NotNull(message = "El estado de conservación es obligatorio")
         ConservationStatus conservationStatus,
 
-        @Schema(description = "Precio de venta en COP. Forzoso 0 COP si esDonacion=true; mayor a 0 COP si esDonacion=false", example = "75000.00")
+        @Schema(description = "Sale price in COP. Forced to 0 COP if esDonacion=true; strictly > 0 COP if esDonacion=false", example = "75000.00")
         @DecimalMin(value = "0.0", message = "El precio debe ser mayor o igual a 0")
         BigDecimal price,
 
-        @Schema(description = "Discriminador de economía circular: TRUE para donación benéfica (precio 0 COP, vitrina abierta a fundaciones); FALSE para reventa segunda mano C2C", example = "false", defaultValue = "false")
+        @Schema(description = "Circular economy discriminator: true for charitable donation (0 COP); false for C2C second-hand resale", example = "false", defaultValue = "false")
         Boolean esDonacion,
 
-        @Schema(description = "Localidad de Bogotá D.C. donde se encuentra la prenda (exclusivo para Bogotá)", example = "CHAPINERO")
+        @Schema(description = "Bogota D.C. district (localidad) where the garment is located", example = "CHAPINERO")
         LocalidadBogota localidad,
 
-        @Schema(description = "URLs de fotografías de la prenda (máximo 4)", example = "[\"https://cdn.styleradar.com/garments/chaqueta1.jpg\"]")
+        @Schema(description = "Garment photo URLs (maximum 4)", example = "[\"https://cdn.styleradar.com/garments/chaqueta1.jpg\"]")
         @jakarta.validation.constraints.Size(max = 4, message = "No se permiten más de 4 fotografías")
         List<String> photos
 ) {

@@ -30,6 +30,7 @@ import edu.dosw.styleradar.donaciones.domain.port.in.CreatePublicationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.GetPublicationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ManagePublicationUseCase;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.mapper.PublicationRestMapper;
+import edu.dosw.styleradar.donaciones.infrastructure.config.WebMvcEnumConfig;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtAuthenticationFilter;
 import edu.dosw.styleradar.donaciones.infrastructure.security.JwtTokenProvider;
 import edu.dosw.styleradar.donaciones.infrastructure.security.ResourceOwnershipValidator;
@@ -43,6 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -59,6 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({
         PublicationRestMapper.class,
         GlobalExceptionHandler.class,
+        WebMvcEnumConfig.class,
         SecurityConfig.class,
         JwtAuthenticationFilter.class,
         JwtTokenProvider.class,
@@ -236,6 +239,21 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
+    @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe rechazar con 400 si el cliente intenta inyectar interesadosIds no verificados")
+    void shouldRejectClientSuppliedInteresadosIds() throws Exception {
+        mockMvc.perform(patch("/api/v1/second-hand/publications/1/sale")
+                        .param("userId", "101")
+                        .param("compradorId", "102")
+                        .param("interesadosIds", "201", "202"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.title").value("Solicitud inválida"));
+
+        verify(managePublicationUseCase, never()).markAsSold(any(), any(), any());
+        verify(managePublicationUseCase, never()).markAsSold(any(), any(), any(), any());
+    }
+
+    @Test
     @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe responder 400 Bad Request cuando falta compradorId")
     void shouldFailWhenCompradorIdIsMissing() throws Exception {
         mockMvc.perform(patch("/api/v1/second-hand/publications/1/sale")
@@ -291,5 +309,82 @@ class SecondHandPublicationControllerTest {
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.title").value("Acceso denegado"))
                 .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/second-hand/publications - Debe aceptar alias ?search= y nuevos enums en español y talla numérica")
+    void shouldSearchPublicationsWithSearchAliasAndNewEnums() throws Exception {
+        SecondHandPublication publication = buildSamplePublication(2L, 101L);
+        publication.getGarment().setType(GarmentType.CHAQUETAS);
+        publication.setSize(Size.TALLA_38);
+        when(getPublicationsUseCase.search(any())).thenReturn(List.of(publication));
+
+        mockMvc.perform(get("/api/v1/second-hand/publications")
+                        .param("search", "chaqueta")
+                        .param("garmentType", "Chaquetas")
+                        .param("size", "38")
+                        .param("color", "Azul"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].garmentType").value("Chaquetas"))
+                .andExpect(jsonPath("$[0].size").value("38"));
+
+        verify(getPublicationsUseCase).search(argThat(criteria ->
+                "chaqueta".equals(criteria.getSearchTerm())
+                        && criteria.getType() == GarmentType.CHAQUETAS
+                        && criteria.getSize() == Size.TALLA_38
+                        && "Azul".equals(criteria.getColor())));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/second-hand/publications/{id} - Debe responder 400 Bad Request si description está en blanco")
+    void shouldFailEditWhenDescriptionBlank() throws Exception {
+        EditPublicationRequestDTO request = new EditPublicationRequestDTO(
+                101L, "Chaqueta Modificada", "   ", GarmentType.CHAQUETAS, "Levi's", "Azul Oscuro",
+                Style.URBAN, Size.M, ConservationStatus.GOOD_CONDITION, new BigDecimal("80000.00"),
+                List.of("https://cdn.test.com/foto2.jpg")
+        );
+
+        mockMvc.perform(put("/api/v1/second-hand/publications/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.invalidParams.description").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/second-hand/publications - Debe aceptar nuevas categorías y tallas JSON (Suéteres, Unica)")
+    void shouldCreatePublicationWithNewEnumsViaJson() throws Exception {
+        String payload = """
+                {
+                  "userId": 101,
+                  "garmentName": "Suéter Tejido Artesanal",
+                  "description": "Suéter tejido en lana suave",
+                  "garmentType": "Suéteres",
+                  "brand": "Arturo Calle",
+                  "color": "Beige",
+                  "style": "CASUAL",
+                  "size": "Unica",
+                  "conservationStatus": "LIKE_NEW",
+                  "price": 0,
+                  "esDonacion": true,
+                  "localidad": "CHAPINERO",
+                  "photos": ["https://cdn.test.com/sueter.jpg"]
+                }
+                """;
+
+        SecondHandPublication created = buildSamplePublication(5L, 101L);
+        created.getGarment().setName("Suéter Tejido Artesanal");
+        created.getGarment().setType(GarmentType.SUETERES);
+        created.setSize(Size.UNICA);
+        created.setEsDonacion(true);
+        created.setPrice(BigDecimal.ZERO);
+        when(createPublicationUseCase.create(any())).thenReturn(created);
+
+        mockMvc.perform(post("/api/v1/second-hand/publications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.garmentType").value("Suéteres"))
+                .andExpect(jsonPath("$.size").value("Unica"));
     }
 }

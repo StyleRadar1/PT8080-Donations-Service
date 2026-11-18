@@ -40,26 +40,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Profile({"local", "test", "dev"})
 @Tag(
-        name = "Autenticación & Usuarios Demo",
-        description = "Endpoints para inicio de sesión, obtención inmediata de tokens JWT (Admin, Usuario Normal, Fundación) para usar en el botón 'Authorize' de Swagger"
+        name = "Demo Authentication & Users",
+        description = "Endpoints for login and instant JWT token generation (Admin, User, Foundation) for Swagger testing"
 )
 public class AuthController {
 
     private final DemoUserService demoUserService;
 
     @Operation(
-            summary = "Iniciar sesión con credenciales",
-            description = "Autentica un usuario por email y contraseña, retornando un token Bearer JWT con su rol y permisos correspondientes."
+            summary = "Log in with credentials",
+            description = "Authenticates a demo user by email and password, returning a Bearer JWT token with role and permissions."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Inicio de sesión exitoso con token JWT",
+                    description = "Successful login with JWT token",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = LoginResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "LoginExitoso",
+                                    name = "SuccessfulLogin",
                                     value = """
                                     {
                                       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -76,12 +76,12 @@ public class AuthController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Credenciales incorrectas o datos de entrada inválidos",
+                    description = "Invalid credentials or malformed request payload",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "CredencialesIncorrectas",
+                                    name = "InvalidCredentials",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -97,12 +97,12 @@ public class AuthController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidorAuth",
+                                    name = "AuthServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -124,18 +124,18 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Obtener token JWT rápido por rol",
-            description = "Genera instantáneamente un token Bearer JWT firmado para cualquiera de los 3 roles predefinidos (ADMIN, USER, FOUNDATION) sin requerir contraseña manual, para pruebas inmediatas en Swagger."
+            summary = "Generate quick JWT token by role",
+            description = "Immediately generates a signed Bearer JWT token for any predefined role (ADMIN, USER, FOUNDATION) without requiring manual password entry for Swagger testing."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Token JWT generado para el rol seleccionado",
+                    description = "JWT token generated for the selected role",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = LoginResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "QuickTokenExitoso",
+                                    name = "QuickTokenSuccess",
                                     value = """
                                     {
                                       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -152,12 +152,12 @@ public class AuthController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Rol no especificado o inválido",
+                    description = "Missing or invalid role parameter",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "RolInvalido",
+                                    name = "InvalidRole",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -173,12 +173,12 @@ public class AuthController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidorQuickToken",
+                                    name = "QuickTokenServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -195,25 +195,25 @@ public class AuthController {
     })
     @GetMapping("/quick-token")
     public ResponseEntity<LoginResponseDTO> quickToken(
-            @Parameter(description = "Rol para el cual generar el token (ADMIN, USER o FOUNDATION)", example = "USER")
+            @Parameter(description = "Role to generate token for (ADMIN, USER, or FOUNDATION)", example = "USER")
             @RequestParam Role role) {
         LoginResponseDTO response = demoUserService.quickToken(role);
         return ResponseEntity.ok(response);
     }
 
     @Operation(
-            summary = "Listar usuarios demo preconfigurados",
-            description = "Devuelve el catálogo de usuarios de prueba preconfigurados en el sistema con sus credenciales, roles y catálogo de acciones permitidas para cada uno."
+            summary = "List preconfigured demo users",
+            description = "Returns the catalog of preconfigured demo accounts including their credentials, roles, and allowed actions."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Lista de usuarios demo con sus roles y credenciales",
+                    description = "List of demo users with roles and credentials",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = DemoUserDTO.class)),
                             examples = @ExampleObject(
-                                    name = "ListaUsuariosDemo",
+                                    name = "DemoUsersList",
                                     value = """
                                     [
                                       {
@@ -244,12 +244,12 @@ public class AuthController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno del servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidorDemoUsers",
+                                    name = "DemoUsersServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",

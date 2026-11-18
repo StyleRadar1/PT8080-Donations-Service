@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.donaciones.application.usecase;
 
+import java.text.Normalizer;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -21,23 +22,44 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUseCase {
 
-    private static final Map<String, String> CATEGORY_ALIASES = Map.of(
-            "UPPER", "SUPERIOR",
-            "LOWER", "INFERIOR",
-            "DRESS", "SUPERIOR",
-            "FOOTWEAR", "CALZADO",
-            "ACCESSORY", "ACCESORIOS"
+    private static final Map<String, String> CATEGORY_ALIASES = Map.ofEntries(
+            Map.entry("UPPER", "SUPERIOR"),
+            Map.entry("CAMISAS", "SUPERIOR"),
+            Map.entry("CAMISA", "SUPERIOR"),
+            Map.entry("CAMISETAS", "SUPERIOR"),
+            Map.entry("CAMISETA", "SUPERIOR"),
+            Map.entry("SUETERES", "SUPERIOR"),
+            Map.entry("SUETER", "SUPERIOR"),
+            Map.entry("CHAQUETAS", "SUPERIOR"),
+            Map.entry("CHAQUETA", "SUPERIOR"),
+            Map.entry("VESTIDOS", "SUPERIOR"),
+            Map.entry("VESTIDO", "SUPERIOR"),
+            Map.entry("DRESS", "SUPERIOR"),
+            Map.entry("FULL_BODY", "SUPERIOR"),
+            Map.entry("LOWER", "INFERIOR"),
+            Map.entry("PANTALONES", "INFERIOR"),
+            Map.entry("PANTALON", "INFERIOR"),
+            Map.entry("FALDAS", "INFERIOR"),
+            Map.entry("FALDA", "INFERIOR"),
+            Map.entry("FOOTWEAR", "CALZADO"),
+            Map.entry("CALZADO", "CALZADO"),
+            Map.entry("ACCESSORY", "ACCESORIOS"),
+            Map.entry("ACCESORIOS", "ACCESORIOS"),
+            Map.entry("ACCESORIO", "ACCESORIOS")
     );
 
     private final FoundationCatalogPort foundationCatalogPort;
 
     @Override
     public List<FoundationSummary> getActiveFoundations(String category) {
-        String normalizedCategory = normalizeCategory(category);
+        String rawNormalized = normalizeText(category);
+        String groupCategory = rawNormalized != null
+                ? CATEGORY_ALIASES.getOrDefault(rawNormalized, rawNormalized)
+                : null;
 
         return foundationCatalogPort.findAllActiveFoundations().stream()
                 .filter(FoundationSummary::activa)
-                .filter(foundation -> matchesCategory(foundation, normalizedCategory))
+                .filter(foundation -> matchesCategory(foundation, rawNormalized, groupCategory))
                 .sorted(Comparator.comparing(
                         foundation -> foundation.nombre() == null ? "" : foundation.nombre().toLowerCase(Locale.ROOT)
                 ))
@@ -76,19 +98,21 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
                         "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId));
     }
 
-    private String normalizeCategory(String rawCategory) {
+    private String normalizeText(String rawCategory) {
         if (rawCategory == null || rawCategory.isBlank()) {
             return null;
         }
-        String upper = rawCategory.trim().toUpperCase(Locale.ROOT);
-        return CATEGORY_ALIASES.getOrDefault(upper, upper);
+        return Normalizer.normalize(rawCategory.trim(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toUpperCase(Locale.ROOT);
     }
 
-    private boolean matchesCategory(FoundationSummary foundation, String normalizedCategory) {
-        if (normalizedCategory == null) {
+    private boolean matchesCategory(FoundationSummary foundation, String rawNormalized, String groupCategory) {
+        if (rawNormalized == null) {
             return true;
         }
         return foundation.categoriasAceptadas().stream()
-                .anyMatch(cat -> cat != null && cat.trim().equalsIgnoreCase(normalizedCategory));
+                .map(this::normalizeText)
+                .anyMatch(cat -> cat != null && (cat.equals(rawNormalized) || cat.equals(groupCategory)));
     }
 }

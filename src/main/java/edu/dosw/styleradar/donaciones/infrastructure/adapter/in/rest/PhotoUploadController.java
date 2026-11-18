@@ -33,8 +33,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/v1/second-hand/photos")
 @Tag(
-        name = "Carga de Fotografías (Azure Blob Storage)",
-        description = "Endpoints para la subida de imágenes de prendas hacia Azure Blob Storage y obtención de URLs públicas CDN para el catálogo de Economía Circular"
+        name = "Garment Photo Upload (Azure Blob Storage)",
+        description = "Endpoints for uploading garment images to Azure Blob Storage and retrieving public CDN URLs for the Circular Economy catalog"
 )
 public class PhotoUploadController {
 
@@ -45,19 +45,19 @@ public class PhotoUploadController {
     }
 
     @Operation(
-            summary = "Subir fotografía de prenda a Azure Blob Storage",
-            description = "Carga un archivo binario de imagen (formatos JPEG, PNG, WEBP, tamaño máximo 5 MB) al contenedor 'donaciones-fotos' de Azure Blob Storage en el Resource Group 'rg-styleradar'. Retorna la URL pública permanente para asociarla a la prenda en el endpoint POST /api/v1/second-hand/publications.",
+            summary = "Upload garment photo to Azure Blob Storage",
+            description = "Uploads a binary image file (JPEG, PNG, WEBP, max 5 MB) to the 'donaciones-fotos' Azure Blob Storage container. Returns the permanent public URL to attach to a publication via POST /api/v1/second-hand/publications.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",
-                    description = "Fotografía cargada exitosamente en Azure Blob Storage",
+                    description = "Photo uploaded successfully to Azure Blob Storage",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = PhotoUploadResponseDTO.class),
                             examples = @ExampleObject(
-                                    name = "CargaExitosa",
+                                    name = "UploadSuccess",
                                     value = """
                                     {
                                       "photoUrl": "https://srdonacionesjmunar.blob.core.windows.net/donaciones-fotos/garment_9b83b9c0a1b2c3d4.jpg",
@@ -70,12 +70,12 @@ public class PhotoUploadController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Archivo inválido: vacío, excede 5 MB o formato no permitido",
+                    description = "Invalid file: empty, exceeds 5 MB, or unsupported format",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ArchivoInvalido",
+                                    name = "InvalidFile",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/bad-request",
@@ -91,12 +91,12 @@ public class PhotoUploadController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado o token JWT ausente/inválido",
+                    description = "Unauthenticated: missing or invalid JWT token",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "NoAutenticado",
+                                    name = "Unauthorized",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/unauthorized",
@@ -112,12 +112,12 @@ public class PhotoUploadController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado: rol insuficiente",
+                    description = "Forbidden: insufficient role permissions",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "AccesoDenegado",
+                                    name = "Forbidden",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/forbidden",
@@ -133,12 +133,12 @@ public class PhotoUploadController {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Error interno al procesar el flujo binario",
+                    description = "Internal server error while processing binary upload",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
-                                    name = "ErrorServidor",
+                                    name = "ServerError",
                                     value = """
                                     {
                                       "type": "https://styleradar.dosw.edu/errors/internal-server-error",
@@ -156,7 +156,7 @@ public class PhotoUploadController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
     public ResponseEntity<PhotoUploadResponseDTO> uploadPhoto(
-            @Parameter(description = "Archivo binario de imagen (JPEG, PNG, WEBP, máx 5MB)", required = true)
+            @Parameter(description = "Binary image file (JPEG, PNG, WEBP, max 5 MB)", required = true)
             @RequestParam("file") MultipartFile file) {
 
         if (file == null || file.isEmpty()) {

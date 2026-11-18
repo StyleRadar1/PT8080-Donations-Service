@@ -69,9 +69,15 @@ class GetPartnerFoundationsUseCaseTest {
         ));
 
         List<FoundationSummary> upperResult = useCase.getActiveFoundations("UPPER");
+        List<FoundationSummary> camisasResult = useCase.getActiveFoundations("Camisas");
+        List<FoundationSummary> sueteresResult = useCase.getActiveFoundations("Suéteres");
+        List<FoundationSummary> pantalonesResult = useCase.getActiveFoundations("Pantalones");
         List<FoundationSummary> calzadoResult = useCase.getActiveFoundations("CALZADO");
 
         assertThat(upperResult).extracting(FoundationSummary::id).containsExactly(1L);
+        assertThat(camisasResult).extracting(FoundationSummary::id).containsExactly(1L);
+        assertThat(sueteresResult).extracting(FoundationSummary::id).containsExactly(1L);
+        assertThat(pantalonesResult).extracting(FoundationSummary::id).containsExactly(1L);
         assertThat(calzadoResult).extracting(FoundationSummary::id).containsExactly(2L);
     }
 

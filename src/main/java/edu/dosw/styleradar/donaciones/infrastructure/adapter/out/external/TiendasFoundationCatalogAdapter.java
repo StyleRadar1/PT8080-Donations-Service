@@ -71,7 +71,7 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
 
     @Override
     public Optional<FoundationSummary> findFoundationById(Long foundationId) {
-        if (foundationId == null) {
+        if (foundationId == null || !tiendasProperties.isValidationEnabled()) {
             return Optional.empty();
         }
 

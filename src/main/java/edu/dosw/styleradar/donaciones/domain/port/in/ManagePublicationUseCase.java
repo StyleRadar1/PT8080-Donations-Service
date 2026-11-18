@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.donaciones.domain.port.in;
 
+import java.util.List;
+
 import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 
 /**
@@ -13,6 +15,10 @@ public interface ManagePublicationUseCase {
 
     default SecondHandPublication markAsSold(Long userId, Long publicationId, Long compradorId) {
         return markAsSold(userId, publicationId);
+    }
+
+    default SecondHandPublication markAsSold(Long userId, Long publicationId, Long compradorId, List<Long> interesadosIds) {
+        return markAsSold(userId, publicationId, compradorId);
     }
 
     void retire(Long userId, Long publicationId);

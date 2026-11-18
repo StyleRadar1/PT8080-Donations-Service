@@ -134,6 +134,21 @@ class ManagePublicationUseCaseTest {
     }
 
     @Test
+    @DisplayName("Debe marcar como vendida propagando compradorId e interesadosIds filtrados sin duplicados")
+    void shouldMarkAsSoldWithInteresadosIds() {
+        when(publicationRepositoryPort.findById(50L)).thenReturn(Optional.of(publication));
+        when(publicationRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        SecondHandPublication result = managePublicationUseCase.markAsSold(
+                10L, 50L, 20L, List.of(30L, 40L, 10L, 20L, 30L));
+
+        assertEquals(PublicationStatus.SOLD, result.getStatus());
+        verify(eventPublisherPort).publishEvent(argThat(ev -> ev instanceof PublicationSoldEvent sold
+                && sold.compradorId().equals(20L)
+                && sold.interesadosIds().equals(List.of(30L, 40L))));
+    }
+
+    @Test
     @DisplayName("Debe retirar publicación correctamente")
     void shouldRetirePublication() {
         when(publicationRepositoryPort.findById(50L)).thenReturn(Optional.of(publication));

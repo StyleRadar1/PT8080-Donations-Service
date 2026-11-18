@@ -12,6 +12,7 @@ import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
+import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationCommand;
@@ -72,6 +73,9 @@ public class ClaimDonationUseCaseImpl implements ClaimDonationUseCase {
         }
 
         foundationCatalogPort.validateActiveFoundation(command.foundationId());
+        Long representanteId = foundationCatalogPort.findFoundationById(command.foundationId())
+                .map(FoundationSummary::representanteId)
+                .orElse(null);
 
         try {
             publication.markForDonation();
@@ -94,7 +98,8 @@ public class ClaimDonationUseCaseImpl implements ClaimDonationUseCase {
                 savedRequest.getPublicationId(),
                 savedRequest.getDonorId(),
                 savedRequest.getFoundationId(),
-                savedRequest.getStatus() != null ? savedRequest.getStatus().name() : "APPROVED"
+                savedRequest.getStatus() != null ? savedRequest.getStatus().name() : "APPROVED",
+                representanteId
         );
 
         TransactionEventHelper.publishAfterCommitOrImmediate(eventPublisherPort, event);

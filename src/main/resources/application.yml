@@ -65,13 +65,14 @@ app:
   rabbitmq:
     exchange:
       main: ${RABBITMQ_EXCHANGE:styleradar.exchange}
-      chat: ${RABBITMQ_CHAT_EXCHANGE:styleradar.events}
+      chat: ${RABBITMQ_CHAT_EXCHANGE:styleradar.exchange}
       dlx: ${RABBITMQ_DLX:styleradar.dlx}
       donations: ${RABBITMQ_EXCHANGE:styleradar.exchange}
     routing-keys:
       donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
       second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:segunda-mano.prenda.vendida}
-      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
+      notifications-second-hand-sold: ${RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA:styleradar.segundavida.prenda.vendida}
+      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION_CREATED:styleradar.donaciones.solicitud.creada}
     queues:
       dlq: ${RABBITMQ_DLQ:styleradar.donaciones.dlq}
       notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
@@ -84,7 +85,7 @@ styleradar:
   security:
     publication-by-id-path: ${SECOND_HAND_PUBLICATION_BY_ID_PATH:/api/v1/second-hand/publications/{id}}
     jwt:
-      secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:}}
+      secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:${JWT_SECRET:${JWT_SECRET_KEY:}}}}
       duration: ${JWT_DURATION:PT24H}
   tiendas:
     base-url: ${TIENDAS_SERVICE_URL:http://localhost:8140}
