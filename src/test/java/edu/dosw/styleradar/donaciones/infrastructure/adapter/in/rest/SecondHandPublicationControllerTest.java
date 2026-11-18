@@ -44,6 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -238,18 +239,18 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe aceptar interesadosIds opcionales para notificar otros interesados")
-    void shouldMarkAsSoldWithOptionalInteresadosIds() throws Exception {
-        SecondHandPublication sold = buildSamplePublication(1L, 101L);
-        sold.setStatus(PublicationStatus.SOLD);
-        when(managePublicationUseCase.markAsSold(101L, 1L, 102L, List.of(201L, 202L))).thenReturn(sold);
-
+    @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe rechazar con 400 si el cliente intenta inyectar interesadosIds no verificados")
+    void shouldRejectClientSuppliedInteresadosIds() throws Exception {
         mockMvc.perform(patch("/api/v1/second-hand/publications/1/sale")
                         .param("userId", "101")
                         .param("compradorId", "102")
                         .param("interesadosIds", "201", "202"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("SOLD"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.title").value("Solicitud inválida"));
+
+        verify(managePublicationUseCase, never()).markAsSold(any(), any(), any());
+        verify(managePublicationUseCase, never()).markAsSold(any(), any(), any(), any());
     }
 
     @Test

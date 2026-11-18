@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import edu.dosw.styleradar.donaciones.application.dto.request.CreatePublicationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.EditPublicationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.response.PublicationResponseDTO;
+import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
 import edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota;
@@ -46,6 +47,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -788,7 +790,7 @@ public class SecondHandPublicationController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Missing mandatory parameter (compradorId)",
+                    description = "Missing mandatory parameter (compradorId) or unauthorized client recipient list",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
@@ -922,12 +924,13 @@ public class SecondHandPublicationController {
             @RequestParam Long userId,
             @Parameter(description = "ID of the buyer in the C2C chat (mandatory to coordinate chat closure)", example = "102", required = true)
             @RequestParam Long compradorId,
-            @Parameter(description = "Optional list of interested user IDs (excluding seller and buyer) to notify about the sale", example = "103,104")
-            @RequestParam(required = false) List<Long> interesadosIds) {
+            HttpServletRequest request) {
+        if (request != null && request.getParameterValues("interesadosIds") != null) {
+            throw new InvalidPublicationException(
+                    "No se permite enviar 'interesadosIds' desde el cliente sin validación en ms-chat");
+        }
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
-        SecondHandPublication sold = (interesadosIds == null || interesadosIds.isEmpty())
-                ? managePublicationUseCase.markAsSold(userId, id, compradorId)
-                : managePublicationUseCase.markAsSold(userId, id, compradorId, interesadosIds);
+        SecondHandPublication sold = managePublicationUseCase.markAsSold(userId, id, compradorId);
         return ResponseEntity.ok(publicationRestMapper.toResponse(sold));
     }
 
