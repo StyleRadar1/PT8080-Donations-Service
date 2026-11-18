@@ -48,7 +48,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             @Value("${app.rabbitmq.exchange.chat:styleradar.events}") String chatExchangeName,
             @Value("${app.rabbitmq.routing-keys.donation-status-updated:styleradar.donaciones.estado.cambiado}") String donationStatusUpdatedRoutingKey,
             @Value("${app.rabbitmq.routing-keys.second-hand-sold:segunda-mano.prenda.vendida}") String secondHandSoldRoutingKey,
-            @Value("${app.rabbitmq.routing-keys.donation-request-created:styleradar.donaciones.estado.cambiado}") String donationRequestCreatedRoutingKey) {
+            @Value("${app.rabbitmq.routing-keys.donation-request-created:styleradar.donaciones.solicitud.creada}") String donationRequestCreatedRoutingKey) {
         this.rabbitTemplate = rabbitTemplate;
         this.exchangeName = exchangeName;
         this.chatExchangeName = chatExchangeName;
@@ -114,6 +114,15 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 event.getEventType(), chatExchangeName, secondHandSoldRoutingKey);
 
         rabbitTemplate.convertAndSend(chatExchangeName, secondHandSoldRoutingKey, event, correlationData);
+
+        if (exchangeName != null && !exchangeName.equals(chatExchangeName)) {
+            String mainExchangeSoldKey = secondHandSoldRoutingKey.startsWith("styleradar.")
+                    ? secondHandSoldRoutingKey
+                    : "styleradar." + secondHandSoldRoutingKey;
+            log.info(">>> [RabbitMQ PUBLISH] Publicando evento venta C2C hacia Exchange '{}' con Routing Key '{}' para ms-notificaciones",
+                    exchangeName, mainExchangeSoldKey);
+            rabbitTemplate.convertAndSend(exchangeName, mainExchangeSoldKey, event, correlationData);
+        }
     }
 
     private void publishDonationDecided(DonationRequestDecidedEvent domainEvent) {

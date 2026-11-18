@@ -2,6 +2,7 @@ package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.even
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -74,6 +75,8 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
     private Long prendaId;
     private Long vendedorId;
     private Long compradorId;
+    @Builder.Default
+    private List<Long> interesadosIds = List.of();
     private Double precioFinal;
     private String moneda;
     private String estado;
@@ -102,6 +105,8 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
         private Long prendaId;
         private Long vendedorId;
         private Long compradorId;
+        @Builder.Default
+        private List<Long> interesadosIds = List.of();
         private Double precioFinal;
         private String moneda;
         private String estado;
@@ -119,6 +124,7 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
                 .prendaId(domainEvent.publicationId())
                 .vendedorId(domainEvent.userId())
                 .compradorId(domainEvent.compradorId())
+                .interesadosIds(List.of())
                 .estado("VENDIDA")
                 .moneda("COP")
                 .fechaVenta(now)
@@ -142,6 +148,7 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
                 .prendaId(domainEvent.publicationId())
                 .vendedorId(domainEvent.userId())
                 .compradorId(domainEvent.compradorId())
+                .interesadosIds(List.of())
                 .estado("VENDIDA")
                 .moneda("COP")
                 .fechaVenta(now)
