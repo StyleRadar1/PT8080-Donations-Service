@@ -117,6 +117,9 @@ public class SecondHandPublication {
         if (status == PublicationStatus.DONATED) {
             throw new InvalidStateTransitionException("No se puede editar una prenda que ya fue donada");
         }
+        if (status == PublicationStatus.IN_DONATION) {
+            throw new InvalidStateTransitionException("No se puede editar una publicación que se encuentra en proceso de donación");
+        }
 
         this.garment = newGarment;
         this.size = newSize;
@@ -176,6 +179,9 @@ public class SecondHandPublication {
         }
         if (status == PublicationStatus.DONATED) {
             throw new InvalidStateTransitionException("No se puede retirar una prenda que ya fue donada");
+        }
+        if (status == PublicationStatus.IN_DONATION) {
+            throw new InvalidStateTransitionException("No se puede retirar una publicación que se encuentra en proceso de donación");
         }
 
         this.status = PublicationStatus.RETIRED;
