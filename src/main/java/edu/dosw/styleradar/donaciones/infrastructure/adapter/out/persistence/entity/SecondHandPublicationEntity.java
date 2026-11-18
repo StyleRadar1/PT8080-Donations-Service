@@ -11,8 +11,11 @@ import edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence.converter.GarmentTypeConverter;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence.converter.SizeConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -56,7 +59,7 @@ public class SecondHandPublicationEntity {
     @Column(name = "descripcion", length = 1000)
     private String description;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = GarmentTypeConverter.class)
     @Column(name = "tipo_prenda", nullable = false, length = 30)
     private GarmentType garmentType;
 
@@ -70,7 +73,7 @@ public class SecondHandPublicationEntity {
     @Column(name = "estilo", nullable = false, length = 30)
     private Style style;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = SizeConverter.class)
     @Column(name = "talla", nullable = false, length = 20)
     private Size size;
 

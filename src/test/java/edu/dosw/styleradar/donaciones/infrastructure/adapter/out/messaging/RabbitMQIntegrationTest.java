@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging;
 
+import java.util.List;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,18 +17,25 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.core.ParameterizedTypeReference;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.RabbitMQContainer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
+import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
+import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationRequestCreatedIntegrationEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionEstadoCambiadoIntegrationEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionPrendaVendidaIntegrationEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.config.RabbitMQConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Prueba de integración con Testcontainers RabbitMQ para validar la publicación
- * hacia 'donaciones.exchange' y su recepción asíncrona mediante la cola de 'ms-notificaciones'.
+ * Prueba de integración con Testcontainers RabbitMQ para validar los contratos reales
+ * de publicación y consumo sobre 'styleradar.exchange' hacia 'ms-notificaciones' y 'ms-chat'.
  */
 class RabbitMQIntegrationTest {
 
@@ -35,9 +44,16 @@ class RabbitMQIntegrationTest {
     static RabbitTemplate rabbitTemplate;
     static RabbitAdmin rabbitAdmin;
 
-    private static final String EXCHANGE_NAME = "donaciones.exchange";
-    private static final String ROUTING_KEY = "donacion.solicitud.creada";
-    private static final String QUEUE_NAME = "q.notificaciones.donacion-solicitud-creada";
+    private static final String EXCHANGE_NAME = "styleradar.exchange";
+    private static final String ROUTING_KEY_CREATED = "styleradar.donaciones.solicitud.creada";
+    private static final String ROUTING_KEY_STATUS = "styleradar.donaciones.estado.cambiado";
+    private static final String ROUTING_KEY_SOLD_CHAT = "segunda-mano.prenda.vendida";
+    private static final String ROUTING_KEY_SOLD_NOTIF = "styleradar.segundavida.prenda.vendida";
+
+    private static final String QUEUE_CREATED = "q.notificaciones.donacion-solicitud-creada";
+    private static final String QUEUE_STATUS = "q.notificaciones.donacion-estado-cambiado";
+    private static final String QUEUE_SOLD_CHAT = "q.chat.segunda-mano";
+    private static final String QUEUE_SOLD_NOTIF = "q.notificaciones.prenda-vendida";
 
     @BeforeAll
     static void setUp() {
@@ -58,8 +74,7 @@ class RabbitMQIntegrationTest {
         connectionFactory.setUsername(rabbitMQContainer.getAdminUsername());
         connectionFactory.setPassword(rabbitMQContainer.getAdminPassword());
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
+        Jackson2JsonMessageConverter converter = new RabbitMQConfig().jackson2JsonMessageConverter(new ObjectMapper());
 
         rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(converter);
@@ -67,10 +82,17 @@ class RabbitMQIntegrationTest {
         rabbitAdmin = new RabbitAdmin(connectionFactory);
 
         TopicExchange exchange = ExchangeBuilder.topicExchange(EXCHANGE_NAME).durable(true).build();
-        Queue queue = QueueBuilder.durable(QUEUE_NAME).build();
-        Binding binding = BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
-
         rabbitAdmin.declareExchange(exchange);
+
+        declareQueueAndBinding(exchange, QUEUE_CREATED, ROUTING_KEY_CREATED);
+        declareQueueAndBinding(exchange, QUEUE_STATUS, ROUTING_KEY_STATUS);
+        declareQueueAndBinding(exchange, QUEUE_SOLD_CHAT, ROUTING_KEY_SOLD_CHAT);
+        declareQueueAndBinding(exchange, QUEUE_SOLD_NOTIF, ROUTING_KEY_SOLD_NOTIF);
+    }
+
+    private static void declareQueueAndBinding(TopicExchange exchange, String queueName, String routingKey) {
+        Queue queue = QueueBuilder.durable(queueName).build();
+        Binding binding = BindingBuilder.bind(queue).to(exchange).with(routingKey);
         rabbitAdmin.declareQueue(queue);
         rabbitAdmin.declareBinding(binding);
     }
@@ -86,7 +108,7 @@ class RabbitMQIntegrationTest {
     }
 
     @Test
-    @DisplayName("Debe publicar evento a donaciones.exchange y ser consumido desde la cola de ms-notificaciones con payload JSON intacto")
+    @DisplayName("Debe publicar y consumir eventos reales en styleradar.exchange para Chat y Notificaciones")
     void shouldPublishAndConsumeEventThroughRealRabbitMQBroker() {
         Assumptions.assumeTrue(rabbitMQContainer != null && rabbitMQContainer.isRunning(),
                 "RabbitMQ Testcontainer no está corriendo.");
@@ -94,23 +116,47 @@ class RabbitMQIntegrationTest {
         DonationEventPublisherAdapter adapter = new DonationEventPublisherAdapter(
                 rabbitTemplate,
                 EXCHANGE_NAME,
-                ROUTING_KEY,
-                "donacion.estado.actualizado");
+                EXCHANGE_NAME,
+                ROUTING_KEY_STATUS,
+                ROUTING_KEY_SOLD_CHAT,
+                ROUTING_KEY_SOLD_NOTIF,
+                ROUTING_KEY_CREATED);
 
-        DonationRequestCreatedEvent domainEvent = new DonationRequestCreatedEvent(777L, 888L, 999L, 111L);
+        // 1. Solicitud creada -> ms-notificaciones (con representanteId)
+        adapter.publishEvent(new DonationRequestCreatedEvent(777L, 888L, 999L, 111L, "PENDING", 24L));
+        DonationRequestCreatedIntegrationEvent createdEvent = rabbitTemplate.receiveAndConvert(
+                QUEUE_CREATED, 5000, new ParameterizedTypeReference<>() {});
+        assertThat(createdEvent).isNotNull();
+        assertThat(createdEvent.getEventType()).isEqualTo("donacion.solicitud.creada");
+        assertThat(createdEvent.getRequestId()).isEqualTo(777L);
+        assertThat(createdEvent.getRepresentanteId()).isEqualTo(24L);
+        assertThat(createdEvent.getFundacionUsuarioId()).isEqualTo(24L);
+        assertThat(createdEvent.getData().getEstado()).isEqualTo("PENDIENTE");
 
-        adapter.publishEvent(domainEvent);
+        // 2. Estado cambiado -> ms-notificaciones
+        adapter.publishEvent(new DonationRequestDecidedEvent(777L, 111L, 999L, true, null));
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent statusEvent = rabbitTemplate.receiveAndConvert(
+                QUEUE_STATUS, 5000, new ParameterizedTypeReference<>() {});
+        assertThat(statusEvent).isNotNull();
+        assertThat(statusEvent.getDonacionId()).isEqualTo(777L);
+        assertThat(statusEvent.getNuevoEstado()).isEqualTo("APROBADA");
 
-        Object receivedMessage = rabbitTemplate.receiveAndConvert(QUEUE_NAME, 5000);
-        assertThat(receivedMessage).isNotNull().isInstanceOf(DonationRequestCreatedIntegrationEvent.class);
+        // 3. Prenda vendida -> ms-chat (segunda-mano.prenda.vendida) y ms-notificaciones (styleradar.segundavida.prenda.vendida)
+        adapter.publishEvent(new PublicationSoldEvent(50L, 101L, 102L, List.of(201L, 202L)));
 
-        DonationRequestCreatedIntegrationEvent event = (DonationRequestCreatedIntegrationEvent) receivedMessage;
-        assertThat(event.getEventType()).isEqualTo("donacion.solicitud.creada");
-        assertThat(event.getRequestId()).isEqualTo(777L);
-        assertThat(event.getPublicationId()).isEqualTo(888L);
-        assertThat(event.getDonorId()).isEqualTo(999L);
-        assertThat(event.getFoundationId()).isEqualTo(111L);
-        assertThat(event.getData().getSolicitudId()).isEqualTo(777L);
-        assertThat(event.getData().getEstado()).isEqualTo("PENDIENTE");
+        SegundaVidaDonacionPrendaVendidaIntegrationEvent chatSoldEvent = rabbitTemplate.receiveAndConvert(
+                QUEUE_SOLD_CHAT, 5000, new ParameterizedTypeReference<>() {});
+        assertThat(chatSoldEvent).isNotNull();
+        assertThat(chatSoldEvent.getPublicacionId()).isEqualTo(50L);
+        assertThat(chatSoldEvent.getCompradorId()).isEqualTo(102L);
+        assertThat(chatSoldEvent.getInteresadosIds()).containsExactly(201L, 202L);
+
+        SegundaVidaDonacionPrendaVendidaIntegrationEvent notifSoldEvent = rabbitTemplate.receiveAndConvert(
+                QUEUE_SOLD_NOTIF, 5000, new ParameterizedTypeReference<>() {});
+        assertThat(notifSoldEvent).isNotNull();
+        assertThat(notifSoldEvent.getPublicacionId()).isEqualTo(50L);
+        assertThat(notifSoldEvent.getVendedorId()).isEqualTo(101L);
+        assertThat(notifSoldEvent.getCompradorId()).isEqualTo(102L);
+        assertThat(notifSoldEvent.getInteresadosIds()).containsExactly(201L, 202L);
     }
 }

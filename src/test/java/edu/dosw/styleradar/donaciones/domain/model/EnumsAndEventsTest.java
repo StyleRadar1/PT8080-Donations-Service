@@ -124,6 +124,10 @@ class EnumsAndEventsTest {
         PublicationSoldEvent ev2 = new PublicationSoldEvent(1L, 2L);
         assertEquals(1L, ev2.publicationId());
         assertNotNull(ev2.occurredOn());
+        assertTrue(ev2.interesadosIds().isEmpty());
+
+        PublicationSoldEvent ev2Full = new PublicationSoldEvent(1L, 2L, 3L, java.util.List.of(4L, 5L, 2L, 3L, 4L));
+        assertEquals(java.util.List.of(4L, 5L), ev2Full.interesadosIds());
 
         DonationRequestCreatedEvent ev3 = new DonationRequestCreatedEvent(10L, 1L, 2L, 3L);
         assertEquals(10L, ev3.requestId());

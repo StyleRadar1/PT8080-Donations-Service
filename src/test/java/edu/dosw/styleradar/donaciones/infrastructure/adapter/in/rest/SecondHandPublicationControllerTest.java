@@ -238,6 +238,21 @@ class SecondHandPublicationControllerTest {
     }
 
     @Test
+    @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe aceptar interesadosIds opcionales para notificar otros interesados")
+    void shouldMarkAsSoldWithOptionalInteresadosIds() throws Exception {
+        SecondHandPublication sold = buildSamplePublication(1L, 101L);
+        sold.setStatus(PublicationStatus.SOLD);
+        when(managePublicationUseCase.markAsSold(101L, 1L, 102L, List.of(201L, 202L))).thenReturn(sold);
+
+        mockMvc.perform(patch("/api/v1/second-hand/publications/1/sale")
+                        .param("userId", "101")
+                        .param("compradorId", "102")
+                        .param("interesadosIds", "201", "202"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SOLD"));
+    }
+
+    @Test
     @DisplayName("PATCH /api/v1/second-hand/publications/{id}/sale - Debe responder 400 Bad Request cuando falta compradorId")
     void shouldFailWhenCompradorIdIsMissing() throws Exception {
         mockMvc.perform(patch("/api/v1/second-hand/publications/1/sale")

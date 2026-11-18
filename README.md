@@ -89,7 +89,7 @@
 * **Puerto de Escucha Oficial:** `8520` (context-path: `/api/v1`)
 * **Base de Datos Asignada:** `PostgreSQL 16` (`styleradar_donations_qa` en QA / `styleradar_donations_prod` en PROD), aisladas en Azure Flexible Server bajo el patrón *Database-per-Service*.
 * **Almacenamiento de Fotografías:** `Azure Blob Storage` (Cuenta `srdonacionesjmunar`, contenedor público `donaciones-fotos` en `rg-styleradar`).
-* **Broker de Mensajería:** `RabbitMQ 3.12` mediante Topic Exchanges `styleradar.exchange` y `styleradar.events` con *Publisher Confirms* y *Correlation ID*.
+* **Broker de Mensajería:** `RabbitMQ 3.12` mediante el Topic Exchange compartido `styleradar.exchange` con *Publisher Confirms* y *Correlation ID*.
 * **Bounded Context:** `Segunda Vida y Donaciones` (Economía Circular Textil C2C y Sostenibilidad Social en Bogotá D.C.)
 
 ### Responsabilidades del Dominio
@@ -104,7 +104,7 @@ Este microservicio encapsula exclusivamente la lógica de negocio de economía c
 | • Gestiona la Vitrina Abierta y solicitudes de donación: reclamo concurrente por fundaciones (`@Version`), selección de fundación, aprobación/rechazo, franjas de entrega en Bogotá y confirmación física (`SR-RF-42`, `44` a `49`). | • NO procesa pasarelas de pago monetarias de tiendas comerciales (delegado a `ms-pagos` en `:8090`). |
 | • Carga y sirve fotografías de prendas binarias directamente a **Azure Blob Storage** (`donaciones-fotos`) generando URLs públicas de CDN permanentes con fallback resiliente a almacenamiento local. | • NO envía correos ni notificaciones push directas al usuario final (delegado a `ms-notificaciones` en `:8300` vía eventos RabbitMQ). |
 | • Aplica control de acceso basado en roles (`USER`, `STORE`, `FOUNDATION`, `ADMIN`) y validación estricta de propiedad (`ResourceOwnershipValidator`) contra ataques IDOR/BOLA (`SR-RNF-04`). | • NO gestiona salas de chat en tiempo real entre compradores y vendedores (delegado a `ms-chat` en `:8200`). |
-| • Emite eventos AMQP trazables con `version = 1` y UUID de correlación hacia el bus `styleradar.exchange` y `styleradar.events` con confirmación del broker. | • NO accede directamente a bases de datos de otros microservicios bajo el principio *Database-per-Service*. |
+| • Emite eventos AMQP trazables con `version = 1` y UUID de correlación hacia el bus `styleradar.exchange` con confirmación del broker. | • NO accede directamente a bases de datos de otros microservicios bajo el principio *Database-per-Service*. |
 
 ---
 
@@ -168,7 +168,7 @@ Diseñado siguiendo el formato y paleta visual oficial de **StyleRadar** (`#4811
 5. **Proveedores Cloud & Mensajería Asíncrona:**
    - Base de Datos: PostgreSQL 16 (`styleradar_donations_*` en Azure Flexible Server).
    - Cloud Storage: Azure Blob Storage (`srdonacionesjmunar` en `rg-styleradar`).
-   - Broker AMQP: Tubería RabbitMQ con exchanges `styleradar.exchange` y `styleradar.events`, enrutando hacia `ms-chat`, `ms-notificaciones` y `ms-auditoria-analitica`.
+   - Broker AMQP: Tubería RabbitMQ sobre el exchange compartido `styleradar.exchange`, enrutando hacia `ms-chat`, `ms-notificaciones` y `ms-auditoria-analitica`.
 
 ---
 
@@ -369,7 +369,7 @@ Todos los endpoints responden bajo el estándar **RFC 7807 (`application/problem
 La integración asíncrona se realiza a través de **RabbitMQ 3.12** utilizando Topic Exchanges compartidos en StyleRadar:
 
 * **Exchange General:** `styleradar.exchange` (`topic`, durable)
-* **Exchange de Eventos de Chat:** `styleradar.events` (`topic`, durable)
+* **Exchange para Chat (homologado):** `styleradar.exchange` (`topic`, durable)
 * **Dead Letter Exchange (DLX):** `styleradar.dlx` con cola `styleradar.donaciones.dlq`
 * **Garantías de Entrega:** *Publisher Confirms* (`correlated`), *Publisher Returns* y trazabilidad con `version = 1` y `correlationId` UUID.
 
@@ -377,7 +377,7 @@ La integración asíncrona se realiza a través de **RabbitMQ 3.12** utilizando 
 
 | Tipo | Exchange | Routing Key | Emisor ➔ Receptor | Payload y Propósito de Integración |
 | :---: | :--- | :--- | :--- | :--- |
-| **PUBLICA** | `styleradar.events` / `styleradar.exchange` | `segunda-mano.prenda.vendida` *(chat)* / `styleradar.segunda-mano.prenda.vendida` *(notif.)* | `ms-segunda-vida-donaciones` ➔ `ms-chat` & `ms-notificaciones` | `{ "version": 1, "correlationId": "...", "publicacionId": 10, "vendedorId": 101, "compradorId": 102, "interesadosIds": [], "timestamp": "..." }`<br>Permite a `ms-chat` conservar abierta la conversación del comprador, cerrar las demás conversaciones y avisar a los interesados vía `ms-notificaciones`. |
+| **PUBLICA** | `styleradar.exchange` | `segunda-mano.prenda.vendida` *(chat)* / `styleradar.segundavida.prenda.vendida` *(notif.)* | `ms-segunda-vida-donaciones` ➔ `ms-chat` & `ms-notificaciones` | `{ "version": 1, "correlationId": "...", "publicacionId": 10, "vendedorId": 101, "compradorId": 102, "interesadosIds": [...], "timestamp": "..." }`<br>Permite a `ms-chat` conservar abierta la conversación del comprador y cerrar las demás, y a `ms-notificaciones` avisar a los interesados (`interesadosIds` opcional en `PATCH /sale` o provistos por Chat). |
 | **PUBLICA** | `styleradar.exchange` | `styleradar.donaciones.solicitud.creada` | `ms-segunda-vida-donaciones` ➔ `ms-notificaciones` | `{ "eventId": "...", "eventType": "donacion.solicitud.creada", "solicitudId": 1, "donanteId": 101, "fundacionId": 501, "representanteId": 24, "fundacionUsuarioId": 24, ... }`<br>Notifica al representante de la fundación sobre nuevas postulaciones o reclamos en Vitrina Abierta. |
 | **PUBLICA** | `styleradar.exchange` | `styleradar.donaciones.estado.cambiado` | `ms-segunda-vida-donaciones` ➔ `ms-notificaciones` | `{ "version": 1, "correlationId": "...", "solicitudId": 1, "donanteId": 101, "fundacionId": 501, "nuevoEstado": "APPROVED", ... }`<br>Dispara alertas push/email al donante y a la fundación ante cambios de estado en el ciclo benéfico. |
 | **CONSUME** | `styleradar.exchange` | `styleradar.donaciones.estado.cambiado` | `styleradar.exchange` ➔ `NotificationConsumerSimulator` | Consumidor de prueba E2E aislable mediante `RABBITMQ_SIMULATOR_ENABLED=true` para verificar la emisión local sin depender de servicios externos. |
@@ -397,7 +397,7 @@ El stack tecnológico de `PT8080-Donations-Service` cumple con el estándar unif
 | **Cloud Storage** | Azure Blob Storage SDK | `12.28.0` | `com.azure:azure-storage-blob` para almacenamiento de fotos en nube con fallback local. |
 | **Seguridad y Tokens** | Spring Security + JJWT | `6.3.x` / `0.13.0` | Validación stateless de JWT con firma HMAC-SHA256 (`HS256`) y claim `exp`. |
 | **Base de Datos** | PostgreSQL | `16` | Integridad ACID, bloqueo optimista (`@Version`) y aislamiento *Database-per-Service*. |
-| **Control de Esquema** | Flyway Core | `10.10.0` | Migraciones reproducibles (`V1__init_schema.sql`, `V2__align_domain_and_tables.sql`). |
+| **Control de Esquema** | Flyway Core | `10.10.0` | Migraciones reproducibles (`V1__init_schema.sql` .. `V5__migrate_garment_type_and_size_enums.sql`). |
 | **Broker de Mensajería** | RabbitMQ (Spring AMQP) | `3.12` | Topic Exchanges durables con confirmaciones de publicación (*Publisher Confirms*). |
 | **Mapeo y Boilerplate** | MapStruct + Lombok | `1.5.5` / `1.18.38` | Reducción de código repetitivo compatible con JDK 21. |
 | **Documentación API** | SpringDoc OpenAPI | `2.5.0` | Especificación OpenAPI 3.0 con Swagger UI, esquemas RFC 7807 y ejemplos interactivos. |
@@ -467,7 +467,9 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 | `RABBITMQ_USERNAME` | Usuario de conexión RabbitMQ | `guest` | Sí |
 | `RABBITMQ_PASSWORD` | Contraseña de conexión RabbitMQ | `guest` | Sí |
 | `RABBITMQ_EXCHANGE` | Exchange compartido de eventos | `styleradar.exchange` | Sí |
-| `RABBITMQ_CHAT_EXCHANGE` | Exchange para eventos hacia chat | `styleradar.events` | Sí |
+| `RABBITMQ_CHAT_EXCHANGE` | Exchange para eventos hacia chat | `styleradar.exchange` | Sí |
+| `RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA` | Routing key de venta hacia `ms-chat` | `segunda-mano.prenda.vendida` | Sí |
+| `RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA` | Routing key de venta hacia `ms-notificaciones` | `styleradar.segundavida.prenda.vendida` | Sí |
 | `JWT_SECRET_BASE64` | Clave Base64 HMAC-SHA256 compartida con `ms-auth` (≥ 256 bits) | Clave local dev/test | Sí |
 | `TIENDAS_SERVICE_URL` | URL base de `ms-tiendas` para fundaciones (`SR-RF-44`) | `http://localhost:8140` (`qa`/`prod` Azure) | Sí |
 | `TIENDAS_VALIDATION_ENABLED` | Activa/desactiva validación remota de fundaciones en `ms-tiendas` | `true` (`false` en test) | Opcional |

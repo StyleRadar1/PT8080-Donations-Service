@@ -118,13 +118,17 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
         String corrId = UUID.randomUUID().toString();
         String evtId = UUID.randomUUID().toString();
 
+        List<Long> interesados = domainEvent.interesadosIds() != null
+                ? List.copyOf(domainEvent.interesadosIds())
+                : List.of();
+
         PrendaVendidaData dataEnvelope = PrendaVendidaData.builder()
                 .version(1)
                 .publicacionId(domainEvent.publicationId())
                 .prendaId(domainEvent.publicationId())
                 .vendedorId(domainEvent.userId())
                 .compradorId(domainEvent.compradorId())
-                .interesadosIds(List.of())
+                .interesadosIds(interesados)
                 .estado("VENDIDA")
                 .moneda("COP")
                 .fechaVenta(now)
@@ -148,7 +152,7 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
                 .prendaId(domainEvent.publicationId())
                 .vendedorId(domainEvent.userId())
                 .compradorId(domainEvent.compradorId())
-                .interesadosIds(List.of())
+                .interesadosIds(interesados)
                 .estado("VENDIDA")
                 .moneda("COP")
                 .fechaVenta(now)

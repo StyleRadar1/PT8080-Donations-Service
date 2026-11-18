@@ -921,9 +921,13 @@ public class SecondHandPublicationController {
             @Parameter(description = "ID of the authenticated seller user", example = "101")
             @RequestParam Long userId,
             @Parameter(description = "ID of the buyer in the C2C chat (mandatory to coordinate chat closure)", example = "102", required = true)
-            @RequestParam Long compradorId) {
+            @RequestParam Long compradorId,
+            @Parameter(description = "Optional list of interested user IDs (excluding seller and buyer) to notify about the sale", example = "103,104")
+            @RequestParam(required = false) List<Long> interesadosIds) {
         resourceOwnershipValidator.validateOwnerOrAdmin(userId);
-        SecondHandPublication sold = managePublicationUseCase.markAsSold(userId, id, compradorId);
+        SecondHandPublication sold = (interesadosIds == null || interesadosIds.isEmpty())
+                ? managePublicationUseCase.markAsSold(userId, id, compradorId)
+                : managePublicationUseCase.markAsSold(userId, id, compradorId, interesadosIds);
         return ResponseEntity.ok(publicationRestMapper.toResponse(sold));
     }
 

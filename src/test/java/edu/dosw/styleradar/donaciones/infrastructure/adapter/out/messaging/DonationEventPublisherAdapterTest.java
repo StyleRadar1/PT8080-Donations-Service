@@ -2,13 +2,20 @@ package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.core.ParameterizedTypeReference;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
@@ -18,6 +25,7 @@ import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationRequestCreatedIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionEstadoCambiadoIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionPrendaVendidaIntegrationEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.config.RabbitMQConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,10 +40,11 @@ class DonationEventPublisherAdapterTest {
     private DonationEventPublisherAdapter adapter;
 
     private static final String EXCHANGE = "styleradar.exchange";
-    private static final String CHAT_EXCHANGE = "styleradar.events";
+    private static final String CHAT_EXCHANGE = "styleradar.exchange";
     private static final String ROUTING_KEY_CREATED = "styleradar.donaciones.solicitud.creada";
     private static final String ROUTING_KEY_UPDATED = "styleradar.donaciones.estado.cambiado";
     private static final String ROUTING_KEY_SOLD = "segunda-mano.prenda.vendida";
+    private static final String ROUTING_KEY_SOLD_NOTIFICATIONS = "styleradar.segundavida.prenda.vendida";
 
     @BeforeEach
     void setUp() {
@@ -46,6 +55,7 @@ class DonationEventPublisherAdapterTest {
                 CHAT_EXCHANGE,
                 ROUTING_KEY_UPDATED,
                 ROUTING_KEY_SOLD,
+                ROUTING_KEY_SOLD_NOTIFICATIONS,
                 ROUTING_KEY_CREATED);
     }
 
@@ -85,21 +95,23 @@ class DonationEventPublisherAdapterTest {
     }
 
     @Test
-    @DisplayName("Debe publicar evento de prenda vendida hacia ms-chat en styleradar.events con routing key segunda-mano.prenda.vendida y envelope data con compradorId")
+    @DisplayName("Debe publicar evento de prenda vendida hacia ms-chat y ms-notificaciones en styleradar.exchange con sus routing keys e interesadosIds")
     void shouldPublishPublicationSoldEvent() {
-        PublicationSoldEvent event = new PublicationSoldEvent(50L, 101L, 102L);
+        PublicationSoldEvent event = new PublicationSoldEvent(50L, 101L, 102L, List.of(201L, 202L, 101L, 102L, 201L));
 
         adapter.publishEvent(event);
 
-        ArgumentCaptor<SegundaVidaDonacionPrendaVendidaIntegrationEvent> captor =
+        ArgumentCaptor<SegundaVidaDonacionPrendaVendidaIntegrationEvent> chatCaptor =
+                ArgumentCaptor.forClass(SegundaVidaDonacionPrendaVendidaIntegrationEvent.class);
+        ArgumentCaptor<SegundaVidaDonacionPrendaVendidaIntegrationEvent> notifCaptor =
                 ArgumentCaptor.forClass(SegundaVidaDonacionPrendaVendidaIntegrationEvent.class);
         ArgumentCaptor<CorrelationData> correlationCaptor =
                 ArgumentCaptor.forClass(CorrelationData.class);
 
-        verify(rabbitTemplate).convertAndSend(eq(CHAT_EXCHANGE), eq(ROUTING_KEY_SOLD), captor.capture(), correlationCaptor.capture());
-        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq("styleradar." + ROUTING_KEY_SOLD), any(SegundaVidaDonacionPrendaVendidaIntegrationEvent.class), any(CorrelationData.class));
+        verify(rabbitTemplate).convertAndSend(eq(CHAT_EXCHANGE), eq(ROUTING_KEY_SOLD), chatCaptor.capture(), correlationCaptor.capture());
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_SOLD_NOTIFICATIONS), notifCaptor.capture(), any(CorrelationData.class));
 
-        SegundaVidaDonacionPrendaVendidaIntegrationEvent published = captor.getValue();
+        SegundaVidaDonacionPrendaVendidaIntegrationEvent published = chatCaptor.getValue();
         assertThat(published).isNotNull();
         assertThat(published.getEventType()).isEqualTo("segunda-mano.prenda.vendida");
         assertThat(published.getEmisor()).isEqualTo("ms-segunda-vida-donaciones");
@@ -108,19 +120,66 @@ class DonationEventPublisherAdapterTest {
         assertThat(published.getPublicacionId()).isEqualTo(50L);
         assertThat(published.getVendedorId()).isEqualTo(101L);
         assertThat(published.getCompradorId()).isEqualTo(102L);
-        assertThat(published.getInteresadosIds()).isEmpty();
+        assertThat(published.getInteresadosIds()).containsExactly(201L, 202L);
         assertThat(published.getEstado()).isEqualTo("VENDIDA");
 
-        // Envelope data para ms-chat
+        // Envelope data para ms-chat y ms-notificaciones
         assertThat(published.getData()).isNotNull();
         assertThat(published.getData().getPublicacionId()).isEqualTo(50L);
         assertThat(published.getData().getVendedorId()).isEqualTo(101L);
         assertThat(published.getData().getCompradorId()).isEqualTo(102L);
-        assertThat(published.getData().getInteresadosIds()).isEmpty();
+        assertThat(published.getData().getInteresadosIds()).containsExactly(201L, 202L);
         assertThat(published.getData().getEstado()).isEqualTo("VENDIDA");
 
-        CorrelationData correlationData = correlationCaptor.getValue();
-        assertThat(correlationData).isNotNull();
+        assertThat(notifCaptor.getValue().getInteresadosIds()).containsExactly(201L, 202L);
+        assertThat(correlationCaptor.getValue()).isNotNull();
+        assertThat(adapter.getChatExchangeName()).isEqualTo("styleradar.exchange");
+        assertThat(adapter.getNotificationsSecondHandSoldRoutingKey()).isEqualTo("styleradar.segundavida.prenda.vendida");
+    }
+
+    @Test
+    @DisplayName("Debe serializar y deserializar contratos reales JSON de solicitud creada, estado cambiado y prenda vendida")
+    void shouldPreserveJsonContractsOnSerializationAndConsumption() {
+        Jackson2JsonMessageConverter converter = new RabbitMQConfig().jackson2JsonMessageConverter(new ObjectMapper());
+
+        DonationRequestCreatedIntegrationEvent createdPayload = DonationRequestCreatedIntegrationEvent.from(
+                new DonationRequestCreatedEvent(10L, 20L, 30L, 40L, "PENDING", 24L));
+        Message createdMsg = converter.toMessage(createdPayload, new MessageProperties());
+        DonationRequestCreatedIntegrationEvent consumedCreated = (DonationRequestCreatedIntegrationEvent) converter.fromMessage(
+                createdMsg, new ParameterizedTypeReference<DonationRequestCreatedIntegrationEvent>() {}.getType());
+
+        assertThat(consumedCreated.getRepresentanteId()).isEqualTo(24L);
+        assertThat(consumedCreated.getFundacionUsuarioId()).isEqualTo(24L);
+        assertThat(consumedCreated.getData().getRepresentanteId()).isEqualTo(24L);
+        assertThat(consumedCreated.getData().getFundacionUsuarioId()).isEqualTo(24L);
+
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent statusPayload =
+                SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
+                        .donacionId(10L)
+                        .solicitudId(10L)
+                        .donanteId(30L)
+                        .fundacionId(40L)
+                        .nuevoEstado("APROBADA")
+                        .build();
+        Message statusMsg = converter.toMessage(statusPayload, new MessageProperties());
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent consumedStatus =
+                (SegundaVidaDonacionEstadoCambiadoIntegrationEvent) converter.fromMessage(
+                        statusMsg, new ParameterizedTypeReference<SegundaVidaDonacionEstadoCambiadoIntegrationEvent>() {}.getType());
+        assertThat(consumedStatus.getDonacionId()).isEqualTo(10L);
+        assertThat(consumedStatus.getNuevoEstado()).isEqualTo("APROBADA");
+
+        SegundaVidaDonacionPrendaVendidaIntegrationEvent soldPayload = SegundaVidaDonacionPrendaVendidaIntegrationEvent.from(
+                new PublicationSoldEvent(50L, 101L, 102L, List.of(201L, 202L)));
+        Message soldMsg = converter.toMessage(soldPayload, new MessageProperties());
+        SegundaVidaDonacionPrendaVendidaIntegrationEvent consumedSold =
+                (SegundaVidaDonacionPrendaVendidaIntegrationEvent) converter.fromMessage(
+                        soldMsg, new ParameterizedTypeReference<SegundaVidaDonacionPrendaVendidaIntegrationEvent>() {}.getType());
+
+        assertThat(consumedSold.getPublicacionId()).isEqualTo(50L);
+        assertThat(consumedSold.getVendedorId()).isEqualTo(101L);
+        assertThat(consumedSold.getCompradorId()).isEqualTo(102L);
+        assertThat(consumedSold.getInteresadosIds()).containsExactly(201L, 202L);
+        assertThat(consumedSold.getData().getInteresadosIds()).containsExactly(201L, 202L);
     }
 
     @Test

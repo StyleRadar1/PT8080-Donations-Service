@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.donaciones.application.usecase;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -54,8 +56,13 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
 
     @Override
     public SecondHandPublication markAsSold(Long userId, Long publicationId, Long compradorId) {
-        log.info("Marcando como vendida publicación ID: {} por usuario ID: {} (compradorId: {})",
-                publicationId, userId, compradorId);
+        return markAsSold(userId, publicationId, compradorId, List.of());
+    }
+
+    @Override
+    public SecondHandPublication markAsSold(Long userId, Long publicationId, Long compradorId, List<Long> interesadosIds) {
+        log.info("Marcando como vendida publicación ID: {} por usuario ID: {} (compradorId: {}, interesados: {})",
+                publicationId, userId, compradorId, interesadosIds != null ? interesadosIds.size() : 0);
         SecondHandPublication publication = getAndValidateOwner(publicationId, userId);
 
         publication.markAsSold();
@@ -63,7 +70,7 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
 
         TransactionEventHelper.publishAfterCommitOrImmediate(
                 eventPublisherPort,
-                new PublicationSoldEvent(saved.getId(), saved.getUserId(), compradorId)
+                new PublicationSoldEvent(saved.getId(), saved.getUserId(), compradorId, interesadosIds)
         );
         log.info("Publicación ID: {} marcada como VENDIDA exitosamente", saved.getId());
         return saved;

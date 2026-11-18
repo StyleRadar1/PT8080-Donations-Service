@@ -100,12 +100,12 @@ class RabbitMQConfigTest {
     }
 
     @Test
-    @DisplayName("Debe crear TopicExchange durable styleradar.events para ms-chat")
+    @DisplayName("Debe crear TopicExchange durable styleradar.exchange para ms-chat")
     void shouldCreateChatEventsTopicExchange() {
         TopicExchange exchange = rabbitMQConfig.chatEventsExchange(RabbitMQConfig.STYLERADAR_CHAT_EXCHANGE_DEFAULT);
 
         assertThat(exchange).isNotNull();
-        assertThat(exchange.getName()).isEqualTo("styleradar.events");
+        assertThat(exchange.getName()).isEqualTo("styleradar.exchange");
         assertThat(exchange.isDurable()).isTrue();
     }
 
