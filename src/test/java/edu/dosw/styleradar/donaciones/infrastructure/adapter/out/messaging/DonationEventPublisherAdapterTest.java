@@ -33,7 +33,7 @@ class DonationEventPublisherAdapterTest {
 
     private static final String EXCHANGE = "styleradar.exchange";
     private static final String CHAT_EXCHANGE = "styleradar.events";
-    private static final String ROUTING_KEY_CREATED = "styleradar.donaciones.estado.cambiado";
+    private static final String ROUTING_KEY_CREATED = "styleradar.donaciones.solicitud.creada";
     private static final String ROUTING_KEY_UPDATED = "styleradar.donaciones.estado.cambiado";
     private static final String ROUTING_KEY_SOLD = "segunda-mano.prenda.vendida";
 

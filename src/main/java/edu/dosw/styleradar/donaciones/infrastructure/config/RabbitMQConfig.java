@@ -41,7 +41,7 @@ public class RabbitMQConfig {
 
     // Retrocompatibilidad con nombres previos de Sprint 2
     public static final String DONATIONS_EXCHANGE_DEFAULT = STYLERADAR_EXCHANGE_DEFAULT;
-    public static final String DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT = DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT;
+    public static final String DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT = "styleradar.donaciones.solicitud.creada";
     public static final String DONATION_STATUS_UPDATED_ROUTING_KEY_DEFAULT = DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT;
     public static final String NOTIFICATIONS_QUEUE_DEFAULT = "q.notificaciones.donacion-solicitud-creada";
     public static final String SIMULATOR_QUEUE_DEFAULT = "q.donaciones.simulador-notificaciones";
@@ -98,7 +98,7 @@ public class RabbitMQConfig {
     public Binding notificationsDonationCreatedBinding(
             Queue notificationsDonationCreatedQueue,
             TopicExchange donationsTopicExchange,
-            @Value("${app.rabbitmq.routing-keys.donation-status-updated:" + DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT + "}") String routingKey) {
+            @Value("${app.rabbitmq.routing-keys.donation-request-created:" + DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT + "}") String routingKey) {
         return BindingBuilder.bind(notificationsDonationCreatedQueue)
                 .to(donationsTopicExchange)
                 .with(routingKey);
@@ -120,7 +120,7 @@ public class RabbitMQConfig {
     public Binding simulatorNotificationsBinding(
             Queue simulatorNotificationsQueue,
             TopicExchange donationsTopicExchange,
-            @Value("${app.rabbitmq.routing-keys.donation-status-updated:" + DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT + "}") String routingKey) {
+            @Value("${app.rabbitmq.routing-keys.donation-request-created:" + DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT + "}") String routingKey) {
         return BindingBuilder.bind(simulatorNotificationsQueue)
                 .to(donationsTopicExchange)
                 .with(routingKey);

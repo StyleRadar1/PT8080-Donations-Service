@@ -84,7 +84,7 @@ styleradar:
   security:
     publication-by-id-path: ${SECOND_HAND_PUBLICATION_BY_ID_PATH:/api/v1/second-hand/publications/{id}}
     jwt:
-      secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:}}
+      secret-base64: ${JWT_SECRET_BASE64:${SECURITY_JWT_SECRET:${JWT_SECRET:${JWT_SECRET_KEY:}}}}
       duration: ${JWT_DURATION:PT24H}
   tiendas:
     base-url: ${TIENDAS_SERVICE_URL:http://localhost:8140}
