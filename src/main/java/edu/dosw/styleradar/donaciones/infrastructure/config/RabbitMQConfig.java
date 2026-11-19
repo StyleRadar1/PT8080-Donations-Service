@@ -48,6 +48,7 @@ public class RabbitMQConfig {
     public static final String SIMULATOR_QUEUE_DEFAULT = "q.donaciones.simulador-notificaciones";
 
     @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
     public TopicExchange donationsTopicExchange(
             @Value("${app.rabbitmq.exchange.main:${app.rabbitmq.exchange.donations:" + STYLERADAR_EXCHANGE_DEFAULT + "}}") String exchangeName) {
         return ExchangeBuilder.topicExchange(exchangeName)
@@ -56,6 +57,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
     public TopicExchange chatEventsExchange(
             @Value("${app.rabbitmq.exchange.chat:" + STYLERADAR_CHAT_EXCHANGE_DEFAULT + "}") String exchangeName) {
         return ExchangeBuilder.topicExchange(exchangeName)
@@ -64,6 +66,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
     public DirectExchange deadLetterExchange(
             @Value("${app.rabbitmq.exchange.dlx:" + STYLERADAR_DLX_DEFAULT + "}") String dlxName) {
         return ExchangeBuilder.directExchange(dlxName)
@@ -72,6 +75,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
     public Queue deadLetterQueue(
             @Value("${app.rabbitmq.queues.dlq:" + DONACIONES_DLQ_DEFAULT + "}") String dlqName) {
         return QueueBuilder.durable(dlqName)
@@ -79,6 +83,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
     public Binding deadLetterBinding(Queue deadLetterQueue, DirectExchange deadLetterExchange) {
         return BindingBuilder.bind(deadLetterQueue)
                 .to(deadLetterExchange)
@@ -89,6 +94,7 @@ public class RabbitMQConfig {
      * Cola oficial de integración para notificaciones (suscriptora de eventos de donación).
      */
     @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
     public Queue notificationsDonationCreatedQueue(
             @Value("${app.rabbitmq.queues.notifications-donation-created:" + NOTIFICATIONS_QUEUE_DEFAULT + "}") String queueName) {
         return QueueBuilder.durable(queueName)
@@ -96,6 +102,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
     public Binding notificationsDonationCreatedBinding(
             Queue notificationsDonationCreatedQueue,
             TopicExchange donationsTopicExchange,

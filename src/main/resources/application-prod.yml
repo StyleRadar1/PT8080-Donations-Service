@@ -42,13 +42,13 @@ spring:
     port: ${RABBITMQ_PORT:5671}
     username: ${RABBITMQ_USER:${RABBITMQ_USERNAME:}}
     password: ${RABBITMQ_PASSWORD:}
-    virtual-host: ${RABBITMQ_VHOST:/}
+    virtual-host: ${RABBITMQ_VHOST:prod}
     ssl:
       enabled: ${RABBITMQ_SSL_ENABLED:true}
       trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
       trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
       trust-store-type: ${RABBITMQ_TRUSTSTORE_TYPE:PKCS12}
-      verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
+      verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:false}
     publisher-confirm-type: correlated
     publisher-returns: true
 
@@ -71,6 +71,8 @@ app:
       simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
     simulator:
       enabled: false
+    topology:
+      enabled: ${RABBITMQ_DECLARE_TOPOLOGY:false}
 
 azure:
   storage:
