@@ -627,7 +627,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim C2C\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 85000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim C2C\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 85000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -685,7 +685,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Saco Lana Para Retiro\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 45000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Saco Lana Para Retiro\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 45000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -740,7 +740,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Abrigo Térmico Donación\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 90000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Abrigo Térmico Donación\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 90000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -795,7 +795,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Camisa Lino Rechazo\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 50000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Camisa Lino Rechazo\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 50000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -850,7 +850,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Suéter Vitrina Abierta\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Suéter Vitrina Abierta\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -908,7 +908,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Bufanda Vitrina 503\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Bufanda Vitrina 503\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -963,7 +963,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Prenda Inválida\",\n  \"description\": \"\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Zara\",\n  \"color\": \"Negro\",\n  \"style\": \"CASUAL\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"photos\": []\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Prenda Inválida\",\n  \"description\": \"\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Zara\",\n  \"color\": \"Negro\",\n  \"style\": \"CASUAL\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"photos\": []\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1018,7 +1018,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1070,7 +1070,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1431,7 +1431,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Editada\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 79000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Editada\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 79000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1489,7 +1489,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Precio Inválido\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Precio Inválido\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1545,7 +1545,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1598,7 +1598,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1659,7 +1659,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2104,7 +2104,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Intento Edición Vendida\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Intento Edición Vendida\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
