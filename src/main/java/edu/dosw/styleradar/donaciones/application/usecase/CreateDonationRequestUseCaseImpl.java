@@ -68,6 +68,10 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
         Long representanteId = foundationCatalogPort.findFoundationById(command.foundationId())
                 .map(FoundationSummary::representanteId)
                 .orElse(null);
+        if (representanteId == null) {
+            log.warn("No se obtuvo representanteId/fundacionUsuarioId para la fundación ID: {}. "
+                    + "ms-notificaciones requiere este campo para enrutar la campana.", command.foundationId());
+        }
 
         DonationRequest request = DonationRequest.builder()
                 .publicationId(command.publicationId())
@@ -85,13 +89,15 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
 
         log.info("Solicitud de donación radicada exitosamente con ID: {}", saved.getId());
 
+        String resumenPrenda = publication.getGarment() != null ? publication.getGarment().getName() : null;
         DonationRequestCreatedEvent event = new DonationRequestCreatedEvent(
                 saved.getId(),
                 saved.getPublicationId(),
                 saved.getDonorId(),
                 saved.getFoundationId(),
                 saved.getStatus() != null ? saved.getStatus().name() : "PENDING",
-                representanteId
+                representanteId,
+                resumenPrenda
         );
 
         TransactionEventHelper.publishAfterCommitOrImmediate(eventPublisherPort, event);

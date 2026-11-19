@@ -17,6 +17,7 @@ import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationRequestCreatedIntegrationEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.IntegrationDateFormatter;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionEstadoCambiadoIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionPrendaVendidaIntegrationEvent;
 
@@ -32,7 +33,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private static final Logger log = LoggerFactory.getLogger(DonationEventPublisherAdapter.class);
 
-    private static final String STATUS_IN_PICKUP = "EN_RECOGIDA";
+    private static final String STATUS_IN_PICKUP = "CITA_PROGRAMADA";
     private static final String STATUS_DELIVERED = "ENTREGADA";
     private static final String DEFAULT_CHAT_SOLD_KEY = "segunda-mano.prenda.vendida";
     private static final String DEFAULT_NOTIFICATIONS_SOLD_KEY = "styleradar.segundavida.prenda.vendida";
@@ -146,6 +147,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private void publishDonationDecided(DonationRequestDecidedEvent domainEvent) {
         String newStatus = domainEvent.approved() ? "APROBADA" : "RECHAZADA";
+        String fechaCambio = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
                 SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
                         .donacionId(domainEvent.requestId())
@@ -161,6 +163,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .status(newStatus)
                         .motivo(domainEvent.rejectionReason())
                         .mensaje(domainEvent.rejectionReason())
+                        .fechaCambio(fechaCambio)
                         .build();
 
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent event = SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
@@ -177,6 +180,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .status(newStatus)
                 .motivo(domainEvent.rejectionReason())
                 .mensaje(domainEvent.rejectionReason())
+                .fechaCambio(fechaCambio)
+                .fechaEvento(fechaCambio)
                 .data(data)
                 .build();
         CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
@@ -188,6 +193,11 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     }
 
     private void publishPickupScheduled(PickupScheduledEvent domainEvent) {
+        String fechaCambio = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
+        String scheduledDate = IntegrationDateFormatter.formatLocalDateTime(domainEvent.startTime());
+        String reason = domainEvent.deliveryPoint() != null && !domainEvent.deliveryPoint().isBlank()
+                ? "Punto de entrega: " + domainEvent.deliveryPoint()
+                : null;
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
                 SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
                         .donacionId(domainEvent.requestId())
@@ -201,8 +211,10 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .status("SCHEDULED")
                         .puntoEntrega(domainEvent.deliveryPoint())
                         .deliveryPoint(domainEvent.deliveryPoint())
-                        .fechaProgramada(domainEvent.startTime() != null ? domainEvent.startTime().toString() : null)
-                        .mensaje("Recogida programada en: " + domainEvent.deliveryPoint())
+                        .fechaProgramada(scheduledDate)
+                        .motivo(reason)
+                        .mensaje(reason)
+                        .fechaCambio(fechaCambio)
                         .build();
 
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent event = SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
@@ -217,8 +229,11 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .status("SCHEDULED")
                 .puntoEntrega(domainEvent.deliveryPoint())
                 .deliveryPoint(domainEvent.deliveryPoint())
-                .fechaProgramada(domainEvent.startTime() != null ? domainEvent.startTime().toString() : null)
-                .mensaje("Recogida programada en: " + domainEvent.deliveryPoint())
+                .fechaProgramada(scheduledDate)
+                .motivo(reason)
+                .mensaje(reason)
+                .fechaCambio(fechaCambio)
+                .fechaEvento(fechaCambio)
                 .data(data)
                 .build();
         CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
@@ -227,6 +242,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     }
 
     private void publishDonationDelivered(DonationDeliveredEvent domainEvent) {
+        String fechaCambio = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
                 SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
                         .donacionId(domainEvent.requestId())
@@ -242,6 +258,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .nuevoEstado(STATUS_DELIVERED)
                         .estado(STATUS_DELIVERED)
                         .status("COMPLETED")
+                        .fechaCambio(fechaCambio)
                         .build();
 
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent event = SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
@@ -258,6 +275,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .nuevoEstado(STATUS_DELIVERED)
                 .estado(STATUS_DELIVERED)
                 .status("COMPLETED")
+                .fechaCambio(fechaCambio)
+                .fechaEvento(fechaCambio)
                 .data(data)
                 .build();
         CorrelationData correlationData = new CorrelationData(event.getCorrelationId());

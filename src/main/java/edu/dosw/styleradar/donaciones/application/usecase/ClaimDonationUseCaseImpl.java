@@ -76,6 +76,10 @@ public class ClaimDonationUseCaseImpl implements ClaimDonationUseCase {
         Long representanteId = foundationCatalogPort.findFoundationById(command.foundationId())
                 .map(FoundationSummary::representanteId)
                 .orElse(null);
+        if (representanteId == null) {
+            log.warn("No se obtuvo representanteId/fundacionUsuarioId al reclamar donación para fundación ID: {}.",
+                    command.foundationId());
+        }
 
         try {
             publication.markForDonation();
@@ -93,13 +97,15 @@ public class ClaimDonationUseCaseImpl implements ClaimDonationUseCase {
         log.info("Donación ID: {} reclamada exitosamente por fundación ID: {}. Solicitud generada: {}",
                 publication.getId(), command.foundationId(), savedRequest.getId());
 
+        String resumenPrenda = publication.getGarment() != null ? publication.getGarment().getName() : null;
         DonationRequestCreatedEvent event = new DonationRequestCreatedEvent(
                 savedRequest.getId(),
                 savedRequest.getPublicationId(),
                 savedRequest.getDonorId(),
                 savedRequest.getFoundationId(),
                 savedRequest.getStatus() != null ? savedRequest.getStatus().name() : "APPROVED",
-                representanteId
+                representanteId,
+                resumenPrenda
         );
 
         TransactionEventHelper.publishAfterCommitOrImmediate(eventPublisherPort, event);
