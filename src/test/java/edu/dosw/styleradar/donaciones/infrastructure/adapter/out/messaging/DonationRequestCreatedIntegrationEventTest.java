@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -183,5 +184,27 @@ class DonationRequestCreatedIntegrationEventTest {
         assertThat(data.toString()).isNotBlank();
         assertThat(event.hashCode()).isNotZero();
         assertThat(data.hashCode()).isNotZero();
+    }
+
+    @Test
+    @DisplayName("Debe serializar fechaEvento en ISO-8601 sin zona horaria y los alias esperados por ms-notificaciones")
+    void shouldSerializeIsoLocalDateTimeAndNotificationsFields() throws Exception {
+        Instant occurredOn = Instant.parse("2026-11-18T15:30:00Z");
+        DonationRequestCreatedEvent domainEvent = new DonationRequestCreatedEvent(
+                40L, 10L, 501L, 3L, "PENDING", occurredOn, 620L, "Chaqueta Denim Vintage"
+        );
+
+        DonationRequestCreatedIntegrationEvent event = DonationRequestCreatedIntegrationEvent.from(domainEvent);
+        JsonNode root = objectMapper.readTree(objectMapper.writeValueAsString(event));
+
+        assertThat(root.get("eventoId").asText()).isNotBlank();
+        assertThat(root.get("donacionId").asLong()).isEqualTo(40L);
+        assertThat(root.get("solicitudId").asLong()).isEqualTo(40L);
+        assertThat(root.get("fundacionUsuarioId").asLong()).isEqualTo(620L);
+        assertThat(root.get("representanteId").asLong()).isEqualTo(620L);
+        assertThat(root.get("resumen").asText()).isEqualTo("Chaqueta Denim Vintage");
+        String fechaEvento = root.get("fechaEvento").asText();
+        assertThat(fechaEvento).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}");
+        assertThat(LocalDateTime.parse(fechaEvento)).isEqualTo(LocalDateTime.of(2026, 11, 18, 10, 30, 0));
     }
 }
