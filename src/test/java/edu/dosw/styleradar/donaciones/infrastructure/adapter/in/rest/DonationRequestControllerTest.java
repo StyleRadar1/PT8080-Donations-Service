@@ -18,6 +18,7 @@ import edu.dosw.styleradar.donaciones.application.dto.request.ClaimDonationReque
 import edu.dosw.styleradar.donaciones.application.dto.request.ConfirmReceiptRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.CreateDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.DecideDonationRequestDTO;
+import edu.dosw.styleradar.donaciones.application.dto.request.DeliveryProposalDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.domain.exception.ConcurrentDonationClaimException;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
@@ -45,6 +46,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -138,6 +140,51 @@ class DonationRequestControllerTest {
                 .andExpect(jsonPath("$.deliveryPoint").value("Cra 7 # 45"))
                 .andExpect(jsonPath("$.slotStart").isNotEmpty())
                 .andExpect(jsonPath("$.slotEnd").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("POST /donaciones - Debe aceptar deliveryProposal estructurado y tomar donorId del token de sesión")
+    void shouldCreateDonationRequestWithDeliveryProposalAndJwtDonorId() throws Exception {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        DeliveryProposalDTO proposal = new DeliveryProposalDTO(
+                DeliveryMode.DROP_OFF_POINT, "Cra 7 # 45", start, start.plusHours(2)
+        );
+        CreateDonationRequestDTO request = new CreateDonationRequestDTO(10L, 501L, "Deseo donar", proposal);
+        DonationRequest created = buildSampleRequest(1L, DonationRequestStatus.PENDING);
+
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(101L);
+        when(createDonationRequestUseCase.create(argThat(cmd ->
+                cmd != null && Long.valueOf(101L).equals(cmd.donorId())
+                        && DeliveryMode.DROP_OFF_POINT.equals(cmd.deliveryMode())
+                        && "Cra 7 # 45".equals(cmd.deliveryPoint())
+        ))).thenReturn(created);
+
+        mockMvc.perform(post("/api/v1/donations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/v1/donations/1"))
+                .andExpect(jsonPath("$.donorId").value(101L))
+                .andExpect(jsonPath("$.deliveryMode").value("DROP_OFF_POINT"))
+                .andExpect(jsonPath("$.deliveryPoint").value("Cra 7 # 45"));
+    }
+
+    @Test
+    @DisplayName("POST /donaciones - Debe responder 400 Bad Request si donorId no viene en payload ni en el token")
+    void shouldFailWhenDonorIdMissingFromRequestAndToken() throws Exception {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        DeliveryProposalDTO proposal = new DeliveryProposalDTO(
+                DeliveryMode.HOME_PICKUP, "Calle 85 # 15-32", start, start.plusHours(2)
+        );
+        CreateDonationRequestDTO request = new CreateDonationRequestDTO(10L, 501L, "Deseo donar", proposal);
+
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(null);
+
+        mockMvc.perform(post("/api/v1/donations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Solicitud inválida"));
     }
 
     @Test

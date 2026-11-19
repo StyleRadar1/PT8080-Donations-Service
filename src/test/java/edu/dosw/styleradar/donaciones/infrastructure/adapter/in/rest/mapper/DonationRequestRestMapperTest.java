@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import edu.dosw.styleradar.donaciones.application.dto.request.CreateDonationRequestDTO;
+import edu.dosw.styleradar.donaciones.application.dto.request.DeliveryProposalDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.response.DonationRequestResponseDTO;
 import edu.dosw.styleradar.donaciones.domain.model.DeliveryMode;
@@ -24,6 +25,7 @@ class DonationRequestRestMapperTest {
     @DisplayName("Debe manejar nulos en conversiones")
     void shouldHandleNulls() {
         assertThat(mapper.toCommand((CreateDonationRequestDTO) null)).isNull();
+        assertThat(mapper.toCommand((CreateDonationRequestDTO) null, 101L)).isNull();
         assertThat(mapper.toCommand(1L, null)).isNull();
         assertThat(mapper.toResponse(null)).isNull();
         assertThat(mapper.toResponseList(null)).isEmpty();
@@ -46,6 +48,28 @@ class DonationRequestRestMapperTest {
         assertThat(cmd.foundationId()).isEqualTo(501L);
         assertThat(cmd.message()).isEqualTo("Mensaje");
         assertThat(cmd.deliveryMode()).isEqualTo(DeliveryMode.HOME_PICKUP);
+        assertThat(cmd.deliveryPoint()).isEqualTo("Calle 85 # 15-32, Bogotá");
+        assertThat(cmd.startTime()).isEqualTo(start);
+        assertThat(cmd.endTime()).isEqualTo(end);
+    }
+
+    @Test
+    @DisplayName("Debe mapear CreateDonationRequestDTO con deliveryProposal y donante del token JWT")
+    void shouldMapCreateRequestWithDeliveryProposalAndJwtDonor() {
+        LocalDateTime start = LocalDateTime.now().plusDays(2);
+        LocalDateTime end = start.plusHours(3);
+        DeliveryProposalDTO proposal = new DeliveryProposalDTO(
+                DeliveryMode.DROP_OFF_POINT, "Calle 85 # 15-32, Bogotá", start, end
+        );
+        CreateDonationRequestDTO dto = new CreateDonationRequestDTO(10L, 3L, "Para campaña escolar", proposal);
+
+        CreateDonationRequestCommand cmd = mapper.toCommand(dto, 202L);
+
+        assertThat(cmd.publicationId()).isEqualTo(10L);
+        assertThat(cmd.donorId()).isEqualTo(202L);
+        assertThat(cmd.foundationId()).isEqualTo(3L);
+        assertThat(cmd.message()).isEqualTo("Para campaña escolar");
+        assertThat(cmd.deliveryMode()).isEqualTo(DeliveryMode.DROP_OFF_POINT);
         assertThat(cmd.deliveryPoint()).isEqualTo("Calle 85 # 15-32, Bogotá");
         assertThat(cmd.startTime()).isEqualTo(start);
         assertThat(cmd.endTime()).isEqualTo(end);
