@@ -1105,7 +1105,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/second-hand/publications?garmentType=UPPER&localidad=CHAPINERO&esDonacion=false",
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications?garmentType=Chaquetas&localidad=CHAPINERO&esDonacion=false",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1118,7 +1118,7 @@
               "query": [
                 {
                   "key": "garmentType",
-                  "value": "UPPER"
+                  "value": "Chaquetas"
                 },
                 {
                   "key": "localidad",
@@ -1736,6 +1736,65 @@
                   "    pm.expect(body).to.have.property('detail');",
                   "    pm.expect(body).to.have.property('type');",
                   "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 400 Bad Request (Rechaza interesadosIds desde cliente)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/sale?userId={{userId}}&compradorId={{otherUserId}}&interesadosIds=201,202",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "compradorId",
+                  "value": "{{otherUserId}}"
+                },
+                {
+                  "key": "interesadosIds",
+                  "value": "201,202"
+                }
+              ]
+            },
+            "description": "Verifica bloqueo de seguridad contra inyección de interesadosIds arbitrarios desde cliente."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 Rechaza interesadosIds enviado desde cliente', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('detail');",
                   "});"
                 ]
               }
@@ -3687,6 +3746,62 @@
           ]
         },
         {
+          "name": "POST /donations - 400 Bad Request (deliveryProposal incompleto)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "Valida rechazo de propuesta de entrega incompleta aun sin enviar donorId.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryProposal\": {\n    \"deliveryMode\": \"DROP_OFF_POINT\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 Error de validación en deliveryProposal', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body.title).to.eql('Error de validación');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "POST /donations - 401 Unauthorized",
           "request": {
             "method": "POST",
@@ -3939,7 +4054,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"message\": \"Deseo donar este abrigo térmico para programas comunitarios en Bogotá\",\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"message\": \"Deseo donar este abrigo térmico para programas comunitarios en Bogotá\",\n  \"deliveryProposal\": {\n    \"deliveryMode\": \"DROP_OFF_POINT\",\n    \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n    \"startTime\": \"2026-12-20T09:00:00\",\n    \"endTime\": \"2026-12-20T12:00:00\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3954,10 +4069,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('HTTP 201 Solicitud creada en PENDING', function () {",
+                  "pm.test('HTTP 201 Solicitud creada en PENDING (donorId por JWT + deliveryProposal)', function () {",
                   "    pm.response.to.have.status(201);",
                   "    const b = pm.response.json();",
                   "    pm.expect(b.status).to.eql('PENDING');",
+                  "    pm.expect(b.donorId).to.eql(101);",
                   "    pm.expect(b.deliveryMode).to.eql('DROP_OFF_POINT');",
                   "    pm.expect(b.deliveryPoint).to.be.a('string').and.not.empty;",
                   "    pm.expect(b.slotStart).to.be.a('string');",
