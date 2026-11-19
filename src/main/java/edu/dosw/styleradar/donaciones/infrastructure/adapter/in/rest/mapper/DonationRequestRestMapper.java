@@ -26,16 +26,25 @@ public class DonationRequestRestMapper {
         if (dto == null) {
             return null;
         }
+        return toCommand(dto, dto.donorId());
+    }
+
+    public CreateDonationRequestCommand toCommand(CreateDonationRequestDTO dto, Long resolvedDonorId) {
+        if (dto == null) {
+            return null;
+        }
+
+        Long effectiveDonorId = resolvedDonorId != null ? resolvedDonorId : dto.donorId();
 
         return new CreateDonationRequestCommand(
-                dto.donorId(),
+                effectiveDonorId,
                 dto.publicationId(),
                 dto.foundationId(),
                 dto.message(),
-                dto.deliveryMode(),
-                dto.deliveryPoint(),
-                dto.startTime(),
-                dto.endTime()
+                dto.resolvedDeliveryMode(),
+                dto.resolvedDeliveryPoint(),
+                dto.resolvedStartTime(),
+                dto.resolvedEndTime()
         );
     }
 
