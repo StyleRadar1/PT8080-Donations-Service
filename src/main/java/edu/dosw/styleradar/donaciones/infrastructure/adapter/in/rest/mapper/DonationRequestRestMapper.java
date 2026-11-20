@@ -26,7 +26,7 @@ public class DonationRequestRestMapper {
         if (dto == null) {
             return null;
         }
-        return toCommand(dto, dto.donorId());
+        return toCommand(dto, null);
     }
 
     public CreateDonationRequestCommand toCommand(CreateDonationRequestDTO dto, Long resolvedDonorId) {
@@ -34,10 +34,8 @@ public class DonationRequestRestMapper {
             return null;
         }
 
-        Long effectiveDonorId = resolvedDonorId != null ? resolvedDonorId : dto.donorId();
-
         return new CreateDonationRequestCommand(
-                effectiveDonorId,
+                resolvedDonorId,
                 dto.publicationId(),
                 dto.foundationId(),
                 dto.message(),

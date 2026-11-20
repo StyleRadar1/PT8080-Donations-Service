@@ -2,6 +2,8 @@ package edu.dosw.styleradar.donaciones.application.dto.request;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import edu.dosw.styleradar.donaciones.domain.model.DeliveryMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -10,19 +12,18 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO para la solicitud de creación de una petición de donación hacia una fundación,
- * permitiendo resolver el donante desde el token de sesión JWT y recibir la propuesta
- * de entrega en el objeto estructurado {@code deliveryProposal} o en campos planos heredados.
+ * DTO para la solicitud de creación de una petición de donación hacia una fundación.
+ * La identidad del donante se obtiene exclusivamente desde el token de sesión JWT (ignorando
+ * cualquier campo {@code donorId} enviado por clientes previos) y la propuesta de entrega
+ * se recibe en {@code deliveryProposal} o en los campos planos retrocompatibles.
  */
-@Schema(description = "Request payload to create a new garment donation request with an initial delivery proposal")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "Request payload to create a new garment donation request with an initial delivery proposal (donor identity is derived from JWT)")
 public record CreateDonationRequestDTO(
 
         @Schema(description = "ID of the second-hand publication to donate", example = "1")
         @NotNull(message = "El ID de la publicación es obligatorio")
         Long publicationId,
-
-        @Schema(description = "Optional donor user ID; resolved automatically from the authenticated JWT session token when omitted", example = "101", nullable = true)
-        Long donorId,
 
         @Schema(description = "ID of the target foundation", example = "3")
         @NotNull(message = "El ID de la fundación es obligatorio")
@@ -55,7 +56,6 @@ public record CreateDonationRequestDTO(
      */
     public CreateDonationRequestDTO(
             Long publicationId,
-            Long donorId,
             Long foundationId,
             String message,
             DeliveryMode deliveryMode,
@@ -63,11 +63,11 @@ public record CreateDonationRequestDTO(
             LocalDateTime startTime,
             LocalDateTime endTime
     ) {
-        this(publicationId, donorId, foundationId, message, deliveryMode, deliveryPoint, startTime, endTime, null);
+        this(publicationId, foundationId, message, deliveryMode, deliveryPoint, startTime, endTime, null);
     }
 
     /**
-     * Constructor conveniente para solicitudes con objeto {@code deliveryProposal} estructurado y donante inferido del JWT.
+     * Constructor conveniente para solicitudes con objeto {@code deliveryProposal} estructurado.
      */
     public CreateDonationRequestDTO(
             Long publicationId,
@@ -75,7 +75,7 @@ public record CreateDonationRequestDTO(
             String message,
             DeliveryProposalDTO deliveryProposal
     ) {
-        this(publicationId, null, foundationId, message, null, null, null, null, deliveryProposal);
+        this(publicationId, foundationId, message, null, null, null, null, deliveryProposal);
     }
 
     public DeliveryMode resolvedDeliveryMode() {

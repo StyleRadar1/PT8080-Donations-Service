@@ -343,7 +343,7 @@ public class DonationRequestController {
 
     @Operation(
             summary = "Create donation request with target foundation and delivery proposal",
-            description = "Submits a garment to an active partner foundation including the initial deliveryProposal (deliveryMode, deliveryPoint, startTime, endTime) or legacy flat fields. If donorId is omitted, the donor identity is resolved from the authenticated JWT session token. Created in PENDING state and emits an integration event. Requires USER, STORE, or ADMIN role.",
+            description = "Submits a garment to an active partner foundation including the initial deliveryProposal (deliveryMode, deliveryPoint, startTime, endTime) or legacy flat fields. The donor identity (donorId) is obtained exclusively from the authenticated JWT session token, ignoring any client-supplied donorId. Created in PENDING state and emits an integration event. Requires USER, STORE, or ADMIN role.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
@@ -508,14 +508,11 @@ public class DonationRequestController {
     @PreAuthorize("hasAnyRole('USER', 'STORE', 'ADMIN')")
     public ResponseEntity<DonationRequestResponseDTO> createDonationRequest(
             @Valid @RequestBody CreateDonationRequestDTO requestDTO) {
-        Long resolvedDonorId = requestDTO.donorId() != null
-                ? requestDTO.donorId()
-                : resourceOwnershipValidator.extractAuthenticatedUserId();
+        Long resolvedDonorId = resourceOwnershipValidator.extractAuthenticatedUserId();
         if (resolvedDonorId == null) {
             throw new InvalidDonationRequestException(
-                    "El identificador del donante no está disponible en el token de sesión ni en la solicitud");
+                    "El identificador del donante no está disponible en el token de sesión JWT");
         }
-        resourceOwnershipValidator.validateOwnerOrAdmin(resolvedDonorId);
         CreateDonationRequestCommand command = donationRequestRestMapper.toCommand(requestDTO, resolvedDonorId);
         DonationRequest request = createDonationRequestUseCase.create(command);
         DonationRequestResponseDTO response = donationRequestRestMapper.toResponse(request);
