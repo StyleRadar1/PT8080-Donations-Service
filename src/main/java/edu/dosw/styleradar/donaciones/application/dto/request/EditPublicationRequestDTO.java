@@ -64,21 +64,15 @@ public record EditPublicationRequestDTO(
         @DecimalMin(value = "0.0", message = "El precio debe ser mayor o igual a 0")
         BigDecimal price,
 
-        @Schema(description = "Bogota D.C. district (localidad) where the garment is located", example = "CHAPINERO")
+        @Schema(description = "Bogota D.C. district (localidad) where the garment is located; preserves existing localidad when omitted", example = "CHAPINERO", nullable = true)
         LocalidadBogota localidad,
 
         @Schema(description = "Garment photo URLs (maximum 4)", example = "[\"https://cdn.styleradar.com/garments/chaqueta_editada.jpg\"]")
         @jakarta.validation.constraints.Size(max = 4, message = "No se permiten más de 4 fotografías")
         List<String> photos
 ) {
-    public EditPublicationRequestDTO {
-        if (localidad == null) {
-            localidad = LocalidadBogota.CHAPINERO;
-        }
-    }
-
     /**
-     * Constructor de sobrecarga para compatibilidad hacia atrás.
+     * Constructor de sobrecarga para compatibilidad hacia atrás (conserva la localidad previa).
      */
     public EditPublicationRequestDTO(
             Long userId,
@@ -93,6 +87,6 @@ public record EditPublicationRequestDTO(
             BigDecimal price,
             List<String> photos
     ) {
-        this(userId, garmentName, description, garmentType, brand, color, style, size, conservationStatus, price, LocalidadBogota.CHAPINERO, photos);
+        this(userId, garmentName, description, garmentType, brand, color, style, size, conservationStatus, price, null, photos);
     }
 }
