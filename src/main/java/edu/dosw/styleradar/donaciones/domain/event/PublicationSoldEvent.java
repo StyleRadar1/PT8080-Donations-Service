@@ -12,26 +12,45 @@ public record PublicationSoldEvent(
         Long userId,
         Long compradorId,
         List<Long> interesadosIds,
-        Instant occurredOn
+        Instant occurredOn,
+        String nombrePrenda
 ) {
     public PublicationSoldEvent {
         interesadosIds = sanitizeInteresados(interesadosIds, userId, compradorId);
     }
 
+    public PublicationSoldEvent(
+            Long publicationId,
+            Long userId,
+            Long compradorId,
+            List<Long> interesadosIds,
+            Instant occurredOn) {
+        this(publicationId, userId, compradorId, interesadosIds, occurredOn, null);
+    }
+
     public PublicationSoldEvent(Long publicationId, Long userId) {
-        this(publicationId, userId, null, List.of(), Instant.now());
+        this(publicationId, userId, null, List.of(), Instant.now(), null);
     }
 
     public PublicationSoldEvent(Long publicationId, Long userId, Long compradorId) {
-        this(publicationId, userId, compradorId, List.of(), Instant.now());
+        this(publicationId, userId, compradorId, List.of(), Instant.now(), null);
     }
 
     public PublicationSoldEvent(Long publicationId, Long userId, Long compradorId, List<Long> interesadosIds) {
-        this(publicationId, userId, compradorId, interesadosIds, Instant.now());
+        this(publicationId, userId, compradorId, interesadosIds, Instant.now(), null);
+    }
+
+    public PublicationSoldEvent(
+            Long publicationId,
+            Long userId,
+            Long compradorId,
+            List<Long> interesadosIds,
+            String nombrePrenda) {
+        this(publicationId, userId, compradorId, interesadosIds, Instant.now(), nombrePrenda);
     }
 
     public PublicationSoldEvent(Long publicationId, Long userId, Instant occurredOn) {
-        this(publicationId, userId, null, List.of(), occurredOn);
+        this(publicationId, userId, null, List.of(), occurredOn, null);
     }
 
     private static List<Long> sanitizeInteresados(List<Long> rawInteresados, Long sellerId, Long buyerId) {

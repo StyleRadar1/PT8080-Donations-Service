@@ -6,7 +6,7 @@ Carpeta oficial de pruebas funcionales, seguridad RBAC/BOLA, reglas de dominio e
 
 | Archivo | Propósito |
 | :--- | :--- |
-| [`StyleRadar-Donations-Service.postman_collection.json`](StyleRadar-Donations-Service.postman_collection.json) | Colección Postman v2.1 con **6 carpetas**, **108 peticiones** y aserciones automáticas (`pm.test`) para cada código HTTP. |
+| [`StyleRadar-Donations-Service.postman_collection.json`](StyleRadar-Donations-Service.postman_collection.json) | Colección Postman v2.1 con **6 carpetas**, **110 peticiones** y aserciones automáticas (`pm.test`) para cada código HTTP. |
 | [`StyleRadar-Local.postman_environment.json`](StyleRadar-Local.postman_environment.json) | Variables de entorno para ejecución local (`http://localhost:8520` + mock `ms-tiendas` en `:8140`). |
 | [`StyleRadar-QA.postman_environment.json`](StyleRadar-QA.postman_environment.json) | Variables de entorno para Azure QA (`https://styleradar-donaciones-qa-jmunar.azurewebsites.net`). |
 | [`mock-tiendas.js`](mock-tiendas.js) | Simulador ligero en Node.js de `ms-tiendas` (`:8140`) para probar `200`, `400` (fundación inactiva `99`), `404` (`9999`) y `503` (`503` / caída temporal) sin depender de otro repositorio. |
@@ -46,7 +46,7 @@ Para que las 3 pruebas de la carpeta **`03 - Carga de Fotografías`** encuentren
   1. En el panel izquierdo, haz clic en los **tres puntos (`...`)** junto a **`StyleRadar - ms-segunda-vida-donaciones (API v1 Complete Suite)`** → **Run**.
   2. Verifica que todas las carpetas (`01` a `06`) estén seleccionadas en su orden original.
   3. Haz clic en **Run StyleRadar - ms-segunda-vida-donaciones...**.
-  4. Todas las peticiones guardan sus propios tokens (`tokenUser`, `tokenStore`, `tokenFoundation`, `tokenAdmin`) e IDs (`salePubId`, `retirePubId`, `donatePubId`, `rejectDonatePubId`, `openShowcasePubId`, `donationRequestId`, `rejectRequestId`, `claimedRequestId`), por lo que debe cerrar con **108/108 assertions passed** (y puedes volver a darle *Run again* las veces que quieras).
+  4. Todas las peticiones guardan sus propios tokens (`tokenUser`, `tokenStore`, `tokenFoundation`, `tokenAdmin`) e IDs (`salePubId`, `retirePubId`, `donatePubId`, `rejectDonatePubId`, `openShowcasePubId`, `donationRequestId`, `rejectRequestId`, `claimedRequestId`), por lo que debe cerrar con **110/110 assertions passed** (y puedes volver a darle *Run again* las veces que quieras).
 * **Opción B — Probar peticiones una por una:**
   1. Ejecuta primero las peticiones `200` de **`02 - Autenticación Demo`** (para generar y guardar los 4 tokens JWT) y la `201` de **`03 - Carga de Fotografías`** (para guardar `uploadedPhotoUrl`).
   2. En las carpetas **`04`**, **`05`** y **`06`**, respeta el orden de aparición dentro de cada endpoint, porque las pruebas `409 Conflict` reutilizan las publicaciones/solicitudes recién vendidas, reclamadas o confirmadas en las peticiones anteriores.

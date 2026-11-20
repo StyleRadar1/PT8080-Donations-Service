@@ -73,6 +73,7 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
 
     private Long publicacionId;
     private Long prendaId;
+    private String nombrePrenda;
     private Long vendedorId;
     private Long compradorId;
     @Builder.Default
@@ -88,7 +89,7 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
     private String timestamp = Instant.now().toString();
 
     @Builder.Default
-    private String fechaEvento = Instant.now().toString();
+    private String fechaEvento = IntegrationDateFormatter.nowLocalDateTime();
 
     @Data
     @Builder
@@ -103,6 +104,7 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
 
         private Long publicacionId;
         private Long prendaId;
+        private String nombrePrenda;
         private Long vendedorId;
         private Long compradorId;
         @Builder.Default
@@ -111,10 +113,12 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
         private String moneda;
         private String estado;
         private String fechaVenta;
+        private String fechaEvento;
     }
 
     public static SegundaVidaDonacionPrendaVendidaIntegrationEvent from(PublicationSoldEvent domainEvent) {
         String now = domainEvent.occurredOn() != null ? domainEvent.occurredOn().toString() : Instant.now().toString();
+        String localFechaEvento = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
         String corrId = UUID.randomUUID().toString();
         String evtId = UUID.randomUUID().toString();
 
@@ -126,12 +130,14 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
                 .version(1)
                 .publicacionId(domainEvent.publicationId())
                 .prendaId(domainEvent.publicationId())
+                .nombrePrenda(domainEvent.nombrePrenda())
                 .vendedorId(domainEvent.userId())
                 .compradorId(domainEvent.compradorId())
                 .interesadosIds(interesados)
                 .estado("VENDIDA")
                 .moneda("COP")
                 .fechaVenta(now)
+                .fechaEvento(localFechaEvento)
                 .build();
 
         return SegundaVidaDonacionPrendaVendidaIntegrationEvent.builder()
@@ -150,6 +156,7 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
                 .canal("C2C")
                 .publicacionId(domainEvent.publicationId())
                 .prendaId(domainEvent.publicationId())
+                .nombrePrenda(domainEvent.nombrePrenda())
                 .vendedorId(domainEvent.userId())
                 .compradorId(domainEvent.compradorId())
                 .interesadosIds(interesados)
@@ -157,7 +164,7 @@ public class SegundaVidaDonacionPrendaVendidaIntegrationEvent implements Seriali
                 .moneda("COP")
                 .fechaVenta(now)
                 .timestamp(now)
-                .fechaEvento(now)
+                .fechaEvento(localFechaEvento)
                 .data(dataEnvelope)
                 .build();
     }

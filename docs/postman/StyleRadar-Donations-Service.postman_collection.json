@@ -627,7 +627,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim C2C\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 85000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim C2C\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 85000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -685,7 +685,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Saco Lana Para Retiro\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 45000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Saco Lana Para Retiro\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 45000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -740,7 +740,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Abrigo Térmico Donación\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 90000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Abrigo Térmico Donación\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 90000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -795,7 +795,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Camisa Lino Rechazo\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 50000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Camisa Lino Rechazo\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 50000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -850,7 +850,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Suéter Vitrina Abierta\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Suéter Vitrina Abierta\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -908,7 +908,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Bufanda Vitrina 503\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Bufanda Vitrina 503\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -963,7 +963,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Prenda Inválida\",\n  \"description\": \"\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Zara\",\n  \"color\": \"Negro\",\n  \"style\": \"CASUAL\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"photos\": []\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Prenda Inválida\",\n  \"description\": \"\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Zara\",\n  \"color\": \"Negro\",\n  \"style\": \"CASUAL\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"photos\": []\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1018,7 +1018,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1070,7 +1070,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1105,7 +1105,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/second-hand/publications?garmentType=UPPER&localidad=CHAPINERO&esDonacion=false",
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications?garmentType=Chaquetas&localidad=CHAPINERO&esDonacion=false",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1118,7 +1118,7 @@
               "query": [
                 {
                   "key": "garmentType",
-                  "value": "UPPER"
+                  "value": "Chaquetas"
                 },
                 {
                   "key": "localidad",
@@ -1431,7 +1431,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Editada\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 79000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Editada\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 79000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1489,7 +1489,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Precio Inválido\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Precio Inválido\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1545,7 +1545,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1598,7 +1598,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1659,7 +1659,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1736,6 +1736,65 @@
                   "    pm.expect(body).to.have.property('detail');",
                   "    pm.expect(body).to.have.property('type');",
                   "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 400 Bad Request (Rechaza interesadosIds desde cliente)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/sale?userId={{userId}}&compradorId={{otherUserId}}&interesadosIds=201,202",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "compradorId",
+                  "value": "{{otherUserId}}"
+                },
+                {
+                  "key": "interesadosIds",
+                  "value": "201,202"
+                }
+              ]
+            },
+            "description": "Verifica bloqueo de seguridad contra inyección de interesadosIds arbitrarios desde cliente."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 Rechaza interesadosIds enviado desde cliente', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('detail');",
                   "});"
                 ]
               }
@@ -2045,7 +2104,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Intento Edición Vendida\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"UPPER\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Intento Edición Vendida\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3657,7 +3716,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 99,\n  \"message\": \"Fundación inactiva\",\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 99,\n  \"message\": \"Fundación inactiva\",\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3680,6 +3739,62 @@
                   "    pm.expect(body).to.have.property('detail');",
                   "    pm.expect(body).to.have.property('type');",
                   "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 400 Bad Request (deliveryProposal incompleto)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "Valida rechazo de propuesta de entrega incompleta aun sin enviar donorId.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryProposal\": {\n    \"deliveryMode\": \"DROP_OFF_POINT\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 Error de validación en deliveryProposal', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body.title).to.eql('Error de validación');",
                   "});"
                 ]
               }
@@ -3711,7 +3826,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3733,7 +3848,7 @@
           ]
         },
         {
-          "name": "POST /donations - 403 Forbidden (donorId ajeno o rol FOUNDATION)",
+          "name": "POST /donations - 403 Forbidden (rol FOUNDATION no habilitado)",
           "request": {
             "method": "POST",
             "header": [
@@ -3762,7 +3877,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3821,7 +3936,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 9999,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 9999,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3880,7 +3995,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 503,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 503,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3939,7 +4054,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"message\": \"Deseo donar este abrigo térmico para programas comunitarios en Bogotá\",\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"message\": \"Deseo donar este abrigo térmico para programas comunitarios en Bogotá\",\n  \"deliveryProposal\": {\n    \"deliveryMode\": \"DROP_OFF_POINT\",\n    \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n    \"startTime\": \"2026-12-20T09:00:00\",\n    \"endTime\": \"2026-12-20T12:00:00\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3954,10 +4069,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('HTTP 201 Solicitud creada en PENDING', function () {",
+                  "pm.test('HTTP 201 Solicitud creada en PENDING (donorId por JWT + deliveryProposal)', function () {",
                   "    pm.response.to.have.status(201);",
                   "    const b = pm.response.json();",
                   "    pm.expect(b.status).to.eql('PENDING');",
+                  "    pm.expect(b.donorId).to.eql(101);",
                   "    pm.expect(b.deliveryMode).to.eql('DROP_OFF_POINT');",
                   "    pm.expect(b.deliveryPoint).to.be.a('string').and.not.empty;",
                   "    pm.expect(b.slotStart).to.be.a('string');",
@@ -3999,7 +4115,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{rejectDonatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"message\": \"Solicitud para validar rechazo y reversión automática a AVAILABLE\",\n  \"deliveryMode\": \"HOME_PICKUP\",\n  \"deliveryPoint\": \"Carrera 15 # 90-20, Chicó, Bogotá\",\n  \"startTime\": \"2026-12-20T14:00:00\",\n  \"endTime\": \"2026-12-20T17:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{rejectDonatePubId}}\",\n  \"foundationId\": 3,\n  \"message\": \"Solicitud para validar rechazo y reversión automática a AVAILABLE\",\n  \"deliveryMode\": \"HOME_PICKUP\",\n  \"deliveryPoint\": \"Carrera 15 # 90-20, Chicó, Bogotá\",\n  \"startTime\": \"2026-12-20T14:00:00\",\n  \"endTime\": \"2026-12-20T17:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4053,7 +4169,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"donorId\": 101,\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

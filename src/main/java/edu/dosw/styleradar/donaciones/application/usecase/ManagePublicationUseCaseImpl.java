@@ -68,9 +68,16 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
         publication.markAsSold();
         SecondHandPublication saved = publicationRepositoryPort.save(publication);
 
+        String nombrePrenda = saved.getGarment() != null ? saved.getGarment().getName() : null;
         TransactionEventHelper.publishAfterCommitOrImmediate(
                 eventPublisherPort,
-                new PublicationSoldEvent(saved.getId(), saved.getUserId(), compradorId, interesadosIds)
+                new PublicationSoldEvent(
+                        saved.getId(),
+                        saved.getUserId(),
+                        compradorId,
+                        interesadosIds,
+                        nombrePrenda
+                )
         );
         log.info("Publicación ID: {} marcada como VENDIDA exitosamente", saved.getId());
         return saved;

@@ -29,6 +29,8 @@ class GlobalExceptionHandlerTest {
         assertThat(problem.getTitle()).isEqualTo("Acceso denegado");
         assertThat(problem.getDetail()).isEqualTo("Acceso denegado");
         assertThat(problem.getInstance().getPath()).isEqualTo("/api/v1/second-hand/publications");
+        assertThat(problem.getProperties()).containsEntry("code", "FORBIDDEN");
+        assertThat(problem.getProperties()).containsKey("errors");
         assertThat(problem.getProperties()).containsKey("timestamp");
     }
 
@@ -44,6 +46,8 @@ class GlobalExceptionHandlerTest {
         assertThat(problem.getTitle()).isEqualTo("Recurso no encontrado");
         assertThat(problem.getDetail()).isEqualTo("No encontrado");
         assertThat(problem.getInstance().getPath()).isEqualTo("/api/v1/second-hand/publications/99");
+        assertThat(problem.getProperties()).containsEntry("code", "RESOURCE_NOT_FOUND");
+        assertThat(problem.getProperties()).containsKey("errors");
         assertThat(problem.getProperties()).containsKey("timestamp");
     }
 
@@ -58,6 +62,8 @@ class GlobalExceptionHandlerTest {
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(problem.getTitle()).isEqualTo("Solicitud inválida");
         assertThat(problem.getDetail()).isEqualTo("Invariante violada");
+        assertThat(problem.getProperties()).containsEntry("code", "BAD_REQUEST");
+        assertThat(problem.getProperties()).containsKey("errors");
     }
 
     @Test
@@ -71,6 +77,8 @@ class GlobalExceptionHandlerTest {
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
         assertThat(problem.getTitle()).isEqualTo("Conflicto de dominio");
         assertThat(problem.getDetail()).isEqualTo("Conflicto");
+        assertThat(problem.getProperties()).containsEntry("code", "DOMAIN_CONFLICT");
+        assertThat(problem.getProperties()).containsKey("errors");
     }
 
     @Test
@@ -83,5 +91,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
         assertThat(problem.getTitle()).isEqualTo("Error interno del servidor");
+        assertThat(problem.getProperties()).containsEntry("code", "INTERNAL_SERVER_ERROR");
+        assertThat(problem.getProperties()).containsKey("errors");
     }
 }

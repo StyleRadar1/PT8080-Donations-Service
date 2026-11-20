@@ -74,6 +74,7 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
     private Long donorId;
     private Long foundationId;
     private Long fundacionId;
+    private String nombreFundacion;
     private String estado;
     private String status;
     private String estadoAnterior;
@@ -90,7 +91,10 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
     private String timestamp = Instant.now().toString();
 
     @Builder.Default
-    private String fechaEvento = Instant.now().toString();
+    private String fechaCambio = IntegrationDateFormatter.nowLocalDateTime();
+
+    @Builder.Default
+    private String fechaEvento = IntegrationDateFormatter.nowLocalDateTime();
 
     @Data
     @Builder
@@ -110,6 +114,7 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
         private Long donorId;
         private Long fundacionId;
         private Long foundationId;
+        private String nombreFundacion;
         private Long publicacionId;
         private Long publicationId;
         private String estado;
@@ -121,5 +126,6 @@ public class SegundaVidaDonacionEstadoCambiadoIntegrationEvent implements Serial
         private String puntoEntrega;
         private String deliveryPoint;
         private String fechaProgramada;
+        private String fechaCambio;
     }
 }

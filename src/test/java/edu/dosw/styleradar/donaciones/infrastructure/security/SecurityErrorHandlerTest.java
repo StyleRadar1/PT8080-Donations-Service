@@ -35,7 +35,7 @@ class SecurityErrorHandlerTest {
 
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(response.getContentType()).isEqualTo("application/problem+json;charset=UTF-8");
-        assertThat(response.getContentAsString()).contains("No autorizado");
+        assertThat(response.getContentAsString()).contains("No autorizado", "\"code\":\"UNAUTHORIZED\"", "\"errors\":[]");
     }
 
     @Test
@@ -48,6 +48,6 @@ class SecurityErrorHandlerTest {
 
         assertThat(response.getStatus()).isEqualTo(403);
         assertThat(response.getContentType()).isEqualTo("application/problem+json;charset=UTF-8");
-        assertThat(response.getContentAsString()).contains("Acceso denegado");
+        assertThat(response.getContentAsString()).contains("Acceso denegado", "\"code\":\"FORBIDDEN\"", "\"errors\":[]");
     }
 }

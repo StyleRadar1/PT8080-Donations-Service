@@ -169,16 +169,19 @@ class DonationEventPublisherAdapterTest {
         assertThat(consumedStatus.getNuevoEstado()).isEqualTo("APROBADA");
 
         SegundaVidaDonacionPrendaVendidaIntegrationEvent soldPayload = SegundaVidaDonacionPrendaVendidaIntegrationEvent.from(
-                new PublicationSoldEvent(50L, 101L, 102L, List.of(201L, 202L)));
+                new PublicationSoldEvent(50L, 101L, 102L, List.of(201L, 202L), "Chaqueta bomber"));
         Message soldMsg = converter.toMessage(soldPayload, new MessageProperties());
         SegundaVidaDonacionPrendaVendidaIntegrationEvent consumedSold =
                 (SegundaVidaDonacionPrendaVendidaIntegrationEvent) converter.fromMessage(
                         soldMsg, new ParameterizedTypeReference<SegundaVidaDonacionPrendaVendidaIntegrationEvent>() {}.getType());
 
         assertThat(consumedSold.getPublicacionId()).isEqualTo(50L);
+        assertThat(consumedSold.getNombrePrenda()).isEqualTo("Chaqueta bomber");
         assertThat(consumedSold.getVendedorId()).isEqualTo(101L);
         assertThat(consumedSold.getCompradorId()).isEqualTo(102L);
         assertThat(consumedSold.getInteresadosIds()).containsExactly(201L, 202L);
+        assertThat(consumedSold.getFechaEvento()).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}");
+        assertThat(LocalDateTime.parse(consumedSold.getFechaEvento())).isNotNull();
         assertThat(consumedSold.getData().getInteresadosIds()).containsExactly(201L, 202L);
     }
 
@@ -197,13 +200,18 @@ class DonationEventPublisherAdapterTest {
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
         assertThat(published.getDonacionId()).isEqualTo(10L);
         assertThat(published.getDonanteId()).isEqualTo(30L);
+        assertThat(published.getNuevoEstado()).isEqualTo("APROBADA");
+        assertThat(published.getFechaCambio()).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}");
+        assertThat(published.getFechaEvento()).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}");
+        assertThat(LocalDateTime.parse(published.getFechaCambio())).isNotNull();
         assertThat(published.getData()).isNotNull();
         assertThat(published.getData().getDonacionId()).isEqualTo(10L);
         assertThat(published.getData().getDonanteId()).isEqualTo(30L);
+        assertThat(published.getData().getFechaCambio()).isEqualTo(published.getFechaCambio());
     }
 
     @Test
-    @DisplayName("Debe publicar evento de agendamiento de recogida con donacionId y donanteId para ms-notificaciones")
+    @DisplayName("Debe publicar evento de agendamiento de recogida con estado CITA_PROGRAMADA, donacionId y fechaCambio ISO-8601 sin zona")
     void shouldPublishPickupScheduledEvent() {
         PickupScheduledEvent event = new PickupScheduledEvent(
                 10L,
@@ -221,8 +229,14 @@ class DonationEventPublisherAdapterTest {
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
         assertThat(published.getDonacionId()).isEqualTo(10L);
         assertThat(published.getDonanteId()).isEqualTo(99L);
+        assertThat(published.getNuevoEstado()).isEqualTo("CITA_PROGRAMADA");
+        assertThat(published.getNuevoEstado()).contains("CITA");
+        assertThat(published.getMotivo()).isEqualTo("Punto de entrega: Punto Central");
+        assertThat(published.getFechaCambio()).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}");
+        assertThat(LocalDateTime.parse(published.getFechaCambio())).isNotNull();
         assertThat(published.getData().getDonacionId()).isEqualTo(10L);
         assertThat(published.getData().getDonanteId()).isEqualTo(99L);
+        assertThat(published.getData().getNuevoEstado()).isEqualTo("CITA_PROGRAMADA");
     }
 
     @Test

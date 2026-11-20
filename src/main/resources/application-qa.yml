@@ -47,6 +47,8 @@ spring:
       trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
       trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
       trust-store-type: ${RABBITMQ_TRUSTSTORE_TYPE:PKCS12}
+      # Verificación de hostname activa (certificado QA incluye SAN styleradar-rabbitmq-qa.northcentralus.cloudapp.azure.com e IP 20.88.7.76);
+      # en QA puede sobrescribirse temporalmente con RABBITMQ_SSL_VERIFY_HOSTNAME=false si se usa un alias interno sin SAN.
       verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
     publisher-confirm-type: correlated
     publisher-returns: true
@@ -70,6 +72,8 @@ app:
       simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
     simulator:
       enabled: false
+    topology:
+      enabled: ${RABBITMQ_DECLARE_TOPOLOGY:false}
 
 # Azure Blob Storage para QA en la Nube
 azure:

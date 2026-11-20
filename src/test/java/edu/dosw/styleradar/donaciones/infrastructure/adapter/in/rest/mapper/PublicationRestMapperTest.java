@@ -66,6 +66,7 @@ class PublicationRestMapperTest {
         assertThat(cmd.userId()).isEqualTo(101L);
         assertThat(cmd.publicationId()).isEqualTo(1L);
         assertThat(cmd.garment().getName()).isEqualTo("Chaqueta Editada");
+        assertThat(cmd.localidad()).isNull();
         assertThat(cmd.photos()).isEmpty();
     }
 
