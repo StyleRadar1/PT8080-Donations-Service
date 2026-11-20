@@ -21,8 +21,8 @@ master / main                           <-- Producción (Azure PROD · Requiere 
 
 - [x] La rama parte de la versión más reciente de `develop`.
 - [x] El código compila limpiamente sin advertencias críticas con `mvn clean compile`.
-- [x] Todas las pruebas automatizadas pasan en verde (`mvn -B clean verify "-Dapi.version=1.44"` con **271 pasando en local**, 0 fallos, 0 errores, 1 condicional PostgreSQL CI omitida).
-- [x] La cobertura en JaCoCo supera el 85% obligatorio (alcanzado **98.26% líneas / 98.07% instrucciones / 89.19% ramas / 96.27% métodos**).
+- [x] Todas las pruebas automatizadas pasan en verde (`mvn -B clean verify "-Dapi.version=1.44"` con **273 pasando en local**, 0 fallos, 0 errores, 1 condicional PostgreSQL CI omitida).
+- [x] La cobertura en JaCoCo supera el 85% obligatorio (alcanzado **98.25% líneas / 98.09% instrucciones / 89.27% ramas / 96.27% métodos**).
 - [x] Diagramas de arquitectura actualizados en [`docs/diagramas/drawio`](../diagramas/drawio) y [`docs/diagramas/png`](../diagramas/png).
 - [x] Evidencias de pruebas, cobertura JaCoCo, SonarQube, Swagger y despliegue almacenadas en [`docs/evidencias/`](../evidencias/).
 - [x] Colección Postman y pruebas automatizadas de todos los endpoints disponibles en [`docs/postman/`](../postman/).

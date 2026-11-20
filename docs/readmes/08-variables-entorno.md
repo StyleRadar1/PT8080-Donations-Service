@@ -26,8 +26,8 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 | `RABBITMQ_TRUSTSTORE_PATH` | Ruta del truststore PKCS12/JKS para AMQPS | `classpath:certs/rabbitmq-truststore.jks` | Sí |
 | `RABBITMQ_TRUSTSTORE_PASSWORD` | Contraseña del truststore RabbitMQ | `changeit` | Sí |
 | `RABBITMQ_TRUSTSTORE_TYPE` | Tipo de keystore del truststore | `PKCS12` | Opcional |
-| `RABBITMQ_SSL_VERIFY_HOSTNAME` | Verificación estricta de hostname en certificado AMQPS | `false` | Opcional |
-| `RABBITMQ_DECLARE_TOPOLOGY` | Declara colas/exchanges al arrancar (`false` para usuario publicador) | `true` (`false` en QA/PROD) | Opcional |
+| `RABBITMQ_SSL_VERIFY_HOSTNAME` | Verificación estricta de hostname en certificado AMQPS *(en QA puede ajustarse a `false` temporalmente solo si el host interno carece de SAN)* | `true` | Sí (`true` en `prod`) |
+| `RABBITMQ_DECLARE_TOPOLOGY` | Declara colas/exchanges al arrancar (`false` para usuario publicador; requiere `styleradar.exchange` y bindings creados en el vhost destino) | `true` (`false` en QA/PROD) | Opcional |
 | `RABBITMQ_EXCHANGE` | Exchange compartido de eventos | `styleradar.exchange` | Sí |
 | `RABBITMQ_CHAT_EXCHANGE` | Exchange para eventos hacia chat | `styleradar.exchange` | Sí |
 | `RABBITMQ_ROUTING_KEY_DONACION_CREATED` | Routing key de nueva solicitud hacia `ms-notificaciones` | `styleradar.donaciones.solicitud.creada` | Sí |
