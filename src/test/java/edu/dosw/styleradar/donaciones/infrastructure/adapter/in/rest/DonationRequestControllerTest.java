@@ -204,6 +204,39 @@ class DonationRequestControllerTest {
     }
 
     @Test
+    @DisplayName("POST /donaciones - Debe aceptar alias mode y point dentro de deliveryProposal (SR-RF-45 v4)")
+    void shouldAcceptDeliveryProposalAliasesModeAndPoint() throws Exception {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        String v4AliasPayload = """
+                {
+                  "publicationId": 10,
+                  "foundationId": 501,
+                  "message": "Con alias mode y point",
+                  "deliveryProposal": {
+                    "mode": "DROP_OFF_POINT",
+                    "point": "Cra 7 # 45",
+                    "startTime": "%s",
+                    "endTime": "%s"
+                  }
+                }
+                """.formatted(start, start.plusHours(2));
+        DonationRequest created = buildSampleRequest(1L, DonationRequestStatus.PENDING);
+
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(101L);
+        when(createDonationRequestUseCase.create(argThat(cmd ->
+                cmd != null && DeliveryMode.DROP_OFF_POINT.equals(cmd.deliveryMode())
+                        && "Cra 7 # 45".equals(cmd.deliveryPoint())
+        ))).thenReturn(created);
+
+        mockMvc.perform(post("/api/v1/donations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(v4AliasPayload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.deliveryMode").value("DROP_OFF_POINT"))
+                .andExpect(jsonPath("$.deliveryPoint").value("Cra 7 # 45"));
+    }
+
+    @Test
     @DisplayName("POST /donaciones - Debe responder 400 Bad Request si la identidad del donante no viene en el token JWT")
     void shouldFailWhenDonorIdMissingFromToken() throws Exception {
         LocalDateTime start = LocalDateTime.now().plusDays(1);
@@ -264,7 +297,10 @@ class DonationRequestControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").value("Error de validación"));
+                .andExpect(jsonPath("$.title").value("Error de validación"))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.errors[0].field").isNotEmpty())
+                .andExpect(jsonPath("$.errors[0].message").isNotEmpty());
     }
 
     @Test
