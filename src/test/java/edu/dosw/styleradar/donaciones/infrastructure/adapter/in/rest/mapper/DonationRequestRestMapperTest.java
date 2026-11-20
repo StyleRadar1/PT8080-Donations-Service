@@ -32,16 +32,16 @@ class DonationRequestRestMapperTest {
     }
 
     @Test
-    @DisplayName("Debe mapear CreateDonationRequestDTO a CreateDonationRequestCommand")
+    @DisplayName("Debe mapear CreateDonationRequestDTO a CreateDonationRequestCommand usando donante resuelto")
     void shouldMapCreateRequestToCommand() {
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime end = start.plusHours(2);
         CreateDonationRequestDTO dto = new CreateDonationRequestDTO(
-                1L, 101L, 501L, "Mensaje",
+                1L, 501L, "Mensaje",
                 DeliveryMode.HOME_PICKUP, "Calle 85 # 15-32, Bogotá", start, end
         );
 
-        CreateDonationRequestCommand cmd = mapper.toCommand(dto);
+        CreateDonationRequestCommand cmd = mapper.toCommand(dto, 101L);
 
         assertThat(cmd.publicationId()).isEqualTo(1L);
         assertThat(cmd.donorId()).isEqualTo(101L);
@@ -51,6 +51,7 @@ class DonationRequestRestMapperTest {
         assertThat(cmd.deliveryPoint()).isEqualTo("Calle 85 # 15-32, Bogotá");
         assertThat(cmd.startTime()).isEqualTo(start);
         assertThat(cmd.endTime()).isEqualTo(end);
+        assertThat(mapper.toCommand(dto).donorId()).isNull();
     }
 
     @Test

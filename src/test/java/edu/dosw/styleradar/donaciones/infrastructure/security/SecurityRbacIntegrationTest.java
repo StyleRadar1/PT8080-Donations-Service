@@ -9,6 +9,7 @@ import edu.dosw.styleradar.donaciones.application.dto.request.CreatePublicationR
 import edu.dosw.styleradar.donaciones.application.dto.request.DecideDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
+import edu.dosw.styleradar.donaciones.domain.model.DeliveryMode;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
 import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
@@ -490,5 +491,52 @@ class SecurityRbacIntegrationTest {
                         .header("Access-Control-Request-Method", "GET")
                         .header("Access-Control-Request-Headers", "Authorization"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Debe ignorar donorId enviado en el payload de POST /api/v1/donations y tomar siempre el del token JWT")
+    void shouldIgnoreSpoofedDonorIdInPayloadAndResolveFromJwt() throws Exception {
+        String userToken = jwtTokenProvider.generateToken(101L, "user1@styleradar.com", Role.USER, "Donante Real");
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime end = start.plusHours(2);
+
+        String payloadWithSpoofedDonor = """
+                {
+                  "publicationId": 10,
+                  "donorId": 999,
+                  "foundationId": 3,
+                  "message": "Donación desde sesión real",
+                  "deliveryProposal": {
+                    "deliveryMode": "DROP_OFF_POINT",
+                    "deliveryPoint": "Calle 85 # 15-32, Chapinero, Bogotá",
+                    "startTime": "%s",
+                    "endTime": "%s"
+                  }
+                }
+                """.formatted(start, end);
+
+        DonationRequest created = DonationRequest.builder()
+                .id(1L)
+                .publicationId(10L)
+                .donorId(101L)
+                .foundationId(3L)
+                .status(DonationRequestStatus.PENDING)
+                .deliveryMode(DeliveryMode.DROP_OFF_POINT)
+                .deliveryPoint("Calle 85 # 15-32, Chapinero, Bogotá")
+                .pickupStartTime(start)
+                .pickupEndTime(end)
+                .requestedAt(LocalDateTime.now())
+                .build();
+
+        when(createDonationRequestUseCase.create(org.mockito.ArgumentMatchers.argThat(cmd ->
+                cmd != null && Long.valueOf(101L).equals(cmd.donorId())
+        ))).thenReturn(created);
+
+        mockMvc.perform(post("/api/v1/donations")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payloadWithSpoofedDonor))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.donorId").value(101L));
     }
 }

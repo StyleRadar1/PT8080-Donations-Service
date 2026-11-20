@@ -118,15 +118,16 @@ class DonationRequestControllerTest {
     }
 
     @Test
-    @DisplayName("POST /donaciones - Debe crear solicitud de donación y responder 201 Created")
+    @DisplayName("POST /donaciones - Debe crear solicitud de donación con campos planos y responder 201 Created")
     void shouldCreateDonationRequestSuccessfully() throws Exception {
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         CreateDonationRequestDTO request = new CreateDonationRequestDTO(
-                10L, 101L, 501L, "Deseo donar",
+                10L, 501L, "Deseo donar",
                 DeliveryMode.DROP_OFF_POINT, "Cra 7 # 45", start, start.plusHours(2)
         );
         DonationRequest created = buildSampleRequest(1L, DonationRequestStatus.PENDING);
 
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(101L);
         when(createDonationRequestUseCase.create(any())).thenReturn(created);
 
         mockMvc.perform(post("/api/v1/donations")
@@ -135,6 +136,7 @@ class DonationRequestControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "/api/v1/donations/1"))
                 .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.donorId").value(101L))
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.deliveryMode").value("DROP_OFF_POINT"))
                 .andExpect(jsonPath("$.deliveryPoint").value("Cra 7 # 45"))
@@ -170,8 +172,40 @@ class DonationRequestControllerTest {
     }
 
     @Test
-    @DisplayName("POST /donaciones - Debe responder 400 Bad Request si donorId no viene en payload ni en el token")
-    void shouldFailWhenDonorIdMissingFromRequestAndToken() throws Exception {
+    @DisplayName("POST /donaciones - Debe ignorar donorId enviado en payload y usar exclusivamente la identidad del JWT")
+    void shouldIgnoreClientDonorIdAndAlwaysUseJwtToken() throws Exception {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        String spoofedPayload = """
+                {
+                  "publicationId": 10,
+                  "donorId": 999,
+                  "foundationId": 501,
+                  "message": "Intento de suplantación",
+                  "deliveryProposal": {
+                    "deliveryMode": "DROP_OFF_POINT",
+                    "deliveryPoint": "Cra 7 # 45",
+                    "startTime": "%s",
+                    "endTime": "%s"
+                  }
+                }
+                """.formatted(start, start.plusHours(2));
+        DonationRequest created = buildSampleRequest(1L, DonationRequestStatus.PENDING);
+
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(101L);
+        when(createDonationRequestUseCase.create(argThat(cmd ->
+                cmd != null && Long.valueOf(101L).equals(cmd.donorId())
+        ))).thenReturn(created);
+
+        mockMvc.perform(post("/api/v1/donations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(spoofedPayload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.donorId").value(101L));
+    }
+
+    @Test
+    @DisplayName("POST /donaciones - Debe responder 400 Bad Request si la identidad del donante no viene en el token JWT")
+    void shouldFailWhenDonorIdMissingFromToken() throws Exception {
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         DeliveryProposalDTO proposal = new DeliveryProposalDTO(
                 DeliveryMode.HOME_PICKUP, "Calle 85 # 15-32", start, start.plusHours(2)
@@ -224,7 +258,7 @@ class DonationRequestControllerTest {
     @Test
     @DisplayName("POST /donaciones - Debe responder 400 Bad Request cuando faltan IDs o propuesta de entrega obligatorios")
     void shouldFailWhenMissingRequiredFields() throws Exception {
-        CreateDonationRequestDTO request = new CreateDonationRequestDTO(null, null, null, null, null, null, null, null);
+        CreateDonationRequestDTO request = new CreateDonationRequestDTO(null, null, null, null, null, null, null);
 
         mockMvc.perform(post("/api/v1/donations")
                         .contentType(MediaType.APPLICATION_JSON)
