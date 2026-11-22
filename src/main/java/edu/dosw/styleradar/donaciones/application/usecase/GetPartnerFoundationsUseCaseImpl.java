@@ -24,6 +24,7 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
 
     private static final Map<String, String> CATEGORY_ALIASES = Map.ofEntries(
             Map.entry("UPPER", "SUPERIOR"),
+            Map.entry("TOP", "SUPERIOR"),
             Map.entry("CAMISAS", "SUPERIOR"),
             Map.entry("CAMISA", "SUPERIOR"),
             Map.entry("CAMISETAS", "SUPERIOR"),
@@ -37,6 +38,7 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
             Map.entry("DRESS", "SUPERIOR"),
             Map.entry("FULL_BODY", "SUPERIOR"),
             Map.entry("LOWER", "INFERIOR"),
+            Map.entry("BOTTOM", "INFERIOR"),
             Map.entry("PANTALONES", "INFERIOR"),
             Map.entry("PANTALON", "INFERIOR"),
             Map.entry("FALDAS", "INFERIOR"),
@@ -111,8 +113,19 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
         if (rawNormalized == null) {
             return true;
         }
+        if (foundation.categoriasAceptadas() == null) {
+            return false;
+        }
         return foundation.categoriasAceptadas().stream()
                 .map(this::normalizeText)
-                .anyMatch(cat -> cat != null && (cat.equals(rawNormalized) || cat.equals(groupCategory)));
+                .anyMatch(cat -> {
+                    if (cat == null) {
+                        return false;
+                    }
+                    String normalizedGroup = CATEGORY_ALIASES.getOrDefault(cat, cat);
+                    return cat.equals(rawNormalized)
+                            || cat.equals(groupCategory)
+                            || normalizedGroup.equals(groupCategory);
+                });
     }
 }

@@ -46,6 +46,12 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
 
     @Override
     public List<FoundationSummary> findAllActiveFoundations() {
+        return fetchAllFoundations().stream()
+                .filter(FoundationSummary::activa)
+                .toList();
+    }
+
+    private List<FoundationSummary> fetchAllFoundations() {
         try {
             TiendasFoundationResponseDTO[] response = tiendasRestClient.get()
                     .uri(tiendasProperties.getFoundationsPath())
@@ -59,7 +65,6 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
 
             return Arrays.stream(response)
                     .map(this::toDomain)
-                    .filter(FoundationSummary::activa)
                     .toList();
         } catch (RestClientException ex) {
             throw handleTiendasFailure(
@@ -73,6 +78,14 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
     public Optional<FoundationSummary> findFoundationById(Long foundationId) {
         if (foundationId == null || !tiendasProperties.isValidationEnabled()) {
             return Optional.empty();
+        }
+
+        // Si ms-tiendas solo expone el catálogo general (/api/v1/foundations) sin endpoint por ID,
+        // consultamos la lista y filtramos por ID en memoria.
+        if (!hasText(tiendasProperties.getFoundationByIdPath())) {
+            return fetchAllFoundations().stream()
+                    .filter(foundation -> foundationId.equals(foundation.id()))
+                    .findFirst();
         }
 
         try {
