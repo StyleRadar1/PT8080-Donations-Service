@@ -22,9 +22,37 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUseCase {
 
+    private static final Map<String, String> GROUP_ALIASES = Map.ofEntries(
+            Map.entry("SUPERIOR", "SUPERIOR"),
+            Map.entry("UPPER", "SUPERIOR"),
+            Map.entry("TOP", "SUPERIOR"),
+            Map.entry("FULL_BODY", "SUPERIOR"),
+            Map.entry("INFERIOR", "INFERIOR"),
+            Map.entry("LOWER", "INFERIOR"),
+            Map.entry("BOTTOM", "INFERIOR"),
+            Map.entry("CALZADO", "CALZADO"),
+            Map.entry("FOOTWEAR", "CALZADO"),
+            Map.entry("ACCESORIOS", "ACCESORIOS"),
+            Map.entry("ACCESORIO", "ACCESORIOS"),
+            Map.entry("ACCESSORY", "ACCESORIOS"),
+            Map.entry("ACCESSORIES", "ACCESORIOS")
+    );
+
+    private static final Map<String, String> SPECIFIC_ALIASES = Map.ofEntries(
+            Map.entry("CAMISA", "CAMISAS"),
+            Map.entry("CAMISETA", "CAMISETAS"),
+            Map.entry("SUETER", "SUETERES"),
+            Map.entry("CHAQUETA", "CHAQUETAS"),
+            Map.entry("PANTALON", "PANTALONES"),
+            Map.entry("FALDA", "FALDAS"),
+            Map.entry("VESTIDO", "VESTIDOS"),
+            Map.entry("DRESS", "VESTIDOS")
+    );
+
     private static final Map<String, String> CATEGORY_ALIASES = Map.ofEntries(
             Map.entry("UPPER", "SUPERIOR"),
             Map.entry("TOP", "SUPERIOR"),
+            Map.entry("SUPERIOR", "SUPERIOR"),
             Map.entry("CAMISAS", "SUPERIOR"),
             Map.entry("CAMISA", "SUPERIOR"),
             Map.entry("CAMISETAS", "SUPERIOR"),
@@ -39,6 +67,7 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
             Map.entry("FULL_BODY", "SUPERIOR"),
             Map.entry("LOWER", "INFERIOR"),
             Map.entry("BOTTOM", "INFERIOR"),
+            Map.entry("INFERIOR", "INFERIOR"),
             Map.entry("PANTALONES", "INFERIOR"),
             Map.entry("PANTALON", "INFERIOR"),
             Map.entry("FALDAS", "INFERIOR"),
@@ -46,6 +75,7 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
             Map.entry("FOOTWEAR", "CALZADO"),
             Map.entry("CALZADO", "CALZADO"),
             Map.entry("ACCESSORY", "ACCESORIOS"),
+            Map.entry("ACCESSORIES", "ACCESORIOS"),
             Map.entry("ACCESORIOS", "ACCESORIOS"),
             Map.entry("ACCESORIO", "ACCESORIOS")
     );
@@ -116,16 +146,21 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
         if (foundation.categoriasAceptadas() == null) {
             return false;
         }
+        String querySpecific = SPECIFIC_ALIASES.getOrDefault(rawNormalized, rawNormalized);
         return foundation.categoriasAceptadas().stream()
                 .map(this::normalizeText)
                 .anyMatch(cat -> {
                     if (cat == null) {
                         return false;
                     }
-                    String normalizedGroup = CATEGORY_ALIASES.getOrDefault(cat, cat);
-                    return cat.equals(rawNormalized)
-                            || cat.equals(groupCategory)
-                            || normalizedGroup.equals(groupCategory);
+                    String foundationSpecific = SPECIFIC_ALIASES.getOrDefault(cat, cat);
+                    if (foundationSpecific.equals(querySpecific)) {
+                        return true;
+                    }
+                    // Solo expandimos a grupo si la fundación declara explícitamente una categoría grupal
+                    // (e.g., TOP/BOTTOM/FOOTWEAR/SUPERIOR/INFERIOR), respetando tipos específicos (e.g., FALDAS).
+                    String foundationGroup = GROUP_ALIASES.get(cat);
+                    return foundationGroup != null && foundationGroup.equals(groupCategory);
                 });
     }
 }
