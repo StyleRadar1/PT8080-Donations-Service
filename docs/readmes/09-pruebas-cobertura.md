@@ -9,8 +9,8 @@ El proyecto exige una cobertura de código mínima del **85%** verificada autom�
 | Métrica | Valor Alcanzado | Umbral Exigido | Estado |
 | :--- | :---: | :---: | :---: |
 | **Pruebas Automatizadas Ejecutadas** | **276 pasando** *(277 totales: 0 fallos, 0 errores, 1 prueba PostgreSQL condicional CI omitida en local: `VitrinaAbiertaPostgresConcurrencyIntegrationTest`)* | Suite completa | ✅ **0 fallos, 0 errores** |
-| **Cobertura de Instrucciones (JaCoCo)** | **98.04%** (`9600 / 9792`) | `≥ 85.00%` | ✅ **Aprobado (+13.04%)** |
-| **Cobertura de Líneas (JaCoCo)** | **98.17%** (`2149 / 2189`) | `≥ 85.00%` | ✅ **Aprobado (+13.17%)** |
+| **Cobertura de Instrucciones (JaCoCo)** | **98.07%** (`9763 / 9955`) | `≥ 85.00%` | ✅ **Aprobado (+13.07%)** |
+| **Cobertura de Líneas (JaCoCo)** | **98.20%** (`2177 / 2217`) | `≥ 85.00%` | ✅ **Aprobado (+13.20%)** |
 | **Cobertura de Ramas (JaCoCo)** | **88.80%** (`666 / 750`) | `≥ 85.00%` | ✅ **Aprobado (+3.80%)** |
 | **Cobertura de Métodos (JaCoCo)** | **96.30%** (`364 / 378`) | `≥ 85.00%` | ✅ **Aprobado (+11.30%)** |
 | **Auditoría SonarQube** | **Quality Gate Passed (Rating A)** | 0 Bugs, 0 Vuln, 0 Smells | ✅ **Calificación A** |
