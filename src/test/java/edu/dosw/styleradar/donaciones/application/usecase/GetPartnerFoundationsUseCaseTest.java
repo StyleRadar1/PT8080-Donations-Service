@@ -154,7 +154,7 @@ class GetPartnerFoundationsUseCaseTest {
     }
 
     @Test
-    @DisplayName("Debe emparejar categorías en inglés de ms-tiendas QA (TOP, BOTTOM, FOOTWEAR) con filtros en español e inglés")
+    @DisplayName("Debe emparejar grupos de ms-tiendas (TOP, BOTTOM, FOOTWEAR) pero respetar tipos específicos declarados por la fundación")
     void shouldMatchEnglishAcceptedCategoriesFromMsTiendas() {
         FoundationSummary qaFoundation = foundation(
                 1L,
@@ -162,12 +162,26 @@ class GetPartnerFoundationsUseCaseTest {
                 List.of("FOOTWEAR", "TOP", "BOTTOM"),
                 true
         );
-        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(qaFoundation));
+        FoundationSummary skirtsOnlyFoundation = foundation(
+                2L,
+                "Fundación Solo Faldas",
+                List.of("FALDAS"),
+                true
+        );
+        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(qaFoundation, skirtsOnlyFoundation));
 
+        // 1. Fundación acepta BOTTOM y usuario busca Pantalones -> debe aparecer
+        assertThat(useCase.getActiveFoundations("Pantalones")).extracting(FoundationSummary::id).containsExactly(1L);
+        // 2. Fundación acepta únicamente FALDAS y usuario busca Pantalones -> solo aparece la de BOTTOM, FALDAS queda fuera
+        assertThat(useCase.getActiveFoundations("Faldas")).extracting(FoundationSummary::id).containsExactly(1L, 2L);
         assertThat(useCase.getActiveFoundations("Chaquetas")).extracting(FoundationSummary::id).containsExactly(1L);
         assertThat(useCase.getActiveFoundations("TOP")).extracting(FoundationSummary::id).containsExactly(1L);
-        assertThat(useCase.getActiveFoundations("Pantalones")).extracting(FoundationSummary::id).containsExactly(1L);
         assertThat(useCase.getActiveFoundations("CALZADO")).extracting(FoundationSummary::id).containsExactly(1L);
         assertThat(useCase.getActiveFoundations("ACCESORIOS")).isEmpty();
+
+        // Verificación aislada de regresión para fundación específica FALDAS
+        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(skirtsOnlyFoundation));
+        assertThat(useCase.getActiveFoundations("Pantalones")).isEmpty();
+        assertThat(useCase.getActiveFoundations("Faldas")).extracting(FoundationSummary::id).containsExactly(2L);
     }
 }
