@@ -339,4 +339,54 @@ class TiendasFoundationCatalogAdapterTest {
                 .isInstanceOf(ExternalServiceUnavailableException.class);
         mockServer.verify();
     }
+
+    @Test
+    @DisplayName("Debe deserializar el contrato en inglés de ms-tiendas QA y resolver por ID usando /api/v1/foundations cuando foundationByIdPath está vacío")
+    void shouldDeserializeEnglishPayloadAndLookupByIdViaFoundationsList() {
+        properties.setFoundationsPath("/api/v1/foundations");
+        properties.setFoundationByIdPath("");
+
+        String englishListJson = """
+                [
+                  {
+                    "id": 1,
+                    "nit": "900777888-1",
+                    "email": "fundacion.qa@styleradar.com",
+                    "name": "Fundación Pruebas QA",
+                    "neighborhood": "Chapinero",
+                    "description": "Fundación de prueba para integración",
+                    "address": "Calle 85 # 15-32, Bogotá",
+                    "phone": "+57 601 742 8899",
+                    "acceptedCategories": ["FOOTWEAR", "TOP", "BOTTOM"],
+                    "representativeId": 901,
+                    "supportedCauses": "Moda circular",
+                    "openingHours": "08:00-17:00",
+                    "donationPolicies": "Ropa limpia",
+                    "active": true
+                  }
+                ]
+                """;
+
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(englishListJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> found = adapter.findFoundationById(1L);
+        mockServer.verify();
+
+        assertThat(found).isPresent();
+        assertThat(found.get().nombre()).isEqualTo("Fundación Pruebas QA");
+        assertThat(found.get().barrio()).isEqualTo("Chapinero");
+        assertThat(found.get().activa()).isTrue();
+        assertThat(found.get().representanteId()).isEqualTo(901L);
+        assertThat(found.get().categoriasAceptadas()).containsExactly("FOOTWEAR", "TOP", "BOTTOM");
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(englishListJson, MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.findFoundationById(999L)).isEmpty();
+        mockServer.verify();
+    }
 }

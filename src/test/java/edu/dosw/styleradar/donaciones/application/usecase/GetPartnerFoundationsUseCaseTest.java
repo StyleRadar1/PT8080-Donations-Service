@@ -152,4 +152,22 @@ class GetPartnerFoundationsUseCaseTest {
         assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(999L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
+
+    @Test
+    @DisplayName("Debe emparejar categorías en inglés de ms-tiendas QA (TOP, BOTTOM, FOOTWEAR) con filtros en español e inglés")
+    void shouldMatchEnglishAcceptedCategoriesFromMsTiendas() {
+        FoundationSummary qaFoundation = foundation(
+                1L,
+                "Fundación Pruebas QA",
+                List.of("FOOTWEAR", "TOP", "BOTTOM"),
+                true
+        );
+        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(qaFoundation));
+
+        assertThat(useCase.getActiveFoundations("Chaquetas")).extracting(FoundationSummary::id).containsExactly(1L);
+        assertThat(useCase.getActiveFoundations("TOP")).extracting(FoundationSummary::id).containsExactly(1L);
+        assertThat(useCase.getActiveFoundations("Pantalones")).extracting(FoundationSummary::id).containsExactly(1L);
+        assertThat(useCase.getActiveFoundations("CALZADO")).extracting(FoundationSummary::id).containsExactly(1L);
+        assertThat(useCase.getActiveFoundations("ACCESORIOS")).isEmpty();
+    }
 }

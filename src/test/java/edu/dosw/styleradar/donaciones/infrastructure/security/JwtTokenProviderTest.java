@@ -218,6 +218,44 @@ class JwtTokenProviderTest {
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
         assertThat(jwtTokenProvider.getRole(adminToken)).isEqualTo(Role.ADMIN);
+
+        // Roles oficiales en inglés emitidos por ms-auth en QA/PROD
+        String buyerToken = Jwts.builder()
+                .subject("2")
+                .claim("roles", java.util.List.of("BUYER"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+        assertThat(jwtTokenProvider.getUserId(buyerToken)).isEqualTo(2L);
+        assertThat(jwtTokenProvider.getRole(buyerToken)).isEqualTo(Role.USER);
+
+        String storeAdminToken = Jwts.builder()
+                .subject("15")
+                .claim("roles", java.util.List.of("STORE_ADMIN"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+        assertThat(jwtTokenProvider.getRole(storeAdminToken)).isEqualTo(Role.STORE);
+
+        String foundationRepToken = Jwts.builder()
+                .subject("901")
+                .claim("roles", java.util.List.of("FOUNDATION_REPRESENTATIVE"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+        assertThat(jwtTokenProvider.getRole(foundationRepToken)).isEqualTo(Role.FOUNDATION);
+
+        String styleRadarAdminToken = Jwts.builder()
+                .subject("1")
+                .claim("roles", java.util.List.of("STYLERADAR_ADMIN"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+        assertThat(jwtTokenProvider.getRole(styleRadarAdminToken)).isEqualTo(Role.ADMIN);
     }
 
     @Test
