@@ -8,11 +8,11 @@ El proyecto exige una cobertura de código mínima del **85%** verificada autom�
 
 | Métrica | Valor Alcanzado | Umbral Exigido | Estado |
 | :--- | :---: | :---: | :---: |
-| **Pruebas Automatizadas Ejecutadas** | **274 pasando** *(275 totales: 0 fallos, 0 errores, 1 prueba PostgreSQL condicional CI omitida en local: `VitrinaAbiertaPostgresConcurrencyIntegrationTest`)* | Suite completa | ✅ **0 fallos, 0 errores** |
-| **Cobertura de Instrucciones (JaCoCo)** | **98.06%** (`9527 / 9715`) | `≥ 85.00%` | ✅ **Aprobado (+13.06%)** |
-| **Cobertura de Líneas (JaCoCo)** | **98.25%** (`2132 / 2170`) | `≥ 85.00%` | ✅ **Aprobado (+13.25%)** |
-| **Cobertura de Ramas (JaCoCo)** | **88.84%** (`661 / 744`) | `≥ 85.00%` | ✅ **Aprobado (+3.84%)** |
-| **Cobertura de Métodos (JaCoCo)** | **96.28%** (`362 / 376`) | `≥ 85.00%` | ✅ **Aprobado (+11.28%)** |
+| **Pruebas Automatizadas Ejecutadas** | **276 pasando** *(277 totales: 0 fallos, 0 errores, 1 prueba PostgreSQL condicional CI omitida en local: `VitrinaAbiertaPostgresConcurrencyIntegrationTest`)* | Suite completa | ✅ **0 fallos, 0 errores** |
+| **Cobertura de Instrucciones (JaCoCo)** | **98.07%** (`9763 / 9955`) | `≥ 85.00%` | ✅ **Aprobado (+13.07%)** |
+| **Cobertura de Líneas (JaCoCo)** | **98.20%** (`2177 / 2217`) | `≥ 85.00%` | ✅ **Aprobado (+13.20%)** |
+| **Cobertura de Ramas (JaCoCo)** | **88.80%** (`666 / 750`) | `≥ 85.00%` | ✅ **Aprobado (+3.80%)** |
+| **Cobertura de Métodos (JaCoCo)** | **96.30%** (`364 / 378`) | `≥ 85.00%` | ✅ **Aprobado (+11.30%)** |
 | **Auditoría SonarQube** | **Quality Gate Passed (Rating A)** | 0 Bugs, 0 Vuln, 0 Smells | ✅ **Calificación A** |
 
 ---

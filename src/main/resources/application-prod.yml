@@ -112,5 +112,7 @@ logging:
 styleradar:
   tiendas:
     base-url: ${TIENDAS_SERVICE_URL:https://styleradar-tiendas-prod.azurewebsites.net}
+    foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/foundations}
+    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:}
     validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
-    forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:true}
+    forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:false}

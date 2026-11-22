@@ -40,15 +40,19 @@ public class JwtTokenProvider {
 
     private static final Map<String, Role> ROLE_ALIASES = Map.ofEntries(
             Map.entry("USER", Role.USER),
+            Map.entry("BUYER", Role.USER),
             Map.entry("COMPRADOR", Role.USER),
             Map.entry("STORE", Role.STORE),
+            Map.entry("STORE_ADMIN", Role.STORE),
             Map.entry("ALMACEN", Role.STORE),
             Map.entry("TIENDA", Role.STORE),
             Map.entry("ADMIN_ALMACEN", Role.STORE),
             Map.entry("FOUNDATION", Role.FOUNDATION),
+            Map.entry("FOUNDATION_REPRESENTATIVE", Role.FOUNDATION),
             Map.entry("FUNDACION", Role.FOUNDATION),
             Map.entry("REPRESENTANTE_FUNDACION", Role.FOUNDATION),
             Map.entry("ADMIN", Role.ADMIN),
+            Map.entry("STYLERADAR_ADMIN", Role.ADMIN),
             Map.entry("ADMIN_STYLERADAR", Role.ADMIN)
     );
 

@@ -36,9 +36,11 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 | `RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA` | Routing key de venta hacia `ms-notificaciones` | `styleradar.segundavida.prenda.vendida` | Sí |
 | `JWT_SECRET_BASE64` | Clave Base64 HMAC-SHA256 compartida con `ms-auth` (≥ 256 bits) | Clave local dev/test | Sí |
 | `TIENDAS_SERVICE_URL` | URL base de `ms-tiendas` para fundaciones (`SR-RF-45`) | `http://localhost:8140` (`qa`/`prod` Azure) | Sí |
+| `TIENDAS_FOUNDATIONS_PATH` | Ruta del listado de fundaciones en `ms-tiendas` | `/api/v1/admin/foundations` (`/api/v1/foundations` en `qa`/`prod`) | Opcional |
+| `TIENDAS_FOUNDATION_BY_ID_PATH` | Ruta de detalle por ID (si está vacía, resuelve desde el listado general) | `/api/v1/admin/foundations/{id}` *(vacío en `qa`/`prod`)* | Opcional |
 | `TIENDAS_VALIDATION_ENABLED` | Activa/desactiva validación remota de fundaciones en `ms-tiendas` | `true` (`false` en test) | Opcional |
-| `TIENDAS_SERVICE_TOKEN` | Token Bearer de servicio/admin para consultar `/api/v1/admin/foundations` | Vacío *(configurable)* | Opcional |
-| `TIENDAS_FORWARD_BEARER_TOKEN` | Reenvía el token `Authorization: Bearer` del usuario entrante | `false` | Opcional |
+| `TIENDAS_SERVICE_TOKEN` | Token Bearer de servicio/admin para consultar endpoints protegidos de `ms-tiendas` | Vacío *(configurable)* | Opcional |
+| `TIENDAS_FORWARD_BEARER_TOKEN` | Reenvía el token `Authorization: Bearer` del usuario entrante | `false` (`false` en `qa`/`prod`) | Opcional |
 | `TIENDAS_SERVICE_ROLES_HEADER` | Nombre de la cabecera de rol de servicio esperada por `ms-tiendas` | `X-User-Roles` | Opcional |
 | `TIENDAS_SERVICE_ROLES_VALUE` | Valor de la cabecera de rol para consultar el catálogo en `ms-tiendas` | `ROLE_ADMIN_STYLERADAR` | Opcional |
 | `CORS_ALLOWED_ORIGINS` | Orígenes permitidos para CORS del Frontend | `*` | Opcional |
