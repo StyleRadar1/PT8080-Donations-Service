@@ -40,6 +40,9 @@ styleradar:
     base-url: http://localhost:8140
     foundations-path: /api/v1/admin/foundations
     foundation-by-id-path: /api/v1/admin/foundations/{id}
+    foundation-by-representative-path: /api/v1/internal/foundations?representativeId={representativeId}
+    internal-username: ms-donaciones
+    internal-password: ""
     validation-enabled: false
     service-bearer-token: ""
     forward-bearer-token: false

@@ -85,7 +85,7 @@ azure:
 # Swagger OpenAPI Público para QA
 springdoc:
   api-docs:
-    path: /api/v1/v3/api-docs
+    path: /v3/api-docs
     enabled: true
   swagger-ui:
     path: /api/v1/swagger-ui.html
@@ -115,6 +115,9 @@ styleradar:
   tiendas:
     base-url: ${TIENDAS_SERVICE_URL:https://styleradar-tiendas-qa.azurewebsites.net}
     foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/foundations}
-    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:}
+    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/internal/foundations/{id}}
+    foundation-by-representative-path: ${TIENDAS_FOUNDATION_BY_REPRESENTATIVE_PATH:/api/v1/internal/foundations?representativeId={representativeId}}
+    internal-username: ${TIENDAS_INTERNAL_USERNAME:ms-donaciones}
+    internal-password: ${TIENDAS_INTERNAL_PASSWORD:}
     validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
     forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:false}
