@@ -354,6 +354,11 @@ class FoundationDeletedOutboxIntegrationTest {
             }
 
             @Override
+            public List<DonationOutboxEvent> findDispatchableByRequestId(Long rid, LocalDateTime staleBefore) {
+                return outboxPersistenceAdapter.findDispatchableByRequestId(rid, staleBefore);
+            }
+
+            @Override
             public Optional<DonationOutboxEvent> claimForDispatch(
                     Long id, String claimToken, LocalDateTime now, LocalDateTime staleBefore) {
                 return outboxPersistenceAdapter.claimForDispatch(id, claimToken, now, staleBefore);

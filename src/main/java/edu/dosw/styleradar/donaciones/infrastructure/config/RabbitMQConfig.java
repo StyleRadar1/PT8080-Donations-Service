@@ -37,6 +37,7 @@ public class RabbitMQConfig {
     public static final String STYLERADAR_DLX_DEFAULT = "styleradar.dlx";
     public static final String DONACIONES_DLQ_DEFAULT = "styleradar.donaciones.dlq";
     public static final String DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT = "styleradar.donaciones.estado.cambiado";
+    public static final String DONACION_COMPLETADA_ROUTING_KEY_DEFAULT = "styleradar.donaciones.completada";
     public static final String SEGUNDA_VIDA_PRENDA_VENDIDA_ROUTING_KEY_DEFAULT = "segunda-mano.prenda.vendida";
     public static final String NOTIFICATIONS_PRENDA_VENDIDA_ROUTING_KEY_DEFAULT = "styleradar.segundavida.prenda.vendida";
 

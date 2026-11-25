@@ -19,6 +19,8 @@ public interface DonationOutboxRepositoryPort {
 
     List<DonationOutboxEvent> findDispatchableByFoundationId(Long foundationId, LocalDateTime staleBefore);
 
+    List<DonationOutboxEvent> findDispatchableByRequestId(Long requestId, LocalDateTime staleBefore);
+
     Optional<DonationOutboxEvent> claimForDispatch(
             Long id, String claimToken, LocalDateTime now, LocalDateTime staleBefore);
 

@@ -46,6 +46,19 @@ public interface SpringDataDonationOutboxRepository extends JpaRepository<Donati
             @Param("processingStatus") OutboxEventStatus processingStatus,
             @Param("staleBefore") LocalDateTime staleBefore);
 
+    @Query("""
+            SELECT e FROM DonationOutboxEventEntity e
+            WHERE e.requestId = :requestId
+              AND (e.status = :pendingStatus
+                   OR (e.status = :processingStatus AND e.claimedAt < :staleBefore))
+            ORDER BY e.createdAt ASC, e.id ASC
+            """)
+    List<DonationOutboxEventEntity> findDispatchableByRequestId(
+            @Param("requestId") Long requestId,
+            @Param("pendingStatus") OutboxEventStatus pendingStatus,
+            @Param("processingStatus") OutboxEventStatus processingStatus,
+            @Param("staleBefore") LocalDateTime staleBefore);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE DonationOutboxEventEntity e

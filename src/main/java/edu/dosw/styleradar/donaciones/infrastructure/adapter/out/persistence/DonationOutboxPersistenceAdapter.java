@@ -60,6 +60,16 @@ public class DonationOutboxPersistenceAdapter implements DonationOutboxRepositor
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<DonationOutboxEvent> findDispatchableByRequestId(Long requestId, LocalDateTime staleBefore) {
+        return repository.findDispatchableByRequestId(
+                        requestId, OutboxEventStatus.PENDING, OutboxEventStatus.PROCESSING, staleBefore)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Optional<DonationOutboxEvent> claimForDispatch(
             Long id, String claimToken, LocalDateTime now, LocalDateTime staleBefore) {
