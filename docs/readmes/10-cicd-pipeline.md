@@ -8,8 +8,8 @@ El ciclo de integración y despliegue continuo está automatizado en **GitHub Ac
 
 | Pipeline | Rama / Entorno | Trigger | Quality Gate Requerido | Ejecución y Estado |
 | :--- | :---: | :---: | :--- | :---: |
-| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR hacia `develop` | **295 pruebas en CI con Docker** *(292 aprobadas en local sin Docker; `develop` `952da52`: 282)* + JaCoCo Líneas `≥ 85%` (`98.34%` en local) + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45529263718) |
-| **CI - Main** | `main`<br>*(Producción)* | Push / PR (`develop → main`) | **295 pruebas en CI con Docker** *(baseline `main`: 277)* + JaCoCo Líneas `≥ 85%` (`98.34%` en local) + Docker Build | [![CI Main](https://img.shields.io/badge/main-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
+| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR hacia `develop` | **301 pruebas aprobadas en local** *(302 en Surefire; `develop` `952da52` en CI con Docker: 282)* + JaCoCo Líneas `≥ 85%` (`97.80%` en local) + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45529263718) |
+| **CI - Main** | `main`<br>*(Producción)* | Push / PR (`develop → main`) | **301 pruebas aprobadas en local** *(baseline `main` en CI con Docker: 277)* + JaCoCo Líneas `≥ 85%` (`97.80%` en local) + Docker Build | [![CI Main](https://img.shields.io/badge/main-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
 | **CD - Despliegue QA** | Azure QA (`rg-styleradar`) | Push / Merge a `develop` | Deploy Web App + Smoke Test `/api/v1/health` | [![Deploy QA](https://img.shields.io/badge/Deploy_QA-Azure_Active-5600EF?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health) |
 | **CD - Despliegue PROD** | Azure PROD (`rg-styleradar`) | Push / Merge `develop → main` (CMV) | Aprobación CMV + Smoke Test `/api/v1/health` | [![Deploy PROD](https://img.shields.io/badge/Deploy_PROD-Azure_Active-16A34A?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health) |
 
@@ -18,7 +18,7 @@ El ciclo de integración y despliegue continuo está automatizado en **GitHub Ac
 ```mermaid
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
-    B --> C["295 Pruebas en CI & JaCoCo<br>(98.34% Líneas en local ≥ 85%)"]
+    B --> C["301 Pruebas Aprobadas (Local) & JaCoCo<br>(97.80% Líneas ≥ 85%)"]
     C --> D["Empaquetado JAR &<br>Docker OCI Image"]
     D -->|Rama develop| E["Deploy Automático QA<br>(Smoke Test /api/v1/health)"]
     D -->|Cierre develop → main + CMV| F["Deploy Producción PROD<br>(Smoke Test /api/v1/health)"]
