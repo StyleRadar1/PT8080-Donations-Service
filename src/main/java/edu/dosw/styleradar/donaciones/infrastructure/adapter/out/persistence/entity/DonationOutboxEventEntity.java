@@ -40,6 +40,9 @@ public class DonationOutboxEventEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "event_id", nullable = false, length = 64)
+    private String eventId;
+
     @Column(name = "solicitud_id", nullable = false)
     private Long requestId;
 
@@ -64,6 +67,12 @@ public class DonationOutboxEventEntity {
 
     @Column(name = "ultimo_error", length = 500)
     private String lastError;
+
+    @Column(name = "reclamado_por", length = 100)
+    private String claimedBy;
+
+    @Column(name = "fecha_reclamo")
+    private LocalDateTime claimedAt;
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime createdAt;

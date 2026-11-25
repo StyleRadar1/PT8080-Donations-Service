@@ -5,5 +5,6 @@ package edu.dosw.styleradar.donaciones.domain.model;
  */
 public enum OutboxEventStatus {
     PENDING,
+    PROCESSING,
     SENT
 }

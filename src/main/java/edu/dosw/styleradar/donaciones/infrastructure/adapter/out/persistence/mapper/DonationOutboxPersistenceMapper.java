@@ -17,6 +17,7 @@ public class DonationOutboxPersistenceMapper {
         }
         return DonationOutboxEventEntity.builder()
                 .id(domain.getId())
+                .eventId(domain.getEventId())
                 .requestId(domain.getRequestId())
                 .foundationId(domain.getFoundationId())
                 .donorId(domain.getDonorId())
@@ -25,6 +26,8 @@ public class DonationOutboxPersistenceMapper {
                 .status(domain.getStatus())
                 .attempts(domain.getAttempts())
                 .lastError(domain.getLastError())
+                .claimedBy(domain.getClaimedBy())
+                .claimedAt(domain.getClaimedAt())
                 .createdAt(domain.getCreatedAt())
                 .sentAt(domain.getSentAt())
                 .build();
@@ -36,6 +39,7 @@ public class DonationOutboxPersistenceMapper {
         }
         return DonationOutboxEvent.builder()
                 .id(entity.getId())
+                .eventId(entity.getEventId())
                 .requestId(entity.getRequestId())
                 .foundationId(entity.getFoundationId())
                 .donorId(entity.getDonorId())
@@ -44,6 +48,8 @@ public class DonationOutboxPersistenceMapper {
                 .status(entity.getStatus())
                 .attempts(entity.getAttempts())
                 .lastError(entity.getLastError())
+                .claimedBy(entity.getClaimedBy())
+                .claimedAt(entity.getClaimedAt())
                 .createdAt(entity.getCreatedAt())
                 .sentAt(entity.getSentAt())
                 .build();
