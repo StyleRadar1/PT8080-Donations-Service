@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
+import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredStatisticsEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.config.RabbitMQConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,18 +41,36 @@ public class DonationCompletedStatisticsIntegrationEvent implements Serializable
     private CompletedDonationData data;
 
     /**
+     * Construye el payload conforme al contrato oficial de {@code ms-estadisticas},
+     * preservando el {@code eventId} y {@code occurredAt} persistidos cuando vienen del Outbox.
+     */
+    public static DonationCompletedStatisticsIntegrationEvent from(DonationDeliveredStatisticsEvent domainEvent) {
+        return buildEvent(
+                domainEvent != null ? domainEvent.foundationId() : null,
+                domainEvent != null ? domainEvent.occurredOn() : null,
+                domainEvent != null ? domainEvent.eventId() : null);
+    }
+
+    /**
      * Construye el payload conforme al contrato oficial de {@code ms-estadisticas}.
      */
     public static DonationCompletedStatisticsIntegrationEvent from(DonationDeliveredEvent domainEvent) {
-        Instant effectiveOccurredAt = domainEvent != null && domainEvent.occurredOn() != null
-                ? domainEvent.occurredOn()
-                : Instant.now();
-        String fundacionId = domainEvent != null && domainEvent.foundationId() != null
-                ? String.valueOf(domainEvent.foundationId())
-                : null;
+        return buildEvent(
+                domainEvent != null ? domainEvent.foundationId() : null,
+                domainEvent != null ? domainEvent.occurredOn() : null,
+                domainEvent != null ? domainEvent.eventId() : null);
+    }
+
+    private static DonationCompletedStatisticsIntegrationEvent buildEvent(
+            Long foundationId, Instant occurredOn, String explicitEventId) {
+        Instant effectiveOccurredAt = occurredOn != null ? occurredOn : Instant.now();
+        String fundacionId = foundationId != null ? String.valueOf(foundationId) : null;
+        String effectiveEventId = explicitEventId != null && !explicitEventId.isBlank()
+                ? explicitEventId.trim()
+                : UUID.randomUUID().toString();
 
         return DonationCompletedStatisticsIntegrationEvent.builder()
-                .eventId(UUID.randomUUID().toString())
+                .eventId(effectiveEventId)
                 .eventType(RabbitMQConfig.DONACION_COMPLETADA_ROUTING_KEY_DEFAULT)
                 .occurredAt(effectiveOccurredAt.truncatedTo(ChronoUnit.SECONDS).toString())
                 .data(CompletedDonationData.builder()

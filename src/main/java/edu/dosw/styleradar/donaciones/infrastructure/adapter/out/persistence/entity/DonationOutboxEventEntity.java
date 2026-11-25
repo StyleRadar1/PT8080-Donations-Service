@@ -46,6 +46,9 @@ public class DonationOutboxEventEntity {
     @Column(name = "solicitud_id", nullable = false)
     private Long requestId;
 
+    @Column(name = "publicacion_id")
+    private Long publicationId;
+
     @Column(name = "fundacion_id", nullable = false)
     private Long foundationId;
 
@@ -73,6 +76,9 @@ public class DonationOutboxEventEntity {
 
     @Column(name = "fecha_reclamo")
     private LocalDateTime claimedAt;
+
+    @Column(name = "fecha_ocurrencia")
+    private LocalDateTime occurredAt;
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime createdAt;

@@ -1,22 +1,27 @@
 package edu.dosw.styleradar.donaciones.application.usecase;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
+import edu.dosw.styleradar.donaciones.domain.model.DonationOutboxEvent;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.port.in.ConfirmDonationReceiptUseCase;
-import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.DonationOutboxRepositoryPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 import lombok.RequiredArgsConstructor;
 
 /**
  * Implementación del caso de uso de confirmación de recepción de prendas donadas en la sede de la fundación.
+ * Registra en la misma transacción dos eventos independientes en el Outbox transaccional:
+ * uno para {@code ms-notificaciones} y otro para {@code ms-estadisticas}.
  */
 @Service
 @RequiredArgsConstructor
@@ -26,7 +31,8 @@ public class ConfirmDonationReceiptUseCaseImpl implements ConfirmDonationReceipt
 
     private final DonationRequestRepositoryPort donationRequestRepositoryPort;
     private final PublicationRepositoryPort publicationRepositoryPort;
-    private final DonationEventPublisherPort eventPublisherPort;
+    private final DonationOutboxRepositoryPort outboxRepositoryPort;
+    private final DonationOutboxDispatcherService outboxDispatcherService;
 
     @Override
     @Transactional
@@ -53,16 +59,34 @@ public class ConfirmDonationReceiptUseCaseImpl implements ConfirmDonationReceipt
         DonationRequest saved = donationRequestRepositoryPort.save(request);
         log.info("Solicitud ID: {} confirmada y marcada como DELIVERED", saved.getId());
 
-        TransactionEventHelper.publishAfterCommitOrImmediate(
-                eventPublisherPort,
-                new DonationDeliveredEvent(
-                        saved.getId(),
-                        saved.getPublicationId(),
-                        saved.getFoundationId(),
-                        saved.getDonorId()
-                )
-        );
+        Instant occurredAt = (saved.getReceivedAt() != null
+                ? saved.getReceivedAt().atOffset(java.time.ZoneOffset.UTC).toInstant()
+                : Instant.now()).truncatedTo(ChronoUnit.SECONDS);
+
+        enqueueIfAbsent(DonationOutboxEvent.pendingDeliveryNotifications(saved, occurredAt));
+        enqueueIfAbsent(DonationOutboxEvent.pendingDeliveryStatistics(saved, occurredAt));
+
+        TransactionEventHelper.runAfterCommitOrImmediate(() -> dispatchDeliveryOutboxSafely(saved.getId()));
 
         return saved;
+    }
+
+    private void enqueueIfAbsent(DonationOutboxEvent event) {
+        if (!outboxRepositoryPort.existsByRequestIdAndEventType(event.getRequestId(), event.getEventType())) {
+            outboxRepositoryPort.save(event);
+        }
+    }
+
+    private void dispatchPending(Long requestId) {
+        outboxDispatcherService.dispatchPendingByRequestId(requestId);
+    }
+
+    private void dispatchDeliveryOutboxSafely(Long requestId) {
+        try {
+            dispatchPending(requestId);
+        } catch (RuntimeException ex) {
+            log.warn("Entrega de donación confirmada [solicitudId={}]; despacho Outbox pospuesto para reintento automático: {}",
+                    requestId, ex.getMessage());
+        }
     }
 }

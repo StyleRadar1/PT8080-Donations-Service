@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
+import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredStatisticsEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
@@ -149,6 +150,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             case DonationRequestDecidedEvent decidedEvent -> publishDonationDecided(decidedEvent);
             case PickupScheduledEvent pickupEvent -> publishPickupScheduled(pickupEvent);
             case DonationDeliveredEvent deliveredEvent -> publishDonationDelivered(deliveredEvent);
+            case DonationDeliveredStatisticsEvent statsEvent -> publishDonationDeliveredStatistics(statsEvent);
             default -> {
                 log.info("Publicando evento en broker RabbitMQ [Exchange: {}, Evento: {}]",
                         exchangeName, event.getClass().getSimpleName());
@@ -325,6 +327,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     private CorrelationData publishDonationDelivered(DonationDeliveredEvent domainEvent) {
         String fechaCambio = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
+        String effectiveEventId = resolveEventId(domainEvent.eventId());
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
                 SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
                         .donacionId(domainEvent.requestId())
@@ -344,6 +347,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .build();
 
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent event = SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
+                .eventoId(effectiveEventId)
+                .eventId(effectiveEventId)
+                .correlationId(effectiveEventId)
                 .donacionId(domainEvent.requestId())
                 .solicitudId(domainEvent.requestId())
                 .requestId(domainEvent.requestId())
@@ -361,26 +367,36 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .fechaEvento(fechaCambio)
                 .data(data)
                 .build();
-        CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
+        CorrelationData correlationData = new CorrelationData(effectiveEventId);
 
         rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
-
-        if (exchangeName != null && donationCompletedRoutingKey != null && !donationCompletedRoutingKey.isBlank()) {
-            if (domainEvent.foundationId() == null) {
-                log.warn("Se omitió publicación estadística '{}' para solicitud ID={} por falta de foundationId.",
-                        donationCompletedRoutingKey, domainEvent.requestId());
-                return correlationData;
-            }
-            DonationCompletedStatisticsIntegrationEvent statsEvent =
-                    DonationCompletedStatisticsIntegrationEvent.from(domainEvent);
-            CorrelationData statsCorrelation = new CorrelationData(statsEvent.getEventId());
-
-            log.info(">>> [RabbitMQ PUBLISH] Publicando '{}' desde ms-segunda-vida-donaciones hacia Exchange '{}' con Routing Key '{}' para ms-estadisticas",
-                    statsEvent.getEventType(), exchangeName, donationCompletedRoutingKey);
-
-            rabbitTemplate.convertAndSend(exchangeName, donationCompletedRoutingKey, statsEvent, statsCorrelation);
-        }
         return correlationData;
+    }
+
+    private CorrelationData publishDonationDeliveredStatistics(DonationDeliveredStatisticsEvent domainEvent) {
+        if (exchangeName == null || donationCompletedRoutingKey == null || donationCompletedRoutingKey.isBlank()) {
+            return null;
+        }
+        if (domainEvent.foundationId() == null) {
+            log.warn("Se omitió publicación estadística '{}' para solicitud ID={} por falta de foundationId.",
+                    donationCompletedRoutingKey, domainEvent.requestId());
+            return null;
+        }
+        DonationCompletedStatisticsIntegrationEvent statsEvent =
+                DonationCompletedStatisticsIntegrationEvent.from(domainEvent);
+        CorrelationData statsCorrelation = new CorrelationData(statsEvent.getEventId());
+
+        log.info(">>> [RabbitMQ PUBLISH] Publicando '{}' [EventId={}] desde ms-segunda-vida-donaciones hacia Exchange '{}' con Routing Key '{}' para ms-estadisticas",
+                statsEvent.getEventType(), statsEvent.getEventId(), exchangeName, donationCompletedRoutingKey);
+
+        rabbitTemplate.convertAndSend(exchangeName, donationCompletedRoutingKey, statsEvent, statsCorrelation);
+        return statsCorrelation;
+    }
+
+    private static String resolveEventId(String explicitEventId) {
+        return explicitEventId != null && !explicitEventId.isBlank()
+                ? explicitEventId.trim()
+                : UUID.randomUUID().toString();
     }
 
     public String getExchangeName() {

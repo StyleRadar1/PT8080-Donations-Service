@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
+import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredStatisticsEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.model.DonationOutboxEvent;
@@ -59,6 +61,14 @@ public class DonationOutboxDispatcherService {
         return dispatchEvents(outboxRepositoryPort.findDispatchableByFoundationId(foundationId, staleBefore));
     }
 
+    public int dispatchPendingByRequestId(Long requestId) {
+        if (requestId == null) {
+            return 0;
+        }
+        LocalDateTime staleBefore = LocalDateTime.now(ZoneOffset.UTC).minus(claimLease);
+        return dispatchEvents(outboxRepositoryPort.findDispatchableByRequestId(requestId, staleBefore));
+    }
+
     public int dispatchAllPending() {
         LocalDateTime staleBefore = LocalDateTime.now(ZoneOffset.UTC).minus(claimLease);
         return dispatchEvents(outboxRepositoryPort.findDispatchableEvents(staleBefore));
@@ -88,15 +98,7 @@ public class DonationOutboxDispatcherService {
             }
 
             DonationOutboxEvent claimed = claimedOpt.get();
-            DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
-                    claimed.getRequestId(),
-                    claimed.getFoundationId(),
-                    claimed.getDonorId(),
-                    false,
-                    claimed.getRejectionReason(),
-                    Instant.now(),
-                    claimed.getEventId()
-            );
+            Object domainEvent = buildDomainEvent(claimed);
 
             boolean brokerConfirmed = false;
             try {
@@ -122,5 +124,43 @@ public class DonationOutboxDispatcherService {
         }
 
         return sentCount;
+    }
+
+    private Object buildDomainEvent(DonationOutboxEvent claimed) {
+        Instant occurredOn = claimed.getOccurredAt() != null
+                ? claimed.getOccurredAt().toInstant(ZoneOffset.UTC)
+                : Instant.now();
+        String eventType = claimed.getEventType();
+
+        if (DonationOutboxEvent.TYPE_DONATION_DELIVERED_NOTIFICATIONS.equals(eventType)) {
+            Long donorId = claimed.getDonorId() != null && claimed.getDonorId() > 0L
+                    ? claimed.getDonorId()
+                    : null;
+            return new DonationDeliveredEvent(
+                    claimed.getRequestId(),
+                    claimed.getPublicationId(),
+                    claimed.getFoundationId(),
+                    donorId,
+                    occurredOn,
+                    claimed.getEventId()
+            );
+        }
+        if (DonationOutboxEvent.TYPE_DONATION_DELIVERED_STATISTICS.equals(eventType)) {
+            return new DonationDeliveredStatisticsEvent(
+                    claimed.getRequestId(),
+                    claimed.getFoundationId(),
+                    occurredOn,
+                    claimed.getEventId()
+            );
+        }
+        return new DonationRequestDecidedEvent(
+                claimed.getRequestId(),
+                claimed.getFoundationId(),
+                claimed.getDonorId(),
+                false,
+                claimed.getRejectionReason(),
+                occurredOn,
+                claimed.getEventId()
+        );
     }
 }
