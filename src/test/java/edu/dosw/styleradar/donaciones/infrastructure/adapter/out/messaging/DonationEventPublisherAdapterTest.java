@@ -15,6 +15,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.core.ParameterizedTypeReference;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
@@ -22,6 +23,7 @@ import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationCompletedStatisticsIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationRequestCreatedIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionEstadoCambiadoIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionPrendaVendidaIntegrationEvent;
@@ -43,6 +45,7 @@ class DonationEventPublisherAdapterTest {
     private static final String CHAT_EXCHANGE = "styleradar.exchange";
     private static final String ROUTING_KEY_CREATED = "styleradar.donaciones.solicitud.creada";
     private static final String ROUTING_KEY_UPDATED = "styleradar.donaciones.estado.cambiado";
+    private static final String ROUTING_KEY_COMPLETED = "styleradar.donaciones.completada";
     private static final String ROUTING_KEY_SOLD = "segunda-mano.prenda.vendida";
     private static final String ROUTING_KEY_SOLD_NOTIFICATIONS = "styleradar.segundavida.prenda.vendida";
 
@@ -240,21 +243,58 @@ class DonationEventPublisherAdapterTest {
     }
 
     @Test
-    @DisplayName("Debe publicar evento de donación entregada con donacionId y donanteId para ms-notificaciones")
-    void shouldPublishDonationDeliveredEvent() {
-        DonationDeliveredEvent event = new DonationDeliveredEvent(10L, 20L, 30L, 99L);
+    @DisplayName("Debe publicar evento de donación entregada para ms-notificaciones y ms-estadisticas")
+    void shouldPublishDonationDeliveredEvent() throws Exception {
+        Instant occurredOn = Instant.parse("2026-11-24T15:00:00.123Z");
+        DonationDeliveredEvent event = new DonationDeliveredEvent(10L, 20L, 30L, 99L, occurredOn);
 
         adapter.publishEvent(event);
 
-        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> captor =
+        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> notificationsCaptor =
                 ArgumentCaptor.forClass(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class);
-        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), captor.capture(), any(CorrelationData.class));
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), notificationsCaptor.capture(), any(CorrelationData.class));
 
-        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = notificationsCaptor.getValue();
         assertThat(published.getDonacionId()).isEqualTo(10L);
         assertThat(published.getDonanteId()).isEqualTo(99L);
         assertThat(published.getData().getDonacionId()).isEqualTo(10L);
         assertThat(published.getData().getDonanteId()).isEqualTo(99L);
+
+        ArgumentCaptor<DonationCompletedStatisticsIntegrationEvent> statsCaptor =
+                ArgumentCaptor.forClass(DonationCompletedStatisticsIntegrationEvent.class);
+        ArgumentCaptor<CorrelationData> statsCorrelationCaptor =
+                ArgumentCaptor.forClass(CorrelationData.class);
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_COMPLETED), statsCaptor.capture(), statsCorrelationCaptor.capture());
+
+        DonationCompletedStatisticsIntegrationEvent statsEvent = statsCaptor.getValue();
+        assertThat(statsEvent.getEventId()).isNotBlank();
+        assertThat(statsCorrelationCaptor.getValue().getId()).isEqualTo(statsEvent.getEventId());
+        assertThat(statsEvent.getEventType()).isEqualTo("styleradar.donaciones.completada");
+        assertThat(statsEvent.getOccurredAt()).isEqualTo("2026-11-24T15:00:00Z");
+        assertThat(statsEvent.getData()).isNotNull();
+        assertThat(statsEvent.getData().getFundacionId()).isEqualTo("30");
+        assertThat(statsEvent.getData().getCantidad()).isEqualTo(1);
+        assertThat(adapter.getDonationCompletedRoutingKey()).isEqualTo(ROUTING_KEY_COMPLETED);
+
+        JsonNode json = new ObjectMapper().readTree(new ObjectMapper().writeValueAsString(statsEvent));
+        assertThat(json.path("eventId").asText()).isEqualTo(statsEvent.getEventId());
+        assertThat(json.path("eventType").asText()).isEqualTo("styleradar.donaciones.completada");
+        assertThat(json.path("occurredAt").asText()).isEqualTo("2026-11-24T15:00:00Z");
+        assertThat(json.path("data").path("fundacionId").asText()).isEqualTo("30");
+        assertThat(json.path("data").path("cantidad").asInt()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Debe omitir publicación a ms-estadisticas si foundationId es nulo pero mantener notificación")
+    void shouldSkipStatisticsEventWhenFoundationIdIsNull() {
+        DonationDeliveredEvent event = new DonationDeliveredEvent(10L, 20L, null, 99L);
+
+        adapter.publishEvent(event);
+
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED),
+                any(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class), any(CorrelationData.class));
+        verify(rabbitTemplate, never()).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_COMPLETED),
+                any(Object.class), any(CorrelationData.class));
     }
 
     @Test
