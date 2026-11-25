@@ -127,7 +127,7 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId));
 
-        if (foundation.representanteId() != null && !representativeUserId.equals(foundation.representanteId())) {
+        if (foundation.representanteId() == null || !representativeUserId.equals(foundation.representanteId())) {
             throw new ResourceNotFoundException(
                     "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId);
         }

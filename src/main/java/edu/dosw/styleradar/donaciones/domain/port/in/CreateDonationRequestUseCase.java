@@ -12,6 +12,8 @@ public interface CreateDonationRequestUseCase {
 
     DonationRequest create(CreateDonationRequestCommand command);
 
+    List<DonationRequest> getAll(DonationRequestStatus status);
+
     List<DonationRequest> getByDonorId(Long donorId);
 
     List<DonationRequest> getByFoundationId(Long foundationId, DonationRequestStatus status);

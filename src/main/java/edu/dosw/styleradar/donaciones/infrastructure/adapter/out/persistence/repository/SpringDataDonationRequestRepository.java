@@ -15,6 +15,10 @@ import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence.ent
 @Repository
 public interface SpringDataDonationRequestRepository extends JpaRepository<DonationRequestEntity, Long> {
 
+    List<DonationRequestEntity> findAllByOrderByRequestedAtDesc();
+
+    List<DonationRequestEntity> findByStatusOrderByRequestedAtDesc(DonationRequestStatus status);
+
     List<DonationRequestEntity> findByDonorIdOrderByRequestedAtDesc(Long donorId);
 
     List<DonationRequestEntity> findByFoundationIdOrderByRequestedAtDesc(Long foundationId);
