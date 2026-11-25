@@ -7,19 +7,26 @@ import jakarta.validation.constraints.Size;
 /**
  * DTO para la decisión de una fundación sobre una solicitud de donación (aprobar o rechazar).
  */
-@Schema(description = "Datos para que la fundación apruebe o rechace una solicitud de donación")
+@Schema(description = "Request payload for a foundation to approve or reject a donation request")
 public record DecideDonationRequestDTO(
 
-        @Schema(description = "ID de la fundación que toma la decisión", example = "501")
+        @Schema(description = "ID of the foundation making the decision", example = "501")
         @NotNull(message = "El ID de la fundación es obligatorio")
         Long foundationId,
 
-        @Schema(description = "Indica si la donación es aprobada (true) o rechazada (false)", example = "true")
+        @Schema(description = "Indicates whether the donation request is approved (true) or rejected (false)", example = "true")
         @NotNull(message = "La decisión de aprobación es obligatoria")
         Boolean approve,
 
-        @Schema(description = "Motivo del rechazo en caso de no ser aceptada", example = "Capacidad de almacenamiento colmada para esta categoría")
+        @Schema(description = "Rejection reason required when declining the request", example = "Capacidad de almacenamiento colmada para esta categoría")
         @Size(max = 500, message = "El motivo de rechazo no puede exceder 500 caracteres")
         String reason
 ) {
+    public Boolean approved() {
+        return approve;
+    }
+
+    public String rejectionReason() {
+        return reason;
+    }
 }

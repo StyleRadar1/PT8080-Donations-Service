@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DonationRequestCreatedIntegrationEventTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Test
+    @DisplayName("Debe mapear correctamente el estado APROBADA cuando la donación proviene de un reclamo de vitrina")
+    void shouldMapApprovedStatusCorrectly() {
+        DonationRequestCreatedEvent domainEvent = new DonationRequestCreatedEvent(101L, 202L, 303L, 501L, "APPROVED", 77L);
+        DonationRequestCreatedIntegrationEvent integrationEvent = DonationRequestCreatedIntegrationEvent.from(domainEvent);
+
+        assertThat(integrationEvent.getEventoId()).isEqualTo(integrationEvent.getEventId());
+        assertThat(integrationEvent.getTipoEvento()).isEqualTo("donacion.solicitud.creada");
+        assertThat(integrationEvent.getRepresentanteId()).isEqualTo(77L);
+        assertThat(integrationEvent.getFundacionUsuarioId()).isEqualTo(77L);
+        assertThat(integrationEvent.getFundacionId()).isEqualTo(501L);
+        assertThat(integrationEvent.getData().getStatus()).isEqualTo("APPROVED");
+        assertThat(integrationEvent.getData().getEstado()).isEqualTo("APROBADA");
+        assertThat(integrationEvent.getData().getRepresentanteId()).isEqualTo(77L);
+        assertThat(integrationEvent.getData().getFundacionUsuarioId()).isEqualTo(77L);
+    }
 
     @Test
     @DisplayName("Debe construir un evento de integración a partir del evento de dominio con todos los campos requeridos")
@@ -166,5 +184,27 @@ class DonationRequestCreatedIntegrationEventTest {
         assertThat(data.toString()).isNotBlank();
         assertThat(event.hashCode()).isNotZero();
         assertThat(data.hashCode()).isNotZero();
+    }
+
+    @Test
+    @DisplayName("Debe serializar fechaEvento en ISO-8601 sin zona horaria y los alias esperados por ms-notificaciones")
+    void shouldSerializeIsoLocalDateTimeAndNotificationsFields() throws Exception {
+        Instant occurredOn = Instant.parse("2026-11-18T15:30:00Z");
+        DonationRequestCreatedEvent domainEvent = new DonationRequestCreatedEvent(
+                40L, 10L, 501L, 3L, "PENDING", occurredOn, 620L, "Chaqueta Denim Vintage"
+        );
+
+        DonationRequestCreatedIntegrationEvent event = DonationRequestCreatedIntegrationEvent.from(domainEvent);
+        JsonNode root = objectMapper.readTree(objectMapper.writeValueAsString(event));
+
+        assertThat(root.get("eventoId").asText()).isNotBlank();
+        assertThat(root.get("donacionId").asLong()).isEqualTo(40L);
+        assertThat(root.get("solicitudId").asLong()).isEqualTo(40L);
+        assertThat(root.get("fundacionUsuarioId").asLong()).isEqualTo(620L);
+        assertThat(root.get("representanteId").asLong()).isEqualTo(620L);
+        assertThat(root.get("resumen").asText()).isEqualTo("Chaqueta Denim Vintage");
+        String fechaEvento = root.get("fechaEvento").asText();
+        assertThat(fechaEvento).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}");
+        assertThat(LocalDateTime.parse(fechaEvento)).isEqualTo(LocalDateTime.of(2026, 11, 18, 10, 30, 0));
     }
 }

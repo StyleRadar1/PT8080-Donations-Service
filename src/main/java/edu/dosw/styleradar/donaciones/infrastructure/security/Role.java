@@ -6,7 +6,8 @@ package edu.dosw.styleradar.donaciones.infrastructure.security;
 public enum Role {
     ADMIN("ROLE_ADMIN"),
     USER("ROLE_USER"),
-    FOUNDATION("ROLE_FOUNDATION");
+    FOUNDATION("ROLE_FOUNDATION"),
+    STORE("ROLE_STORE");
 
     private final String authority;
 

@@ -14,8 +14,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Agregado raíz que representa una publicación de prenda usada en el módulo de Economía Circular.
- * Encapsula la lógica del ciclo de vida (publicar, editar, retirar, vender, donar) y sus invariantes.
+ * Agregado raíz que representa una publicación en el módulo de Economía Circular de StyleRadar.
+ * Unifica:
+ * 1) Prendas de Donación benéfica (esDonacion = true, precio = 0 COP, vitrina abierta a fundaciones).
+ * 2) Prendas de Segunda Mano C2C (esDonacion = false, precio >= 0 COP, chat entre usuarios).
+ * 
+ * Restricción geográfica: Opera exclusivamente en las 20 localidades de Bogotá D.C.
+ * Concurrencia: Protegido mediante versión para bloqueo optimista (@Version).
  */
 @Data
 @Builder
@@ -32,7 +37,15 @@ public class SecondHandPublication {
     private Size size;
     private ConservationStatus conservationStatus;
     private BigDecimal price;
+
+    @Builder.Default
+    private boolean esDonacion = false;
+
+    @Builder.Default
+    private LocalidadBogota localidad = LocalidadBogota.CHAPINERO;
+
     private PublicationStatus status;
+    private Long version;
     private LocalDateTime publishedAt;
     private LocalDateTime updatedAt;
 
@@ -57,16 +70,30 @@ public class SecondHandPublication {
         if (conservationStatus == null) {
             throw new InvalidPublicationException("El estado de conservación es obligatorio");
         }
-        if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidPublicationException("El precio de la prenda usada debe ser mayor o igual a 0");
+
+        if (localidad == null) {
+            this.localidad = LocalidadBogota.CHAPINERO;
         }
+
+        if (esDonacion) {
+            if (price == null) {
+                this.price = BigDecimal.ZERO;
+            } else if (price.compareTo(BigDecimal.ZERO) != 0) {
+                throw new InvalidPublicationException("Una prenda destinada a donación benéfica debe tener precio 0 COP");
+            }
+        } else {
+            if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new InvalidPublicationException("Para publicaciones de segunda mano (venta C2C), el precio debe ser estrictamente mayor a 0 COP");
+            }
+        }
+
         if (photos != null && photos.size() > MAX_PHOTOS) {
             throw new InvalidPublicationException("Una publicación no puede contener más de " + MAX_PHOTOS + " fotografías");
         }
     }
 
     /**
-     * Publica la prenda haciéndola disponible en el catálogo de reventa.
+     * Publica la prenda haciéndola disponible en la vitrina pública.
      */
     public void publish() {
         validateInvariants();
@@ -80,7 +107,7 @@ public class SecondHandPublication {
      * Modifica los datos de la publicación verificando que no se encuentre en un estado terminal o bloqueante.
      */
     public void edit(Garment newGarment, Size newSize, ConservationStatus newConservationStatus,
-                     BigDecimal newPrice, List<String> newPhotos) {
+                     BigDecimal newPrice, LocalidadBogota newLocalidad, List<String> newPhotos) {
         if (status == PublicationStatus.SOLD) {
             throw new InvalidStateTransitionException("No se puede editar una publicación que ya ha sido vendida");
         }
@@ -90,11 +117,21 @@ public class SecondHandPublication {
         if (status == PublicationStatus.DONATED) {
             throw new InvalidStateTransitionException("No se puede editar una prenda que ya fue donada");
         }
+        if (status == PublicationStatus.IN_DONATION) {
+            throw new InvalidStateTransitionException("No se puede editar una publicación que se encuentra en proceso de donación");
+        }
 
         this.garment = newGarment;
         this.size = newSize;
         this.conservationStatus = newConservationStatus;
-        this.price = newPrice;
+        if (this.esDonacion) {
+            this.price = BigDecimal.ZERO;
+        } else {
+            this.price = newPrice;
+        }
+        if (newLocalidad != null) {
+            this.localidad = newLocalidad;
+        }
         this.photos = newPhotos != null ? new ArrayList<>(newPhotos) : new ArrayList<>();
 
         validateInvariants();
@@ -102,9 +139,20 @@ public class SecondHandPublication {
     }
 
     /**
-     * Marca la publicación como vendida en el marketplace de segunda mano.
+     * Sobrecarga de compatibilidad para edición básica.
+     */
+    public void edit(Garment newGarment, Size newSize, ConservationStatus newConservationStatus,
+                     BigDecimal newPrice, List<String> newPhotos) {
+        edit(newGarment, newSize, newConservationStatus, newPrice, this.localidad, newPhotos);
+    }
+
+    /**
+     * Marca la publicación como vendida en el marketplace de segunda mano C2C.
      */
     public void markAsSold() {
+        if (esDonacion) {
+            throw new InvalidStateTransitionException("Una prenda publicada para donación no puede ser vendida");
+        }
         if (status == PublicationStatus.SOLD) {
             throw new InvalidStateTransitionException("La publicación ya se encuentra marcada como vendida");
         }
@@ -126,8 +174,14 @@ public class SecondHandPublication {
         if (status == PublicationStatus.RETIRED) {
             throw new InvalidStateTransitionException("La publicación ya se encuentra retirada");
         }
+        if (status == PublicationStatus.SOLD) {
+            throw new InvalidStateTransitionException("No se puede retirar una publicación que ya fue vendida");
+        }
         if (status == PublicationStatus.DONATED) {
             throw new InvalidStateTransitionException("No se puede retirar una prenda que ya fue donada");
+        }
+        if (status == PublicationStatus.IN_DONATION) {
+            throw new InvalidStateTransitionException("No se puede retirar una publicación que se encuentra en proceso de donación");
         }
 
         this.status = PublicationStatus.RETIRED;
@@ -135,23 +189,42 @@ public class SecondHandPublication {
     }
 
     /**
-     * Destina la prenda hacia el canal benéfico de donaciones a fundaciones aliadas.
+     * Destina la prenda hacia el canal benéfico de donaciones a fundaciones aliadas con valor cero.
      */
     public void markForDonation() {
         if (status != PublicationStatus.AVAILABLE) {
-            throw new InvalidStateTransitionException("Solo una publicación disponible puede destinarse a donación");
+            throw new InvalidStateTransitionException(
+                    "Solo una publicación disponible en vitrina puede destinarse a donación. Estado actual: " + status);
         }
 
+        this.esDonacion = true;
+        this.price = BigDecimal.ZERO;
         this.status = PublicationStatus.IN_DONATION;
         this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     /**
-     * Concluye el ciclo benéfico marcando la prenda como donada a la fundación.
+     * Devuelve la prenda en proceso de donación a vitrina abierta tras el rechazo de una solicitud.
+     */
+    public void revertToAvailableDonation() {
+        if (status != PublicationStatus.IN_DONATION) {
+            throw new InvalidStateTransitionException(
+                    "Solo una prenda en estado IN_DONATION puede regresar a vitrina disponible. Estado actual: " + status);
+        }
+
+        this.esDonacion = true;
+        this.price = BigDecimal.ZERO;
+        this.status = PublicationStatus.AVAILABLE;
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
+    }
+
+    /**
+     * Concluye el ciclo benéfico marcando la prenda como donada a la fundación receptora.
      */
     public void markAsDonated() {
         if (status != PublicationStatus.IN_DONATION) {
-            throw new InvalidStateTransitionException("Solo una prenda marcada en donación puede pasar a estado donada");
+            throw new InvalidStateTransitionException(
+                    "Solo una prenda marcada en donación puede pasar a estado donada. Estado actual: " + status);
         }
 
         this.status = PublicationStatus.DONATED;

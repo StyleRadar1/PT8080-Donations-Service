@@ -6,60 +6,70 @@ import java.util.List;
 
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
+import edu.dosw.styleradar.donaciones.domain.model.LocalidadBogota;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * DTO de respuesta que representa los datos de una publicación de segunda mano.
+ * DTO de respuesta que representa los datos de una publicación de economía circular (Segunda Mano C2C o Donación).
  */
-@Schema(description = "Respuesta detallada con información de una publicación de segunda mano")
+@Schema(description = "Detailed response representing a circular economy publication in Bogota D.C.")
 public record PublicationResponseDTO(
 
-        @Schema(description = "Identificador único de la publicación", example = "1")
+        @Schema(description = "Unique publication identifier", example = "1")
         Long id,
 
-        @Schema(description = "ID del usuario propietario", example = "101")
+        @Schema(description = "ID of the owner user or store", example = "101")
         Long userId,
 
-        @Schema(description = "Nombre o título de la prenda", example = "Chaqueta Denim Vintage")
+        @Schema(description = "Garment title or name", example = "Chaqueta Denim Vintage")
         String garmentName,
 
-        @Schema(description = "Descripción detallada", example = "Chaqueta denim estilo retro de los 90s")
+        @Schema(description = "Detailed garment description", example = "Chaqueta denim estilo retro de los 90s")
         String description,
 
-        @Schema(description = "Tipo o categoría de prenda textil", example = "UPPER")
+        @Schema(description = "Garment category", example = "Chaquetas")
         GarmentType garmentType,
 
-        @Schema(description = "Marca de la prenda", example = "Levi's")
+        @Schema(description = "Garment brand", example = "Levi's")
         String brand,
 
-        @Schema(description = "Color de la prenda", example = "Azul")
+        @Schema(description = "Garment color", example = "Azul")
         String color,
 
-        @Schema(description = "Estilo de la prenda", example = "URBAN")
+        @Schema(description = "Fashion style", example = "URBAN")
         Style style,
 
-        @Schema(description = "Talla estandarizada", example = "M")
+        @Schema(description = "Standardized size", example = "M")
         Size size,
 
-        @Schema(description = "Estado de conservación de la prenda", example = "LIKE_NEW")
+        @Schema(description = "Garment conservation status", example = "LIKE_NEW")
         ConservationStatus conservationStatus,
 
-        @Schema(description = "Precio asignado para reventa", example = "75000.00")
+        @Schema(description = "Assigned price (0 COP for donation, > 0 COP for second-hand resale)", example = "75000.00")
         BigDecimal price,
 
-        @Schema(description = "Estado actual de la publicación en el ciclo de vida", example = "AVAILABLE")
+        @Schema(description = "Indicates whether the publication is a charitable donation (true) or C2C second-hand resale (false)", example = "false")
+        Boolean esDonacion,
+
+        @Schema(description = "Bogota D.C. district (localidad) where the garment is located", example = "CHAPINERO")
+        LocalidadBogota localidad,
+
+        @Schema(description = "Current lifecycle status of the publication", example = "AVAILABLE")
         PublicationStatus status,
 
-        @Schema(description = "Fecha y hora de publicación", example = "2026-11-01T10:00:00")
+        @Schema(description = "Version number for optimistic concurrency control", example = "0")
+        Long version,
+
+        @Schema(description = "Publication creation timestamp", example = "2026-11-01T10:00:00")
         LocalDateTime publicationDate,
 
-        @Schema(description = "Fecha y hora de última actualización", example = "2026-11-05T14:30:00")
+        @Schema(description = "Last update timestamp", example = "2026-11-05T14:30:00")
         LocalDateTime updateDate,
 
-        @Schema(description = "Lista de URLs de fotografías", example = "[\"https://cdn.style.com/foto1.jpg\"]")
+        @Schema(description = "List of photo URLs (maximum 4)", example = "[\"https://cdn.styleradar.com/garments/chaqueta1.jpg\"]")
         List<String> photos
 ) {
 }

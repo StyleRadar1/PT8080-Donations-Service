@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.donaciones.domain.model;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Entidad de dominio que gestiona la solicitud de donación benéfica y la cita logística de entrega a una fundación.
+ * Soporta radicación tradicional y reclamo directo desde la Vitrina Abierta de Donaciones.
  */
 @Data
 @Builder
@@ -26,9 +28,11 @@ public class DonationRequest {
     private String message;
     private DonationRequestStatus status;
     private String rejectionReason;
+    private DeliveryMode deliveryMode;
     private String deliveryPoint;
     private LocalDateTime pickupStartTime;
     private LocalDateTime pickupEndTime;
+    private Long version;
     private LocalDateTime requestedAt;
     private LocalDateTime decidedAt;
     private LocalDateTime receivedAt;
@@ -49,10 +53,34 @@ public class DonationRequest {
     }
 
     /**
-     * Inicializa la solicitud en estado PENDIENTE de evaluación por parte de la fundación benéfica.
+     * Valida los datos de propuesta o programación de entrega (modo opcional en logística, obligatorio al crear).
+     */
+    private void validateDeliverySchedule(String point, LocalDateTime start, LocalDateTime end) {
+        if (point == null || point.trim().isEmpty()) {
+            throw new InvalidDonationRequestException("El punto de entrega o recogida es obligatorio");
+        }
+        if (start == null || end == null) {
+            throw new InvalidDonationRequestException("Las fechas de la franja horaria son obligatorias");
+        }
+        if (start.isBefore(LocalDateTime.now(ZoneId.of("America/Bogota")))) {
+            throw new InvalidDonationRequestException("La fecha de inicio de la franja horaria no puede estar en el pasado");
+        }
+        if (!end.isAfter(start)) {
+            throw new InvalidDonationRequestException("El fin de la franja horaria debe ser posterior al inicio");
+        }
+    }
+
+    /**
+     * Inicializa la solicitud en estado PENDIENTE de evaluación por parte de la fundación benéfica,
+     * validando tanto los identificadores como la propuesta de entrega inicial (SR-RF-45 / SR-RF-48).
      */
     public void initiate() {
         validateInitialInvariants();
+        if (deliveryMode == null) {
+            throw new InvalidDonationRequestException("El modo de entrega propuesto es obligatorio");
+        }
+        validateDeliverySchedule(deliveryPoint, pickupStartTime, pickupEndTime);
+        this.deliveryPoint = this.deliveryPoint.trim();
         this.status = DonationRequestStatus.PENDING;
         this.requestedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
@@ -62,6 +90,22 @@ public class DonationRequest {
      */
     public void create() {
         initiate();
+    }
+
+    /**
+     * Reclama directamente una donación disponible en la Vitrina Abierta por parte de una fundación.
+     * La solicitud queda aprobada de inmediato para coordinar la logística.
+     */
+    public void claim(Long pubId, Long donId, Long foundId, String msg) {
+        this.publicationId = pubId;
+        this.donorId = donId;
+        this.foundationId = foundId;
+        this.message = msg;
+        validateInitialInvariants();
+        this.status = DonationRequestStatus.APPROVED;
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        this.requestedAt = now;
+        this.decidedAt = now;
     }
 
     /**
@@ -107,15 +151,7 @@ public class DonationRequest {
             throw new InvalidStateTransitionException(
                     "Solo se puede programar o reprogramar la recogida de una solicitud aprobada. Estado actual: " + status);
         }
-        if (point == null || point.trim().isEmpty()) {
-            throw new InvalidDonationRequestException("El punto de entrega o recogida es obligatorio");
-        }
-        if (start == null || end == null) {
-            throw new InvalidDonationRequestException("Las fechas de la franja horaria son obligatorias");
-        }
-        if (!end.isAfter(start)) {
-            throw new InvalidDonationRequestException("El fin de la franja horaria debe ser posterior al inicio");
-        }
+        validateDeliverySchedule(point, start, end);
 
         this.deliveryPoint = point.trim();
         this.pickupStartTime = start;

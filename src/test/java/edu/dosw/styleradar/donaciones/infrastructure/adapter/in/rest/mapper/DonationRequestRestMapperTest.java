@@ -6,8 +6,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import edu.dosw.styleradar.donaciones.application.dto.request.CreateDonationRequestDTO;
+import edu.dosw.styleradar.donaciones.application.dto.request.DeliveryProposalDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.response.DonationRequestResponseDTO;
+import edu.dosw.styleradar.donaciones.domain.model.DeliveryMode;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestCommand;
@@ -23,22 +25,55 @@ class DonationRequestRestMapperTest {
     @DisplayName("Debe manejar nulos en conversiones")
     void shouldHandleNulls() {
         assertThat(mapper.toCommand((CreateDonationRequestDTO) null)).isNull();
+        assertThat(mapper.toCommand((CreateDonationRequestDTO) null, 101L)).isNull();
         assertThat(mapper.toCommand(1L, null)).isNull();
         assertThat(mapper.toResponse(null)).isNull();
         assertThat(mapper.toResponseList(null)).isEmpty();
     }
 
     @Test
-    @DisplayName("Debe mapear CreateDonationRequestDTO a CreateDonationRequestCommand")
+    @DisplayName("Debe mapear CreateDonationRequestDTO a CreateDonationRequestCommand usando donante resuelto")
     void shouldMapCreateRequestToCommand() {
-        CreateDonationRequestDTO dto = new CreateDonationRequestDTO(1L, 101L, 501L, "Mensaje");
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime end = start.plusHours(2);
+        CreateDonationRequestDTO dto = new CreateDonationRequestDTO(
+                1L, 501L, "Mensaje",
+                DeliveryMode.HOME_PICKUP, "Calle 85 # 15-32, Bogotá", start, end
+        );
 
-        CreateDonationRequestCommand cmd = mapper.toCommand(dto);
+        CreateDonationRequestCommand cmd = mapper.toCommand(dto, 101L);
 
         assertThat(cmd.publicationId()).isEqualTo(1L);
         assertThat(cmd.donorId()).isEqualTo(101L);
         assertThat(cmd.foundationId()).isEqualTo(501L);
         assertThat(cmd.message()).isEqualTo("Mensaje");
+        assertThat(cmd.deliveryMode()).isEqualTo(DeliveryMode.HOME_PICKUP);
+        assertThat(cmd.deliveryPoint()).isEqualTo("Calle 85 # 15-32, Bogotá");
+        assertThat(cmd.startTime()).isEqualTo(start);
+        assertThat(cmd.endTime()).isEqualTo(end);
+        assertThat(mapper.toCommand(dto).donorId()).isNull();
+    }
+
+    @Test
+    @DisplayName("Debe mapear CreateDonationRequestDTO con deliveryProposal y donante del token JWT")
+    void shouldMapCreateRequestWithDeliveryProposalAndJwtDonor() {
+        LocalDateTime start = LocalDateTime.now().plusDays(2);
+        LocalDateTime end = start.plusHours(3);
+        DeliveryProposalDTO proposal = new DeliveryProposalDTO(
+                DeliveryMode.DROP_OFF_POINT, "Calle 85 # 15-32, Bogotá", start, end
+        );
+        CreateDonationRequestDTO dto = new CreateDonationRequestDTO(10L, 3L, "Para campaña escolar", proposal);
+
+        CreateDonationRequestCommand cmd = mapper.toCommand(dto, 202L);
+
+        assertThat(cmd.publicationId()).isEqualTo(10L);
+        assertThat(cmd.donorId()).isEqualTo(202L);
+        assertThat(cmd.foundationId()).isEqualTo(3L);
+        assertThat(cmd.message()).isEqualTo("Para campaña escolar");
+        assertThat(cmd.deliveryMode()).isEqualTo(DeliveryMode.DROP_OFF_POINT);
+        assertThat(cmd.deliveryPoint()).isEqualTo("Calle 85 # 15-32, Bogotá");
+        assertThat(cmd.startTime()).isEqualTo(start);
+        assertThat(cmd.endTime()).isEqualTo(end);
     }
 
     @Test
@@ -67,6 +102,7 @@ class DonationRequestRestMapperTest {
                 .foundationId(4L)
                 .message("Hola")
                 .status(DonationRequestStatus.PENDING)
+                .deliveryMode(DeliveryMode.DROP_OFF_POINT)
                 .deliveryPoint("Punto")
                 .requestedAt(LocalDateTime.now())
                 .build();
@@ -75,6 +111,25 @@ class DonationRequestRestMapperTest {
 
         assertThat(resp.id()).isEqualTo(1L);
         assertThat(resp.status()).isEqualTo(DonationRequestStatus.PENDING);
+        assertThat(resp.deliveryMode()).isEqualTo(DeliveryMode.DROP_OFF_POINT);
         assertThat(resp.deliveryPoint()).isEqualTo("Punto");
+        assertThat(resp.receiptCode()).isNull();
+    }
+
+    @Test
+    @DisplayName("Debe generar receiptCode SR-DON-XXXX al mapear solicitud DELIVERED")
+    void shouldGenerateReceiptCodeWhenDelivered() {
+        DonationRequest delivered = DonationRequest.builder()
+                .id(42L)
+                .publicationId(2L)
+                .donorId(3L)
+                .foundationId(4L)
+                .status(DonationRequestStatus.DELIVERED)
+                .receivedAt(LocalDateTime.now())
+                .build();
+
+        DonationRequestResponseDTO resp = mapper.toResponse(delivered);
+
+        assertThat(resp.receiptCode()).isEqualTo("SR-DON-0042");
     }
 }

@@ -5,10 +5,14 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import edu.dosw.styleradar.donaciones.application.dto.request.ClaimDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.CreateDonationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.response.DonationRequestResponseDTO;
+import edu.dosw.styleradar.donaciones.application.dto.response.FoundationResponseDTO;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
+import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
+import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestCommand;
 import edu.dosw.styleradar.donaciones.domain.port.in.SchedulePickupCommand;
 
@@ -22,9 +26,32 @@ public class DonationRequestRestMapper {
         if (dto == null) {
             return null;
         }
+        return toCommand(dto, null);
+    }
+
+    public CreateDonationRequestCommand toCommand(CreateDonationRequestDTO dto, Long resolvedDonorId) {
+        if (dto == null) {
+            return null;
+        }
 
         return new CreateDonationRequestCommand(
-                dto.donorId(),
+                resolvedDonorId,
+                dto.publicationId(),
+                dto.foundationId(),
+                dto.message(),
+                dto.resolvedDeliveryMode(),
+                dto.resolvedDeliveryPoint(),
+                dto.resolvedStartTime(),
+                dto.resolvedEndTime()
+        );
+    }
+
+    public ClaimDonationCommand toCommand(ClaimDonationRequestDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        return new ClaimDonationCommand(
                 dto.publicationId(),
                 dto.foundationId(),
                 dto.message()
@@ -58,12 +85,15 @@ public class DonationRequestRestMapper {
                 domain.getMessage(),
                 domain.getStatus(),
                 domain.getRejectionReason(),
+                domain.getDeliveryMode(),
                 domain.getDeliveryPoint(),
                 domain.getPickupStartTime(),
                 domain.getPickupEndTime(),
+                domain.getVersion(),
                 domain.getRequestedAt(),
                 domain.getDecidedAt(),
-                domain.getReceivedAt()
+                domain.getReceivedAt(),
+                DonationRequestResponseDTO.generateReceiptCode(domain.getId(), domain.getStatus())
         );
     }
 
@@ -72,5 +102,33 @@ public class DonationRequestRestMapper {
             return Collections.emptyList();
         }
         return list.stream().map(this::toResponse).toList();
+    }
+
+    public FoundationResponseDTO toFoundationResponse(FoundationSummary foundation) {
+        if (foundation == null) {
+            return null;
+        }
+        return new FoundationResponseDTO(
+                foundation.id(),
+                foundation.nombre(),
+                foundation.barrio(),
+                foundation.descripcion(),
+                foundation.direccion(),
+                foundation.telefono(),
+                foundation.email(),
+                foundation.categoriasAceptadas(),
+                foundation.causasApoyadas(),
+                foundation.horarioAtencion(),
+                foundation.politicasDonacion(),
+                foundation.activa(),
+                foundation.representanteId()
+        );
+    }
+
+    public List<FoundationResponseDTO> toFoundationResponseList(List<FoundationSummary> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        return list.stream().map(this::toFoundationResponse).toList();
     }
 }

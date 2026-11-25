@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Manejador de errores de seguridad que emite respuestas bajo el estándar RFC 7807 (Problem Details).
@@ -38,6 +39,8 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
         problem.setTitle("No autorizado");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/unauthorized"));
         problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("code", "UNAUTHORIZED");
+        problem.setProperty("errors", List.of());
         problem.setProperty("timestamp", Instant.now());
 
         writeProblemResponse(response, HttpStatus.UNAUTHORIZED.value(), problem);
@@ -53,6 +56,8 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
         problem.setTitle("Acceso denegado");
         problem.setType(URI.create("https://styleradar.dosw.edu/errors/forbidden"));
         problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("code", "FORBIDDEN");
+        problem.setProperty("errors", List.of());
         problem.setProperty("timestamp", Instant.now());
 
         writeProblemResponse(response, HttpStatus.FORBIDDEN.value(), problem);

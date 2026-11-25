@@ -135,6 +135,13 @@
             <version>${springdoc-openapi.version}</version>
         </dependency>
 
+        <!-- Azure Storage Blob (Fotografías de prendas y donaciones) -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.28.0</version>
+        </dependency>
+
         <!-- Testing Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

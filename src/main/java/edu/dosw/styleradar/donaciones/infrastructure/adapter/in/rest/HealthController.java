@@ -14,8 +14,8 @@ import java.time.ZoneOffset;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/health")
-@Tag(name = "Health Check", description = "Monitoreo del estado operativo del microservicio")
+@RequestMapping("/api/v1/health")
+@Tag(name = "Health Check", description = "Service operational status and health monitoring")
 public class HealthController {
 
     @Value("${app.version:0.0.1-SNAPSHOT}")
@@ -33,8 +33,8 @@ public class HealthController {
     }
 
     @GetMapping
-    @Operation(summary = "Diagnóstico y salud del servicio", description = "Verifica que el microservicio esté en ejecución y respondiendo peticiones.")
-    @ApiResponse(responseCode = "200", description = "Servicio activo y saludable")
+    @Operation(summary = "Service health and diagnostics", description = "Verifies that the microservice is running and responding to requests.")
+    @ApiResponse(responseCode = "200", description = "Service is up and healthy")
     public ResponseEntity<Map<String, Object>> checkHealth() {
         return ResponseEntity.ok(Map.of(
                 "status", "UP",

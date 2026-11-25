@@ -8,12 +8,17 @@ import java.time.LocalDateTime;
  */
 public record PickupScheduledEvent(
         Long requestId,
+        Long donorId,
         String deliveryPoint,
         LocalDateTime startTime,
         LocalDateTime endTime,
         Instant occurredOn
 ) {
     public PickupScheduledEvent(Long requestId, String deliveryPoint, LocalDateTime startTime, LocalDateTime endTime) {
-        this(requestId, deliveryPoint, startTime, endTime, Instant.now());
+        this(requestId, null, deliveryPoint, startTime, endTime, Instant.now());
+    }
+
+    public PickupScheduledEvent(Long requestId, Long donorId, String deliveryPoint, LocalDateTime startTime, LocalDateTime endTime) {
+        this(requestId, donorId, deliveryPoint, startTime, endTime, Instant.now());
     }
 }

@@ -1,0 +1,5807 @@
+{
+  "info": {
+    "_postman_id": "pt8080-donations-service-v1-collection",
+    "name": "StyleRadar - ms-segunda-vida-donaciones (API v1 Complete Suite)",
+    "description": "Colección completa de pruebas funcionales, seguridad RBAC/BOLA, reglas de dominio y validación de integración para todos los endpoints de ms-segunda-vida-donaciones bajo /api/v1.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "tokenUser",
+      "value": ""
+    },
+    {
+      "key": "tokenStore",
+      "value": ""
+    },
+    {
+      "key": "tokenFoundation",
+      "value": ""
+    },
+    {
+      "key": "tokenAdmin",
+      "value": ""
+    },
+    {
+      "key": "uploadedPhotoUrl",
+      "value": ""
+    },
+    {
+      "key": "salePubId",
+      "value": ""
+    },
+    {
+      "key": "retirePubId",
+      "value": ""
+    },
+    {
+      "key": "donatePubId",
+      "value": ""
+    },
+    {
+      "key": "rejectDonatePubId",
+      "value": ""
+    },
+    {
+      "key": "openShowcasePubId",
+      "value": ""
+    },
+    {
+      "key": "claim503PubId",
+      "value": ""
+    },
+    {
+      "key": "donationRequestId",
+      "value": ""
+    },
+    {
+      "key": "rejectRequestId",
+      "value": ""
+    },
+    {
+      "key": "claimedRequestId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Health Check",
+      "description": "Diagnóstico y disponibilidad del microservicio (/api/v1/health).",
+      "item": [
+        {
+          "name": "GET /api/v1/health - 200 OK",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Verifica salud del servicio (código documentado: 200)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Servicio UP en puerto 8520', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.status).to.eql('UP');",
+                  "    pm.expect(b.service).to.eql('ms-segunda-vida-donaciones');",
+                  "    pm.expect(b.port).to.eql(8520);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Autenticación Demo (local/dev/qa)",
+      "description": "Obtención de tokens JWT de prueba y validaciones en /api/v1/auth/**.",
+      "item": [
+        {
+          "name": "GET /api/v1/auth/demo-users - 200 OK",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/demo-users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "demo-users"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Lista usuarios demo precargados', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const arr = pm.response.json();",
+                  "    pm.expect(arr).to.be.an('array').with.lengthOf.at.least(3);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/auth/login - 200 OK (USER)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@styleradar.com\",\n  \"password\": \"User123*\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Login exitoso y guarda tokenUser', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(b.role).to.eql('USER');",
+                  "    pm.collectionVariables.set('tokenUser', b.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/auth/login - 400 Bad Request (Credenciales incorrectas)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@styleradar.com\",\n  \"password\": \"WrongPassword!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/v1/auth/quick-token?role=STORE - 200 OK",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/quick-token?role=STORE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "quick-token"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "STORE"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Token STORE guardado (userId 301)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.role).to.eql('STORE');",
+                  "    pm.collectionVariables.set('tokenStore', b.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/v1/auth/quick-token?role=FOUNDATION - 200 OK",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/quick-token?role=FOUNDATION",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "quick-token"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "FOUNDATION"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Token FOUNDATION guardado (userId 501)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.role).to.eql('FOUNDATION');",
+                  "    pm.collectionVariables.set('tokenFoundation', b.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/v1/auth/quick-token?role=ADMIN - 200 OK",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/quick-token?role=ADMIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "quick-token"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "ADMIN"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Token ADMIN guardado (userId 1)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.role).to.eql('ADMIN');",
+                  "    pm.collectionVariables.set('tokenAdmin', b.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/v1/auth/quick-token?role=INVALID - 400 Bad Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/quick-token?role=INVALID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "quick-token"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "INVALID"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Carga de Fotografías (/api/v1/second-hand/photos)",
+      "description": "Subida binaria de imágenes a Azure Blob Storage (o fallback local) y errores 400/401.",
+      "item": [
+        {
+          "name": "POST /api/v1/second-hand/photos - 201 Created",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/photos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "photos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "docs/postman/test-garment.png"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Foto subida y URL guardada', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.photoUrl).to.be.a('string').and.not.empty;",
+                  "    pm.expect(b.filename).to.include('garment_');",
+                  "    pm.collectionVariables.set('uploadedPhotoUrl', b.photoUrl);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/second-hand/photos - 400 Bad Request (Archivo no imagen)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/photos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "photos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "docs/postman/invalid-photo.txt"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/second-hand/photos - 401 Unauthorized (Sin token)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/photos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "photos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "docs/postman/test-garment.png"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Publicaciones Segunda Mano (/api/v1/second-hand/publications)",
+      "description": "Todos los endpoints de economía circular (crear, buscar, detalle, mis publicaciones, editar, vender, retirar y pasar a donación) con códigos 200/201/204/400/401/403/404/409.",
+      "item": [
+        {
+          "name": "POST /publications - 201 Created (Venta C2C -> salePubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim C2C\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 85000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Publicación venta creada', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.status).to.eql('AVAILABLE');",
+                  "    pm.expect(b.esDonacion).to.eql(false);",
+                  "    pm.collectionVariables.set('salePubId', b.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /publications - 201 Created (Prenda para retiro -> retirePubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Saco Lana Para Retiro\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 45000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Publicación para retiro creada', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.collectionVariables.set('retirePubId', pm.response.json().id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /publications - 201 Created (Prenda para donar y aprobar -> donatePubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Abrigo Térmico Donación\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 90000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Publicación para donación creada', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.collectionVariables.set('donatePubId', pm.response.json().id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /publications - 201 Created (Prenda para donar y rechazar -> rejectDonatePubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Camisa Lino Rechazo\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 50000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Publicación para prueba de rechazo creada', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.collectionVariables.set('rejectDonatePubId', pm.response.json().id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /publications - 201 Created (Vitrina Abierta directa -> openShowcasePubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Suéter Vitrina Abierta\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Publicación Vitrina Abierta con precio 0', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.esDonacion).to.eql(true);",
+                  "    pm.expect(Number(b.price)).to.eql(0);",
+                  "    pm.collectionVariables.set('openShowcasePubId', b.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /publications - 201 Created (Vitrina Abierta 503 test -> claim503PubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Bufanda Vitrina 503\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": true,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Publicación Vitrina 503 creada', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.collectionVariables.set('claim503PubId', pm.response.json().id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /publications - 400 Bad Request (Precio 0 en venta C2C sin descripción)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Prenda Inválida\",\n  \"description\": \"\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Zara\",\n  \"color\": \"Negro\",\n  \"style\": \"CASUAL\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"photos\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /publications - 401 Unauthorized (Sin token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /publications - 403 Forbidden (Rol FOUNDATION o userId ajeno)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /publications - 200 OK (Catálogo AVAILABLE por defecto + filtros)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications?garmentType=Chaquetas&localidad=CHAPINERO&esDonacion=false",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ],
+              "query": [
+                {
+                  "key": "garmentType",
+                  "value": "Chaquetas"
+                },
+                {
+                  "key": "localidad",
+                  "value": "CHAPINERO"
+                },
+                {
+                  "key": "esDonacion",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Catálogo devuelve solo AVAILABLE', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const arr = pm.response.json();",
+                  "    pm.expect(arr).to.be.an('array').and.not.empty;",
+                  "    arr.forEach(p => pm.expect(p.status).to.eql('AVAILABLE'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /publications - 400 Bad Request (Parámetro enum inválido)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications?localidad=LOCALIDAD_INVALIDA",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications"
+              ],
+              "query": [
+                {
+                  "key": "localidad",
+                  "value": "LOCALIDAD_INVALIDA"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /publications/{id} - 200 OK",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Detalle de publicación', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('salePubId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /publications/{id} - 404 Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{notFoundId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{notFoundId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /publications/users/{userId} - 200 OK",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Lista publicaciones del usuario 101', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const arr = pm.response.json();",
+                  "    pm.expect(arr).to.be.an('array').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /publications/users/{userId} - 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /publications/users/{userId} - 403 Forbidden (Usuario ajeno)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/users/{{otherUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "users",
+                "{{otherUserId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /publications/{id} - 200 OK (Editar precio/talla en AVAILABLE)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Editada\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 79000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Publicación actualizada', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.garmentName).to.eql('Chaqueta Denim Editada');",
+                  "    pm.expect(Number(b.price)).to.eql(79000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /publications/{id} - 400 Bad Request (Precio 0 en venta C2C)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Precio Inválido\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 0,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /publications/{id} - 401 Unauthorized",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /publications/{id} - 403 Forbidden (No propietario)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenStore}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /publications/{id} - 404 Not Found",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{notFoundId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{notFoundId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Chaqueta Denim Vintage\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 400 Bad Request (Falta compradorId)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/sale?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 400 Bad Request (Rechaza interesadosIds desde cliente)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/sale?userId={{userId}}&compradorId={{otherUserId}}&interesadosIds=201,202",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "compradorId",
+                  "value": "{{otherUserId}}"
+                },
+                {
+                  "key": "interesadosIds",
+                  "value": "201,202"
+                }
+              ]
+            },
+            "description": "Verifica bloqueo de seguridad contra inyección de interesadosIds arbitrarios desde cliente."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 Rechaza interesadosIds enviado desde cliente', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 401 Unauthorized",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/sale?userId={{userId}}&compradorId={{otherUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "compradorId",
+                  "value": "{{otherUserId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 403 Forbidden (No propietario)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenStore}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/sale?userId={{userId}}&compradorId={{otherUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "compradorId",
+                  "value": "{{otherUserId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 404 Not Found",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{notFoundId}}/sale?userId={{userId}}&compradorId={{otherUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{notFoundId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "compradorId",
+                  "value": "{{otherUserId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 200 OK (Marcar SOLD y emitir evento RabbitMQ)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/sale?userId={{userId}}&compradorId={{otherUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "compradorId",
+                  "value": "{{otherUserId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Publicación marcada como SOLD', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().status).to.eql('SOLD');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/sale - 409 Conflict (Doble venta)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/sale?userId={{userId}}&compradorId={{otherUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "sale"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "compradorId",
+                  "value": "{{otherUserId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /publications/{id} - 409 Conflict (Editar publicación ya SOLD)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"garmentName\": \"Intento Edición Vendida\",\n  \"description\": \"Prenda en excelente estado para flujo completo de pruebas Postman.\",\n  \"garmentType\": \"Chaquetas\",\n  \"brand\": \"Levi's\",\n  \"color\": \"Azul\",\n  \"style\": \"URBAN\",\n  \"size\": \"M\",\n  \"conservationStatus\": \"GOOD_CONDITION\",\n  \"price\": 75000,\n  \"esDonacion\": false,\n  \"localidad\": \"CHAPINERO\",\n  \"photos\": [\n    \"{{uploadedPhotoUrl}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /publications/{id} - 401 Unauthorized",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{retirePubId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{retirePubId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /publications/{id} - 403 Forbidden (No propietario)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenStore}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{retirePubId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{retirePubId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /publications/{id} - 404 Not Found",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{notFoundId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{notFoundId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /publications/{id} - 409 Conflict (Impedir retirar prenda SOLD)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /publications/{id} - 204 No Content (Retirar publicación activa)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{retirePubId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{retirePubId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204 Publicación retirada', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/donation - 401 Unauthorized",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{donatePubId}}/donation?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{donatePubId}}",
+                "donation"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/donation - 403 Forbidden (No propietario)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenStore}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{donatePubId}}/donation?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{donatePubId}}",
+                "donation"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/donation - 404 Not Found",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{notFoundId}}/donation?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{notFoundId}}",
+                "donation"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/donation - 409 Conflict (Prenda ya SOLD)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{salePubId}}/donation?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{salePubId}}",
+                "donation"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/donation - 200 OK (donatePubId -> IN_DONATION y precio 0)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{donatePubId}}/donation?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{donatePubId}}",
+                "donation"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Prenda destinada a donación con precio 0', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.status).to.eql('IN_DONATION');",
+                  "    pm.expect(b.esDonacion).to.eql(true);",
+                  "    pm.expect(Number(b.price)).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /publications/{id}/donation - 200 OK (rejectDonatePubId -> IN_DONATION)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/second-hand/publications/{{rejectDonatePubId}}/donation?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "second-hand",
+                "publications",
+                "{{rejectDonatePubId}}",
+                "donation"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Segunda prenda destinada a donación para prueba de rechazo', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().status).to.eql('IN_DONATION');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Fundaciones y Vitrina Benéfica (/api/v1/donations/foundations & /claims)",
+      "description": "Catálogo de fundaciones en ms-tiendas, /foundations/representative (sin /me) y reclamos concurrentes /claims.",
+      "item": [
+        {
+          "name": "GET /donations/foundations - 200 OK (Filtro opcional ?category=SUPERIOR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations?category=SUPERIOR",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "SUPERIOR"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Lista fundaciones activas de ms-tiendas', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const arr = pm.response.json();",
+                  "    pm.expect(arr).to.be.an('array').and.not.empty;",
+                  "    pm.expect(arr[0].activa).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations - 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations - 503 Service Unavailable (ms-tiendas caído)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const mockUrl = pm.environment.get('mockTiendasUrl');",
+                  "if (mockUrl) {",
+                  "    pm.sendRequest({ url: mockUrl + '/__mock/fail-next-list', method: 'POST' }, function (err, res) {",
+                  "        if (err) { console.log('Mock tiendas no disponible (esperado si ya está caído):', err); }",
+                  "    });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 503 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(503);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(503);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/representative - 200 OK (Representante 501 -> Fundación 3)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/representative",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "representative"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Fundación asociada al representante autenticado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.representanteId).to.eql(501);",
+                  "    pm.expect(b.id).to.eql(3);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/representative - 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/representative",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "representative"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/representative - 403 Forbidden (Rol USER sin permiso)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/representative",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "representative"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/representative - 404 Not Found (ADMIN sin fundación vinculada)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/representative",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "representative"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/representative - 503 Service Unavailable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/representative",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "representative"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const mockUrl = pm.environment.get('mockTiendasUrl');",
+                  "if (mockUrl) {",
+                  "    pm.sendRequest({ url: mockUrl + '/__mock/fail-next-list', method: 'POST' }, function (err, res) {",
+                  "        if (err) { console.log('Mock tiendas no disponible (esperado si ya está caído):', err); }",
+                  "    });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 503 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(503);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(503);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/{foundationId} - 200 OK (Fundación activa)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/{{foundationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "{{foundationId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Detalle fundación activa', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().activa).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/{foundationId} - 400 Bad Request (Fundación inactiva 99)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/{{inactiveFoundationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "{{inactiveFoundationId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/{foundationId} - 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/{{foundationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "{{foundationId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/{foundationId} - 404 Not Found (Fundación inexistente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/{{notFoundFoundationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "{{notFoundFoundationId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/{foundationId} - 503 Service Unavailable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/{{unavailableFoundationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "{{unavailableFoundationId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 503 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(503);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(503);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations/claims - 400 Bad Request (Prenda C2C no destinada a donación)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "claims"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{salePubId}}\",\n  \"foundationId\": 3,\n  \"message\": \"Reclamo inválido\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations/claims - 401 Unauthorized",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "claims"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{openShowcasePubId}}\",\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations/claims - 403 Forbidden (Rol USER intentando reclamar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "claims"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{openShowcasePubId}}\",\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations/claims - 404 Not Found (Publicación inexistente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "claims"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{notFoundId}}\",\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations/claims - 503 Service Unavailable (ms-tiendas falla al validar fundación 503)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "claims"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{claim503PubId}}\",\n  \"foundationId\": 503,\n  \"message\": \"Prueba 503\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 503 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(503);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(503);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations/claims - 201 Created (Fundación 501/3 reclama openShowcasePubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "claims"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{openShowcasePubId}}\",\n  \"foundationId\": 3,\n  \"message\": \"Reclamamos este suéter para brigada invernal en Ciudad Bolívar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Reclamo en vitrina creado en APPROVED', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.status).to.eql('APPROVED');",
+                  "    pm.collectionVariables.set('claimedRequestId', b.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations/claims - 409 Conflict (Doble reclamo sobre openShowcasePubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "claims"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{openShowcasePubId}}\",\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 - Flujo Completo de Solicitudes de Donación (/api/v1/donations/**)",
+      "description": "Radicación directa, consultas BOLA/IDOR, aprobación/rechazo, programación logística y confirmación física con recibo SR-DON-XXXX (200/201/400/401/403/404/409/503).",
+      "item": [
+        {
+          "name": "POST /donations - 400 Bad Request (Fundación inactiva 99 en ms-tiendas)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 99,\n  \"message\": \"Fundación inactiva\",\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 400 Bad Request (deliveryProposal incompleto)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "Valida rechazo de propuesta de entrega incompleta aun sin enviar donorId.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryProposal\": {\n    \"deliveryMode\": \"DROP_OFF_POINT\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 Error de validación en deliveryProposal', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body.title).to.eql('Error de validación');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 401 Unauthorized",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 403 Forbidden (rol FOUNDATION no habilitado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 404 Not Found (Fundación inexistente 9999)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 9999,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 503 Service Unavailable (ms-tiendas no responde para 503)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 503,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 503 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(503);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(503);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 201 Created (Solicitud directa -> donationRequestId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"message\": \"Deseo donar este abrigo térmico para programas comunitarios en Bogotá\",\n  \"deliveryProposal\": {\n    \"deliveryMode\": \"DROP_OFF_POINT\",\n    \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n    \"startTime\": \"2026-12-20T09:00:00\",\n    \"endTime\": \"2026-12-20T12:00:00\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Solicitud creada en PENDING (donorId por JWT + deliveryProposal)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.status).to.eql('PENDING');",
+                  "    pm.expect(b.donorId).to.eql(101);",
+                  "    pm.expect(b.deliveryMode).to.eql('DROP_OFF_POINT');",
+                  "    pm.expect(b.deliveryPoint).to.be.a('string').and.not.empty;",
+                  "    pm.expect(b.slotStart).to.be.a('string');",
+                  "    pm.expect(b.slotEnd).to.be.a('string');",
+                  "    pm.collectionVariables.set('donationRequestId', b.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 201 Created (Segunda solicitud para rechazo -> rejectRequestId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{rejectDonatePubId}}\",\n  \"foundationId\": 3,\n  \"message\": \"Solicitud para validar rechazo y reversión automática a AVAILABLE\",\n  \"deliveryMode\": \"HOME_PICKUP\",\n  \"deliveryPoint\": \"Carrera 15 # 90-20, Chicó, Bogotá\",\n  \"startTime\": \"2026-12-20T14:00:00\",\n  \"endTime\": \"2026-12-20T17:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 Solicitud de rechazo creada en PENDING', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.collectionVariables.set('rejectRequestId', pm.response.json().id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /donations - 409 Conflict (Solicitud duplicada sobre donatePubId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicationId\": \"{{donatePubId}}\",\n  \"foundationId\": 3,\n  \"deliveryMode\": \"DROP_OFF_POINT\",\n  \"deliveryPoint\": \"Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"2026-12-20T09:00:00\",\n  \"endTime\": \"2026-12-20T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/{id} - 200 OK (Donante propietario)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Donante consulta su solicitud', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('donationRequestId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/{id} - 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/{id} - 403 Forbidden (Control BOLA/IDOR con usuario STORE 301 ajeno)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenStore}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/{id} - 404 Not Found",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{notFoundId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{notFoundId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/donors/{donorId} - 200 OK",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/donors/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "donors",
+                "{{userId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Historial de donaciones del donante 101', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json()).to.be.an('array').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/donors/{donorId} - 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/donors/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "donors",
+                "{{userId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/donors/{donorId} - 403 Forbidden (Tercero STORE 301)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenStore}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/donors/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "donors",
+                "{{userId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/{foundationId}/requests - 200 OK (Representante 501 -> Fundación 3)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/{{foundationId}}/requests?status=PENDING",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "{{foundationId}}",
+                "requests"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Bandeja de la fundación filtrada por PENDING', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const arr = pm.response.json();",
+                  "    pm.expect(arr).to.be.an('array').and.not.empty;",
+                  "    arr.forEach(r => pm.expect(r.status).to.eql('PENDING'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/{foundationId}/requests - 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/{{foundationId}}/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "{{foundationId}}",
+                "requests"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /donations/foundations/{foundationId}/requests - 403 Forbidden (Rol USER o fundación ajena)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/foundations/{{foundationId}}/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "foundations",
+                "{{foundationId}}",
+                "requests"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/decision - 400 Bad Request (Rechazar sin motivo obligatorio)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "decision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3,\n  \"approve\": false,\n  \"reason\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/decision - 401 Unauthorized",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "decision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3,\n  \"approve\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/decision - 403 Forbidden (Usuario sin rol FOUNDATION)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "decision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3,\n  \"approve\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/decision - 404 Not Found",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{notFoundId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{notFoundId}}",
+                "decision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3,\n  \"approve\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/decision - 200 OK (Aprobar solicitud -> APPROVED)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "decision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3,\n  \"approve\": true,\n  \"reason\": \"Prenda apta para entrega comunitaria\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Solicitud aprobada (APPROVED)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().status).to.eql('APPROVED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/decision - 200 OK (Rechazar rejectRequestId -> REJECTED y revierte prenda)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{rejectRequestId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{rejectRequestId}}",
+                "decision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3,\n  \"approve\": false,\n  \"reason\": \"Cupo semanal completo para esta categoría\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Solicitud rechazada (REJECTED) con motivo', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.status).to.eql('REJECTED');",
+                  "    pm.expect(b.rejectionReason).to.include('Cupo');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/decision - 409 Conflict (Decidir de nuevo sobre solicitud ya aprobada)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "decision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3,\n  \"approve\": false,\n  \"reason\": \"Cambio de opinión\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/pickup - 400 Bad Request (Fecha en el pasado)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/pickup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "pickup"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"deliveryPoint\": \"Calle 100 # 15-20, Usaquén, Bogotá\",\n  \"startTime\": \"2020-01-10T09:00:00\",\n  \"endTime\": \"2020-01-10T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/pickup - 401 Unauthorized",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/pickup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "pickup"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"deliveryPoint\": \"Calle 100 # 15-20, Bogotá\",\n  \"startTime\": \"2027-01-10T09:00:00\",\n  \"endTime\": \"2027-01-10T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/pickup - 403 Forbidden (Tercero STORE 301)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenStore}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/pickup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "pickup"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"deliveryPoint\": \"Calle 100 # 15-20, Bogotá\",\n  \"startTime\": \"2027-01-10T09:00:00\",\n  \"endTime\": \"2027-01-10T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/pickup - 404 Not Found",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{notFoundId}}/pickup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{notFoundId}}",
+                "pickup"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"deliveryPoint\": \"Calle 100 # 15-20, Bogotá\",\n  \"startTime\": \"2027-01-10T09:00:00\",\n  \"endTime\": \"2027-01-10T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/pickup - 409 Conflict (Solicitud REJECTED no admite cita)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{rejectRequestId}}/pickup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{rejectRequestId}}",
+                "pickup"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"deliveryPoint\": \"Calle 100 # 15-20, Bogotá\",\n  \"startTime\": \"2027-01-10T09:00:00\",\n  \"endTime\": \"2027-01-10T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/pickup - 200 OK (Programar franja futura -> IN_PICKUP)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/pickup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "pickup"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 101,\n  \"deliveryPoint\": \"Punto de Acopio StyleRadar: Calle 85 # 15-32, Chapinero, Bogotá\",\n  \"startTime\": \"{{futureStart}}\",\n  \"endTime\": \"{{futureEnd}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = new Date(Date.now() + 48 * 3600 * 1000);",
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const y = d.getUTCFullYear();",
+                  "const m = pad(d.getUTCMonth() + 1);",
+                  "const day = pad(d.getUTCDate());",
+                  "pm.variables.set('futureStart', `${y}-${m}-${day}T10:00:00`);",
+                  "pm.variables.set('futureEnd', `${y}-${m}-${day}T13:00:00`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Recogida programada (IN_PICKUP)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.status).to.eql('IN_PICKUP');",
+                  "    pm.expect(b.deliveryPoint).to.include('Chapinero');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/confirmation - 400 Bad Request (Fundación distinta con ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/confirmation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "confirmation"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/confirmation - 401 Unauthorized",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/confirmation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "confirmation"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401 No autenticado', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/confirmation - 403 Forbidden (Usuario USER sin rol FOUNDATION)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUser}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/confirmation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "confirmation"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(403);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/confirmation - 404 Not Found",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{notFoundId}}/confirmation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{notFoundId}}",
+                "confirmation"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/confirmation - 409 Conflict (Confirmar solicitud APPROVED antes de pickup)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{claimedRequestId}}/confirmation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{claimedRequestId}}",
+                "confirmation"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/confirmation - 200 OK (DELIVERED + comprobante SR-DON-XXXX)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/confirmation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "confirmation"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 Entrega confirmada con receiptCode SR-DON-XXXX', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const b = pm.response.json();",
+                  "    pm.expect(b.status).to.eql('DELIVERED');",
+                  "    pm.expect(b.receptionDate).to.not.be.null;",
+                  "    pm.expect(b.receiptCode).to.match(/^SR-DON-\\d{4,}$/);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /donations/{id}/confirmation - 409 Conflict (Doble confirmación sobre DELIVERED)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFoundation}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donations/{{donationRequestId}}/confirmation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "donations",
+                "{{donationRequestId}}",
+                "confirmation"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foundationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409 ProblemDetail RFC 7807', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(409);",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('detail');",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

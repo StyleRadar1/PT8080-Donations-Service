@@ -25,25 +25,56 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public static final String PRODUCER_NAME = "ms-segunda-vida-donaciones";
+
     @Builder.Default
     private String eventId = UUID.randomUUID().toString();
+
+    @Builder.Default
+    private String eventoId = UUID.randomUUID().toString();
 
     @Builder.Default
     private String eventType = "donacion.solicitud.creada";
 
     @Builder.Default
+    private String tipoEvento = "donacion.solicitud.creada";
+
+    @Builder.Default
     private String timestamp = Instant.now().toString();
 
     @Builder.Default
-    private String producer = "ms-segunda-vida-donaciones";
+    private String fechaHora = Instant.now().toString();
+
+    @Builder.Default
+    private String fechaEvento = IntegrationDateFormatter.nowLocalDateTime();
+
+    @Builder.Default
+    private String producer = PRODUCER_NAME;
+
+    @Builder.Default
+    private String emisor = PRODUCER_NAME;
+
+    @Builder.Default
+    private String servicio = PRODUCER_NAME;
+
+    @Builder.Default
+    private String modulo = "DONACIONES";
 
     @Builder.Default
     private String correlationId = UUID.randomUUID().toString();
 
+    private Long donacionId;
+    private Long donanteId;
     private Long requestId;
+    private Long solicitudId;
     private Long publicationId;
     private Long donorId;
     private Long foundationId;
+    private Long fundacionId;
+    private Long representanteId;
+    private Long fundacionUsuarioId;
+    private String nombreDonante;
+    private String resumen;
 
     private DonationRequestData data;
 
@@ -55,50 +86,75 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
     public static class DonationRequestData implements Serializable {
         private static final long serialVersionUID = 1L;
 
+        private Long donacionId;
+        private Long donanteId;
         private Long requestId;
         private Long solicitudId;
         private Long publicationId;
         private Long publicacionId;
         private Long donorId;
-        private Long donanteId;
         private Long foundationId;
         private Long fundacionId;
+        private Long representanteId;
+        private Long fundacionUsuarioId;
+        private String nombreDonante;
+        private String resumen;
         private String status;
         private String estado;
         private Integer version;
         private String occurredOn;
+        private String fechaEvento;
     }
 
     public static DonationRequestCreatedIntegrationEvent from(DonationRequestCreatedEvent domainEvent) {
         String nowStr = domainEvent.occurredOn() != null ? domainEvent.occurredOn().toString() : Instant.now().toString();
+        String localFechaEvento = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
         String eventUuid = UUID.randomUUID().toString();
         String corrUuid = UUID.randomUUID().toString();
+        String rawStatus = domainEvent.status() != null ? domainEvent.status() : "PENDING";
+        String estadoEsp = "APPROVED".equalsIgnoreCase(rawStatus) ? "APROBADA" : "PENDIENTE";
 
         DonationRequestData requestData = DonationRequestData.builder()
+                .donacionId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
                 .requestId(domainEvent.requestId())
                 .solicitudId(domainEvent.requestId())
                 .publicationId(domainEvent.publicationId())
                 .publicacionId(domainEvent.publicationId())
                 .donorId(domainEvent.donorId())
-                .donanteId(domainEvent.donorId())
                 .foundationId(domainEvent.foundationId())
                 .fundacionId(domainEvent.foundationId())
-                .status("PENDING")
-                .estado("PENDIENTE")
+                .representanteId(domainEvent.representanteId())
+                .fundacionUsuarioId(domainEvent.representanteId())
+                .resumen(domainEvent.resumen())
+                .status(rawStatus)
+                .estado(estadoEsp)
                 .version(1)
                 .occurredOn(nowStr)
+                .fechaEvento(localFechaEvento)
                 .build();
 
         return DonationRequestCreatedIntegrationEvent.builder()
                 .eventId(eventUuid)
+                .eventoId(eventUuid)
                 .eventType("donacion.solicitud.creada")
+                .tipoEvento("donacion.solicitud.creada")
                 .timestamp(nowStr)
-                .producer("ms-segunda-vida-donaciones")
+                .fechaHora(nowStr)
+                .fechaEvento(localFechaEvento)
+                .producer(PRODUCER_NAME)
                 .correlationId(corrUuid)
+                .donacionId(domainEvent.requestId())
+                .donanteId(domainEvent.donorId())
                 .requestId(domainEvent.requestId())
+                .solicitudId(domainEvent.requestId())
                 .publicationId(domainEvent.publicationId())
                 .donorId(domainEvent.donorId())
                 .foundationId(domainEvent.foundationId())
+                .fundacionId(domainEvent.foundationId())
+                .representanteId(domainEvent.representanteId())
+                .fundacionUsuarioId(domainEvent.representanteId())
+                .resumen(domainEvent.resumen())
                 .data(requestData)
                 .build();
     }

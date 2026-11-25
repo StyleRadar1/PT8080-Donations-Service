@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.Garment;
@@ -82,19 +83,72 @@ class GetPublicationsUseCaseTest {
     }
 
     @Test
-    @DisplayName("Debe retornar publicaciones filtradas por criterios de búsqueda")
+    @DisplayName("Debe retornar publicaciones filtradas por criterios aplicando estado AVAILABLE por defecto")
     void shouldSearchByCriteria() {
         PublicationSearchCriteria criteria = PublicationSearchCriteria.builder()
                 .type(GarmentType.UPPER)
                 .size(Size.M)
                 .build();
 
+        PublicationSearchCriteria expectedCriteria = criteria.toBuilder()
+                .status(PublicationStatus.AVAILABLE)
+                .build();
+
         SecondHandPublication pub = SecondHandPublication.builder().id(1L).build();
-        when(publicationRepositoryPort.findByCriteria(criteria)).thenReturn(List.of(pub));
+        when(publicationRepositoryPort.findByCriteria(expectedCriteria)).thenReturn(List.of(pub));
 
         List<SecondHandPublication> result = getPublicationsUseCase.search(criteria);
 
         assertEquals(1, result.size());
-        verify(publicationRepositoryPort, times(1)).findByCriteria(criteria);
+        verify(publicationRepositoryPort, times(1)).findByCriteria(expectedCriteria);
+    }
+
+    @Test
+    @DisplayName("Debe respetar el estado explícito cuando el caller lo envía en la búsqueda")
+    void shouldRespectExplicitStatusInSearch() {
+        PublicationSearchCriteria criteria = PublicationSearchCriteria.builder()
+                .status(PublicationStatus.SOLD)
+                .build();
+
+        when(publicationRepositoryPort.findByCriteria(criteria)).thenReturn(List.of());
+
+        List<SecondHandPublication> result = getPublicationsUseCase.search(criteria);
+
+        assertTrue(result.isEmpty());
+        verify(publicationRepositoryPort).findByCriteria(criteria);
+    }
+
+    @Test
+    @DisplayName("Debe aplicar AVAILABLE por defecto cuando criteria es null")
+    void shouldDefaultToAvailableWhenCriteriaIsNull() {
+        PublicationSearchCriteria expected = PublicationSearchCriteria.builder()
+                .status(PublicationStatus.AVAILABLE)
+                .build();
+        when(publicationRepositoryPort.findByCriteria(expected)).thenReturn(List.of());
+
+        List<SecondHandPublication> result = getPublicationsUseCase.search(null);
+
+        assertTrue(result.isEmpty());
+        verify(publicationRepositoryPort).findByCriteria(expected);
+    }
+
+    @Test
+    @DisplayName("Debe rechazar búsqueda cuando minPrice es negativo, maxPrice es negativo o minPrice supera a maxPrice")
+    void shouldRejectInvalidPriceRangeInSearch() {
+        PublicationSearchCriteria negativeMin = PublicationSearchCriteria.builder()
+                .minPrice(BigDecimal.valueOf(-1))
+                .build();
+        PublicationSearchCriteria negativeMax = PublicationSearchCriteria.builder()
+                .maxPrice(BigDecimal.valueOf(-100))
+                .build();
+        PublicationSearchCriteria minGreaterThanMax = PublicationSearchCriteria.builder()
+                .minPrice(BigDecimal.valueOf(80000))
+                .maxPrice(BigDecimal.valueOf(50000))
+                .build();
+
+        assertThrows(InvalidPublicationException.class, () -> getPublicationsUseCase.search(negativeMin));
+        assertThrows(InvalidPublicationException.class, () -> getPublicationsUseCase.search(negativeMax));
+        assertThrows(InvalidPublicationException.class, () -> getPublicationsUseCase.search(minGreaterThanMax));
+        verify(publicationRepositoryPort, never()).findByCriteria(any());
     }
 }

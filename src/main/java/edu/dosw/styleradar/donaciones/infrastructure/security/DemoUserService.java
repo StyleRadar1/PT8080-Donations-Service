@@ -14,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Servicio que gestiona los usuarios de prueba (Admin, Normal, Fundación)
  * y la emisión de tokens JWT para interactuar con la API en Swagger UI.
- * Restringido a ambientes de desarrollo y pruebas controladas (local, test, dev, qa).
- * En producción (prod) este bean NO se carga, evitando la exposición de identidades o credenciales.
+ * Restringido exclusivamente a ambientes locales y de desarrollo controlado (local, test, dev).
+ * En QA (qa) y producción (prod) este bean NO se carga, evitando la exposición de identidades o credenciales.
  */
 @Service
-@Profile({"local", "test", "dev", "qa"})
+@Profile({"local", "test", "dev"})
 @SuppressWarnings("java:S2068")
 public class DemoUserService {
 
@@ -56,9 +56,18 @@ public class DemoUserService {
                 Role.FOUNDATION
         );
 
+        UserPrincipal store = new UserPrincipal(
+                301L,
+                "store@styleradar.com",
+                "Store123*",
+                "Boutique Vintage Bogotá (Tienda Aliada)",
+                Role.STORE
+        );
+
         registerUser(admin);
         registerUser(normalUser);
         registerUser(foundation);
+        registerUser(store);
     }
 
     private void registerUser(UserPrincipal user) {

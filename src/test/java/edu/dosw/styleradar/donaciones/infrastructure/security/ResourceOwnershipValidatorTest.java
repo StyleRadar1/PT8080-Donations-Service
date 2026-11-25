@@ -15,10 +15,13 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ResourceOwnershipValidatorTest {
 
@@ -111,17 +114,83 @@ class ResourceOwnershipValidatorTest {
     }
 
     @Test
-    @DisplayName("validateDonationRequestAccess debe permitir acceso a la fundación destinataria")
+    @DisplayName("validateDonationRequestAccess debe permitir acceso solo al representanteId autorizado de la fundación destinataria")
     void shouldAllowDonationRequestAccessForFoundation() {
+        FoundationCatalogPort foundationCatalogPort = mock(FoundationCatalogPort.class);
+        ResourceOwnershipValidator representativeValidator = new ResourceOwnershipValidator(foundationCatalogPort);
+
         Authentication foundationAuth = new UsernamePasswordAuthenticationToken(
                 new UserPrincipal(501L, "foundation@styleradar.com", "pass", "Foundation", Role.FOUNDATION),
                 null,
                 List.of(new SimpleGrantedAuthority("ROLE_FOUNDATION"))
         );
         SecurityContextHolder.getContext().setAuthentication(foundationAuth);
+        when(foundationCatalogPort.isFoundationRepresentative(501L, 3L)).thenReturn(true);
 
-        DonationRequest request = DonationRequest.builder().id(1L).donorId(101L).foundationId(501L).build();
-        assertThatCode(() -> validator.validateDonationRequestAccess(request)).doesNotThrowAnyException();
+        DonationRequest request = DonationRequest.builder().id(1L).donorId(101L).foundationId(3L).build();
+        assertThatCode(() -> representativeValidator.validateDonationRequestAccess(request))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("validateDonationRequestAccess debe denegar acceso aunque userId coincida numéricamente con foundationId sin ser representanteId")
+    void shouldDenyDonationRequestAccessWhenUserIdOnlyMatchesFoundationIdNumerically() {
+        FoundationCatalogPort foundationCatalogPort = mock(FoundationCatalogPort.class);
+        ResourceOwnershipValidator representativeValidator = new ResourceOwnershipValidator(foundationCatalogPort);
+
+        Authentication userAuth = new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(501L, "impostor@styleradar.com", "pass", "Impostor", Role.FOUNDATION),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_FOUNDATION"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(userAuth);
+        when(foundationCatalogPort.isFoundationRepresentative(501L, 501L)).thenReturn(false);
+
+        DonationRequest collidingRequest = DonationRequest.builder().id(1L).donorId(101L).foundationId(501L).build();
+        assertThatThrownBy(() -> representativeValidator.validateDonationRequestAccess(collidingRequest))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Acceso denegado");
+
+        assertThatThrownBy(() -> validator.validateDonationRequestAccess(collidingRequest))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("validateFoundationOwnership debe denegar coincidencia numérica userId == foundationId y sin catálogo")
+    void shouldDenyFoundationOwnershipOnNumericIdCollisionWithoutRepresentation() {
+        FoundationCatalogPort foundationCatalogPort = mock(FoundationCatalogPort.class);
+        ResourceOwnershipValidator representativeValidator = new ResourceOwnershipValidator(foundationCatalogPort);
+
+        Authentication collidingAuth = new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(501L, "impostor@styleradar.com", "pass", "Impostor", Role.FOUNDATION),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_FOUNDATION"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(collidingAuth);
+        when(foundationCatalogPort.isFoundationRepresentative(501L, 501L)).thenReturn(false);
+
+        assertThatThrownBy(() -> representativeValidator.validateFoundationOwnership(501L))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("no tiene autorización");
+
+        assertThatThrownBy(() -> validator.validateFoundationOwnership(501L))
+                .isInstanceOf(AccessDeniedException.class);
+
+        assertThatThrownBy(() -> representativeValidator.validateFoundationOwnership(null, 501L))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("validateFoundationOwnership debe permitir acceso a ROLE_ADMIN incluso sin catálogo de fundaciones")
+    void shouldAllowFoundationOwnershipForAdmin() {
+        Authentication adminAuth = new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(1L, "admin@styleradar.com", "pass", "Admin", Role.ADMIN),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(adminAuth);
+
+        assertThatCode(() -> validator.validateFoundationOwnership(3L)).doesNotThrowAnyException();
     }
 
     @Test
@@ -191,5 +260,34 @@ class ResourceOwnershipValidatorTest {
 
         // Auth nulo
         assertThat(validator.extractAuthenticatedUserId(null)).isNull();
+    }
+
+    @Test
+    @DisplayName("validateFoundationOwnership y validateDonationRequestAccess deben autorizar al representanteId registrado en ms-tiendas")
+    void shouldAllowFoundationAccessViaRepresentativeIdFromTiendas() {
+        FoundationCatalogPort foundationCatalogPort = mock(FoundationCatalogPort.class);
+        ResourceOwnershipValidator representativeValidator = new ResourceOwnershipValidator(foundationCatalogPort);
+
+        Authentication repAuth = new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(24L, "user-24@styleradar.local", "", "Usuario #24", Role.FOUNDATION),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_FOUNDATION"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(repAuth);
+
+        when(foundationCatalogPort.isFoundationRepresentative(24L, 3L)).thenReturn(true);
+        when(foundationCatalogPort.isFoundationRepresentative(24L, 99L)).thenReturn(false);
+
+        assertThatCode(() -> representativeValidator.validateFoundationOwnership(3L)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> representativeValidator.validateFoundationOwnership(99L))
+                .isInstanceOf(AccessDeniedException.class);
+
+        DonationRequest reqAllowed = DonationRequest.builder().id(10L).donorId(101L).foundationId(3L).build();
+        assertThatCode(() -> representativeValidator.validateDonationRequestAccess(reqAllowed))
+                .doesNotThrowAnyException();
+
+        DonationRequest reqForbidden = DonationRequest.builder().id(11L).donorId(101L).foundationId(99L).build();
+        assertThatThrownBy(() -> representativeValidator.validateDonationRequestAccess(reqForbidden))
+                .isInstanceOf(AccessDeniedException.class);
     }
 }

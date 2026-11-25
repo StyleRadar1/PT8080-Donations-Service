@@ -1,6 +1,8 @@
 package edu.dosw.styleradar.donaciones.infrastructure.security;
 
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,14 +11,48 @@ import org.springframework.stereotype.Component;
 
 /**
  * Validador de propiedad de recursos para impedir que usuarios modifiquen o consulten
- * recursos ajenos, respetando las excepciones administrativas autorizadas (ROLE_ADMIN).
+ * recursos ajenos, respetando las excepciones administrativas autorizadas (ROLE_ADMIN)
+ * y la representación de fundaciones aliadas registrada en ms-tiendas (representanteId).
  */
 @Component
 public class ResourceOwnershipValidator {
 
+    private FoundationCatalogPort foundationCatalogPort;
+
+    public ResourceOwnershipValidator() {
+    }
+
+    @Autowired(required = false)
+    public ResourceOwnershipValidator(FoundationCatalogPort foundationCatalogPort) {
+        this.foundationCatalogPort = foundationCatalogPort;
+    }
+
     public void validateOwnerOrAdmin(Long targetUserId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         validateOwnerOrAdmin(authentication, targetUserId);
+    }
+
+    public void validateFoundationOwnership(Long foundationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        validateFoundationOwnership(authentication, foundationId);
+    }
+
+    public void validateFoundationOwnership(Authentication authentication, Long foundationId) {
+        if (isAdmin(authentication)) {
+            return;
+        }
+
+        Long authenticatedUserId = extractAuthenticatedUserId(authentication);
+        if (authenticatedUserId != null && foundationCatalogPort != null
+                && foundationCatalogPort.isFoundationRepresentative(authenticatedUserId, foundationId)) {
+            return;
+        }
+
+        throw new AccessDeniedException(
+                "Acceso denegado: El usuario autenticado (ID: " + authenticatedUserId
+                        + ") no tiene autorización para operar sobre la fundación (ID: "
+                        + foundationId + ")."
+        );
     }
 
     public void validateOwnerOrAdmin(Authentication authentication, Long targetUserId) {
@@ -46,13 +82,19 @@ public class ResourceOwnershipValidator {
 
         Long authenticatedUserId = extractAuthenticatedUserId(authentication);
         boolean isOwnerDonor = authenticatedUserId != null && authenticatedUserId.equals(request.getDonorId());
-        boolean isTargetFoundation = authenticatedUserId != null && authenticatedUserId.equals(request.getFoundationId());
+        boolean isTargetFoundation = authenticatedUserId != null
+                && foundationCatalogPort != null
+                && foundationCatalogPort.isFoundationRepresentative(authenticatedUserId, request.getFoundationId());
 
         if (!isOwnerDonor && !isTargetFoundation) {
             throw new AccessDeniedException(
                     "Acceso denegado: No tiene autorización para consultar la solicitud de donación ID: " + request.getId()
             );
         }
+    }
+
+    public Long extractAuthenticatedUserId() {
+        return extractAuthenticatedUserId(SecurityContextHolder.getContext().getAuthentication());
     }
 
     public boolean isAdmin(Authentication authentication) {

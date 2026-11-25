@@ -37,34 +37,58 @@ spring:
     locations: classpath:db/migration
 
   rabbitmq:
-    host: ${RABBITMQ_HOST:}
+    host: ${RABBITMQ_HOST:styleradar-rabbitmq-qa.northcentralus.cloudapp.azure.com}
     port: ${RABBITMQ_PORT:5671}
-    username: ${RABBITMQ_USERNAME:}
+    username: ${RABBITMQ_USER:${RABBITMQ_USERNAME:ms_donaciones}}
     password: ${RABBITMQ_PASSWORD:}
     virtual-host: ${RABBITMQ_VHOST:/}
     ssl:
       enabled: ${RABBITMQ_SSL_ENABLED:true}
+      trust-store: ${RABBITMQ_TRUSTSTORE_PATH:classpath:certs/rabbitmq-truststore.jks}
+      trust-store-password: ${RABBITMQ_TRUSTSTORE_PASSWORD:changeit}
+      trust-store-type: ${RABBITMQ_TRUSTSTORE_TYPE:PKCS12}
+      # Verificación de hostname activa (certificado QA incluye SAN styleradar-rabbitmq-qa.northcentralus.cloudapp.azure.com e IP 20.88.7.76);
+      # en QA puede sobrescribirse temporalmente con RABBITMQ_SSL_VERIFY_HOSTNAME=false si se usa un alias interno sin SAN.
+      verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
     publisher-confirm-type: correlated
     publisher-returns: true
 
-# Configuración de mensajería asíncrona en QA
+# Configuración de mensajería asíncrona en QA (styleradar.exchange)
 app:
   rabbitmq:
     exchange:
-      donations: ${RABBITMQ_DONATIONS_EXCHANGE:donaciones.exchange}
+      main: ${RABBITMQ_EXCHANGE:styleradar.exchange}
+      chat: ${RABBITMQ_CHAT_EXCHANGE:styleradar.exchange}
+      dlx: ${RABBITMQ_DLX:styleradar.dlx}
+      donations: ${RABBITMQ_EXCHANGE:styleradar.exchange}
+    routing-keys:
+      donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
+      second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:segunda-mano.prenda.vendida}
+      notifications-second-hand-sold: ${RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA:styleradar.segundavida.prenda.vendida}
+      donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION_CREATED:styleradar.donaciones.solicitud.creada}
     queues:
+      dlq: ${RABBITMQ_DLQ:styleradar.donaciones.dlq}
       notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
       simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
     simulator:
       enabled: false
+    topology:
+      enabled: ${RABBITMQ_DECLARE_TOPOLOGY:false}
 
-# Swagger OpenAPI Público para QA (Pág. 10)
+# Azure Blob Storage para QA en la Nube
+azure:
+  storage:
+    connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
+    container-name: ${AZURE_STORAGE_CONTAINER_NAME:donaciones-fotos}
+    blob-endpoint: ${AZURE_STORAGE_BLOB_ENDPOINT:https://srdonacionesjmunar.blob.core.windows.net}
+
+# Swagger OpenAPI Público para QA
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /api/v1/v3/api-docs
     enabled: true
   swagger-ui:
-    path: /swagger-ui.html
+    path: /api/v1/swagger-ui.html
     enabled: true
     tryItOutEnabled: true
     operationsSorter: method
@@ -85,3 +109,12 @@ logging:
     edu.dosw.styleradar.donaciones: INFO
     org.springframework.web: INFO
     org.springframework.security: WARN
+
+# Integración con ms-tiendas (Catálogo maestro de fundaciones aliadas)
+styleradar:
+  tiendas:
+    base-url: ${TIENDAS_SERVICE_URL:https://styleradar-tiendas-qa.azurewebsites.net}
+    foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/foundations}
+    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:}
+    validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
+    forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:false}

@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotNull;
 /**
  * DTO para confirmar la recepción física de la prenda en la fundación.
  */
-@Schema(description = "Datos para que la fundación confirme la recepción física de la prenda donada")
+@Schema(description = "Request payload for a foundation to confirm physical receipt of a donated garment")
 public record ConfirmReceiptRequestDTO(
 
-        @Schema(description = "ID de la fundación que confirma la recepción", example = "501")
+        @Schema(description = "ID of the foundation confirming receipt", example = "501")
         @NotNull(message = "El ID de la fundación es obligatorio")
         Long foundationId
 ) {

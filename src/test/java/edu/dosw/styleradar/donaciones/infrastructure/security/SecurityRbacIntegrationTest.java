@@ -7,22 +7,28 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.dosw.styleradar.donaciones.application.dto.request.CreatePublicationRequestDTO;
 import edu.dosw.styleradar.donaciones.application.dto.request.DecideDonationRequestDTO;
+import edu.dosw.styleradar.donaciones.application.dto.request.SchedulePickupRequestDTO;
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
+import edu.dosw.styleradar.donaciones.domain.model.DeliveryMode;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
+import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
 import edu.dosw.styleradar.donaciones.domain.model.Garment;
 import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
+import edu.dosw.styleradar.donaciones.domain.port.in.ClaimDonationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ConfirmDonationReceiptUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreateDonationRequestUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.CreatePublicationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.DecideDonationRequestUseCase;
+import edu.dosw.styleradar.donaciones.domain.port.in.GetPartnerFoundationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.GetPublicationsUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ManagePublicationUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.in.ScheduleDonationPickupUseCase;
+import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.DonationRequestController;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.GlobalExceptionHandler;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.SecondHandPublicationController;
@@ -43,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -84,6 +91,9 @@ class SecurityRbacIntegrationTest {
     private CreateDonationRequestUseCase createDonationRequestUseCase;
 
     @MockBean
+    private ClaimDonationUseCase claimDonationUseCase;
+
+    @MockBean
     private DecideDonationRequestUseCase decideDonationRequestUseCase;
 
     @MockBean
@@ -92,10 +102,16 @@ class SecurityRbacIntegrationTest {
     @MockBean
     private ConfirmDonationReceiptUseCase confirmDonationReceiptUseCase;
 
+    @MockBean
+    private GetPartnerFoundationsUseCase getPartnerFoundationsUseCase;
+
+    @MockBean
+    private FoundationCatalogPort foundationCatalogPort;
+
     @Test
     @DisplayName("Debe retornar 401 Unauthorized (RFC 7807) cuando un cliente anónimo intenta crear una donación sin Bearer JWT")
     void shouldReturn401WhenUnauthenticated() throws Exception {
-        mockMvc.perform(post("/donaciones")
+        mockMvc.perform(post("/api/v1/donations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isUnauthorized())
@@ -111,7 +127,7 @@ class SecurityRbacIntegrationTest {
     void shouldReturn403WhenUserTriesToDecideDonation() throws Exception {
         DecideDonationRequestDTO request = new DecideDonationRequestDTO(501L, true, null);
 
-        mockMvc.perform(patch("/donaciones/1/decide")
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
@@ -125,7 +141,7 @@ class SecurityRbacIntegrationTest {
     @DisplayName("Debe retornar 403 Forbidden (RFC 7807) cuando una FUNDACIÓN intenta crear una publicación de venta de ropa")
     @WithMockUser(roles = "FOUNDATION")
     void shouldReturn403WhenFoundationTriesToCreatePublication() throws Exception {
-        mockMvc.perform(post("/segunda-mano")
+        mockMvc.perform(post("/api/v1/second-hand/publications")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isForbidden())
@@ -140,7 +156,7 @@ class SecurityRbacIntegrationTest {
         // El endpoint /donaciones/1/decide acepta ADMIN; con token real debe superar el filtro de seguridad
         DecideDonationRequestDTO request = new DecideDonationRequestDTO(501L, true, null);
 
-        mockMvc.perform(patch("/donaciones/1/decide")
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -185,7 +201,7 @@ class SecurityRbacIntegrationTest {
                 List.of("https://styleradar.com/img1.jpg")
         );
 
-        mockMvc.perform(post("/segunda-mano")
+        mockMvc.perform(post("/api/v1/second-hand/publications")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -236,7 +252,7 @@ class SecurityRbacIntegrationTest {
 
         when(createPublicationUseCase.create(any())).thenReturn(created);
 
-        mockMvc.perform(post("/segunda-mano")
+        mockMvc.perform(post("/api/v1/second-hand/publications")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -252,7 +268,7 @@ class SecurityRbacIntegrationTest {
 
         DecideDonationRequestDTO request = new DecideDonationRequestDTO(999L, true, null);
 
-        mockMvc.perform(patch("/donaciones/1/decide")
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -280,11 +296,247 @@ class SecurityRbacIntegrationTest {
 
         when(decideDonationRequestUseCase.decide(any(), any(), anyBoolean(), any())).thenReturn(accepted);
 
-        mockMvc.perform(patch("/donaciones/1/decide")
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"));
+    }
+
+    @Test
+    @DisplayName("Debe retornar 403 Forbidden (BOLA/IDOR) cuando un tercero intenta consultar una solicitud ajena por ID")
+    void shouldDenyDonationRequestByIdForThirdParty() throws Exception {
+        String thirdPartyToken = jwtTokenProvider.generateToken(999L, "intruso@styleradar.com", Role.USER, "Tercero");
+
+        DonationRequest foreignRequest = DonationRequest.builder()
+                .id(1L)
+                .publicationId(10L)
+                .donorId(101L)
+                .foundationId(501L)
+                .status(DonationRequestStatus.PENDING)
+                .requestedAt(LocalDateTime.now())
+                .build();
+
+        when(createDonationRequestUseCase.getById(1L)).thenReturn(foreignRequest);
+
+        mockMvc.perform(get("/api/v1/donations/1")
+                        .header("Authorization", "Bearer " + thirdPartyToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.title").value("Acceso denegado"));
+    }
+
+    @Test
+    @DisplayName("Debe permitir a una FUNDACIÓN participante agendar la recogida con su propio foundationId")
+    void shouldAllowFoundationToSchedulePickup() throws Exception {
+        String foundationToken = jwtTokenProvider.generateToken(501L, "fundacion@styleradar.com", Role.FOUNDATION, "Fundación");
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime end = start.plusHours(2);
+        SchedulePickupRequestDTO request = new SchedulePickupRequestDTO(501L, "Sede Chapinero Cra 7", start, end);
+
+        DonationRequest inPickup = DonationRequest.builder()
+                .id(1L)
+                .publicationId(10L)
+                .donorId(101L)
+                .foundationId(501L)
+                .status(DonationRequestStatus.IN_PICKUP)
+                .deliveryPoint("Sede Chapinero Cra 7")
+                .pickupStartTime(start)
+                .pickupEndTime(end)
+                .requestedAt(LocalDateTime.now())
+                .build();
+
+        when(scheduleDonationPickupUseCase.schedulePickup(any())).thenReturn(inPickup);
+
+        mockMvc.perform(patch("/api/v1/donations/1/pickup")
+                        .header("Authorization", "Bearer " + foundationToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_PICKUP"));
+    }
+
+    @Test
+    @DisplayName("Debe permitir a una TIENDA (ROLE_STORE) marcar su publicación de segunda mano como vendida")
+    void shouldAllowStoreRoleToMarkPublicationAsSold() throws Exception {
+        String storeToken = jwtTokenProvider.generateToken(202L, "tienda@styleradar.com", Role.STORE, "Tienda Eco");
+
+        SecondHandPublication sold = SecondHandPublication.builder()
+                .id(10L)
+                .userId(202L)
+                .garment(Garment.builder().name("Chaqueta").type(GarmentType.UPPER).brand("Levi's").color("Azul").style(Style.URBAN).build())
+                .size(Size.M)
+                .conservationStatus(ConservationStatus.LIKE_NEW)
+                .price(new BigDecimal("60000.00"))
+                .status(PublicationStatus.SOLD)
+                .photos(List.of("https://styleradar.com/img1.jpg"))
+                .publishedAt(LocalDateTime.now())
+                .build();
+
+        when(managePublicationUseCase.markAsSold(202L, 10L, 303L)).thenReturn(sold);
+
+        mockMvc.perform(patch("/api/v1/second-hand/publications/10/sale")
+                        .header("Authorization", "Bearer " + storeToken)
+                        .param("userId", "202")
+                        .param("compradorId", "303"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SOLD"));
+    }
+
+    @Test
+    @DisplayName("Debe retornar 401 sin token en GET /donaciones/foundations y 200 con token USER")
+    void shouldEnforceAuthOnPartnerFoundationsEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/donations/foundations"))
+                .andExpect(status().isUnauthorized());
+
+        String userToken = jwtTokenProvider.generateToken(101L, "user@styleradar.com", Role.USER, "Comprador");
+        when(getPartnerFoundationsUseCase.getActiveFoundations(null)).thenReturn(List.of(
+                new FoundationSummary(3L, "Fundación Abrigo Solidario", "Chapinero", "Desc", "Dir", "Tel",
+                        "contacto@abrigosolidario.org", List.of("SUPERIOR"), "Niñez", "08:00-17:00", "Política", true)
+        ));
+
+        mockMvc.perform(get("/api/v1/donations/foundations")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(3L));
+    }
+
+    @Test
+    @DisplayName("Debe permitir al representante autorizado en ms-tiendas decidir sobre su fundación y rechazar coincidencia numérica sin representación")
+    void shouldEnforceFoundationRepresentationValidationStrictly() throws Exception {
+        // Caso positivo: usuario 24 es representanteId de la fundación 3 según ms-tiendas
+        String authorizedRepToken = jwtTokenProvider.generateToken(24L, "rep24@styleradar.com", Role.FOUNDATION, "Representante");
+        when(foundationCatalogPort.isFoundationRepresentative(24L, 3L)).thenReturn(true);
+
+        DonationRequest accepted = DonationRequest.builder()
+                .id(1L)
+                .publicationId(10L)
+                .donorId(101L)
+                .foundationId(3L)
+                .status(DonationRequestStatus.APPROVED)
+                .requestedAt(LocalDateTime.now())
+                .decidedAt(LocalDateTime.now())
+                .build();
+        when(decideDonationRequestUseCase.decide(3L, 1L, true, null)).thenReturn(accepted);
+
+        DecideDonationRequestDTO validRequest = new DecideDonationRequestDTO(3L, true, null);
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
+                        .header("Authorization", "Bearer " + authorizedRepToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"));
+
+        // Caso negativo: usuario 3 intenta operar sobre fundación 3 por coincidencia numérica sin ser representanteId
+        String collidingUserToken = jwtTokenProvider.generateToken(3L, "intruso3@styleradar.com", Role.FOUNDATION, "Intruso");
+        when(foundationCatalogPort.isFoundationRepresentative(3L, 3L)).thenReturn(false);
+
+        mockMvc.perform(patch("/api/v1/donations/1/decision")
+                        .header("Authorization", "Bearer " + collidingUserToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+
+        mockMvc.perform(get("/api/v1/donations/foundations/3/requests")
+                        .header("Authorization", "Bearer " + collidingUserToken))
+                .andExpect(status().isForbidden());
+
+        DonationRequest foreignRequest = DonationRequest.builder()
+                .id(1L)
+                .publicationId(10L)
+                .donorId(101L)
+                .foundationId(3L)
+                .status(DonationRequestStatus.PENDING)
+                .requestedAt(LocalDateTime.now())
+                .build();
+        when(createDonationRequestUseCase.getById(1L)).thenReturn(foreignRequest);
+
+        mockMvc.perform(get("/api/v1/donations/1")
+                        .header("Authorization", "Bearer " + collidingUserToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Debe aceptar tokens oficiales de ms-auth (sub numérico + lista roles) y permitir preflight CORS")
+    void shouldAcceptOfficialMsAuthJwtAndCorsPreflight() throws Exception {
+        String testSecret = "c3R5bGVyYWRhci1zZWNyZXQta2V5LWZvci1kb3N3LTIwMjYtcHJvamVjdC1qd3Q=";
+        javax.crypto.SecretKey key = new javax.crypto.spec.SecretKeySpec(
+                java.util.Base64.getDecoder().decode(testSecret), "HmacSHA256");
+        java.time.Instant now = java.time.Instant.now();
+
+        String msAuthFoundationJwt = io.jsonwebtoken.Jwts.builder()
+                .subject("24")
+                .claim("roles", List.of("REPRESENTANTE_FUNDACION"))
+                .claim("iat", now.getEpochSecond())
+                .claim("exp", now.plusSeconds(3600).getEpochSecond())
+                .signWith(key, io.jsonwebtoken.Jwts.SIG.HS256)
+                .compact();
+
+        FoundationSummary foundation = new FoundationSummary(
+                3L, "Fundación Abrigo Solidario", "Chapinero", "Desc", "Dir", "Tel",
+                "contacto@abrigosolidario.org", List.of("SUPERIOR"), "Niñez", "08:00-17:00", "Política", true, 24L
+        );
+        when(getPartnerFoundationsUseCase.getFoundationByRepresentativeId(24L)).thenReturn(foundation);
+
+        mockMvc.perform(get("/api/v1/donations/foundations/representative")
+                        .header("Authorization", "Bearer " + msAuthFoundationJwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3L))
+                .andExpect(jsonPath("$.representanteId").value(24L));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/v1/donations/foundations")
+                        .header("Origin", "https://styleradar-front.azurewebsites.net")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "Authorization"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Debe ignorar donorId enviado en el payload de POST /api/v1/donations y tomar siempre el del token JWT")
+    void shouldIgnoreSpoofedDonorIdInPayloadAndResolveFromJwt() throws Exception {
+        String userToken = jwtTokenProvider.generateToken(101L, "user1@styleradar.com", Role.USER, "Donante Real");
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime end = start.plusHours(2);
+
+        String payloadWithSpoofedDonor = """
+                {
+                  "publicationId": 10,
+                  "donorId": 999,
+                  "foundationId": 3,
+                  "message": "Donación desde sesión real",
+                  "deliveryProposal": {
+                    "deliveryMode": "DROP_OFF_POINT",
+                    "deliveryPoint": "Calle 85 # 15-32, Chapinero, Bogotá",
+                    "startTime": "%s",
+                    "endTime": "%s"
+                  }
+                }
+                """.formatted(start, end);
+
+        DonationRequest created = DonationRequest.builder()
+                .id(1L)
+                .publicationId(10L)
+                .donorId(101L)
+                .foundationId(3L)
+                .status(DonationRequestStatus.PENDING)
+                .deliveryMode(DeliveryMode.DROP_OFF_POINT)
+                .deliveryPoint("Calle 85 # 15-32, Chapinero, Bogotá")
+                .pickupStartTime(start)
+                .pickupEndTime(end)
+                .requestedAt(LocalDateTime.now())
+                .build();
+
+        when(createDonationRequestUseCase.create(org.mockito.ArgumentMatchers.argThat(cmd ->
+                cmd != null && Long.valueOf(101L).equals(cmd.donorId())
+        ))).thenReturn(created);
+
+        mockMvc.perform(post("/api/v1/donations")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payloadWithSpoofedDonor))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.donorId").value(101L));
     }
 }

@@ -1,8 +1,11 @@
 package edu.dosw.styleradar.donaciones.application.usecase;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidPublicationException;
@@ -19,6 +22,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(ManagePublicationUseCaseImpl.class);
@@ -36,6 +40,7 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
                 command.size(),
                 command.conservationStatus(),
                 command.price(),
+                command.localidad(),
                 command.photos()
         );
 
@@ -46,13 +51,34 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
 
     @Override
     public SecondHandPublication markAsSold(Long userId, Long publicationId) {
-        log.info("Marcando como vendida publicación ID: {} por usuario ID: {}", publicationId, userId);
+        return markAsSold(userId, publicationId, null);
+    }
+
+    @Override
+    public SecondHandPublication markAsSold(Long userId, Long publicationId, Long compradorId) {
+        return markAsSold(userId, publicationId, compradorId, List.of());
+    }
+
+    @Override
+    public SecondHandPublication markAsSold(Long userId, Long publicationId, Long compradorId, List<Long> interesadosIds) {
+        log.info("Marcando como vendida publicación ID: {} por usuario ID: {} (compradorId: {}, interesados: {})",
+                publicationId, userId, compradorId, interesadosIds != null ? interesadosIds.size() : 0);
         SecondHandPublication publication = getAndValidateOwner(publicationId, userId);
 
         publication.markAsSold();
         SecondHandPublication saved = publicationRepositoryPort.save(publication);
 
-        eventPublisherPort.publishEvent(new PublicationSoldEvent(saved.getId(), saved.getUserId()));
+        String nombrePrenda = saved.getGarment() != null ? saved.getGarment().getName() : null;
+        TransactionEventHelper.publishAfterCommitOrImmediate(
+                eventPublisherPort,
+                new PublicationSoldEvent(
+                        saved.getId(),
+                        saved.getUserId(),
+                        compradorId,
+                        interesadosIds,
+                        nombrePrenda
+                )
+        );
         log.info("Publicación ID: {} marcada como VENDIDA exitosamente", saved.getId());
         return saved;
     }

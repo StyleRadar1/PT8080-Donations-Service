@@ -9,9 +9,14 @@ public record DonationDeliveredEvent(
         Long requestId,
         Long publicationId,
         Long foundationId,
+        Long donorId,
         Instant occurredOn
 ) {
     public DonationDeliveredEvent(Long requestId, Long publicationId, Long foundationId) {
-        this(requestId, publicationId, foundationId, Instant.now());
+        this(requestId, publicationId, foundationId, null, Instant.now());
+    }
+
+    public DonationDeliveredEvent(Long requestId, Long publicationId, Long foundationId, Long donorId) {
+        this(requestId, publicationId, foundationId, donorId, Instant.now());
     }
 }
