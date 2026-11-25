@@ -69,6 +69,10 @@ class EnumsAndEventsTest {
         assertEquals(GarmentType.PANTALONES, GarmentType.fromString("LOWER"));
         assertEquals(GarmentType.VESTIDOS, GarmentType.fromString("DRESS"));
         assertEquals(GarmentType.VESTIDOS, GarmentType.fromString("FULL_BODY"));
+        assertEquals(GarmentType.SUETERES, GarmentType.fromString("Saco"));
+        assertEquals(GarmentType.SUETERES, GarmentType.fromString("Sacos"));
+        assertEquals(GarmentType.VESTIDOS, GarmentType.fromString("Conjunto"));
+        assertEquals(GarmentType.VESTIDOS, GarmentType.fromString("Conjuntos"));
         assertEquals(GarmentType.CALZADO, GarmentType.fromString("FOOTWEAR"));
         assertEquals(GarmentType.ACCESORIOS, GarmentType.fromString("ACCESSORY"));
         assertEquals("Chaquetas", GarmentType.CHAQUETAS.getLabel());
@@ -76,6 +80,26 @@ class EnumsAndEventsTest {
         assertNull(GarmentType.fromString(null));
         assertNull(GarmentType.fromString("   "));
         assertThrows(IllegalArgumentException.class, () -> GarmentType.fromString("SOMBRERO_DESCONOCIDO"));
+    }
+
+    @Test
+    @DisplayName("Debe resolver ConservationStatus desde valores oficiales, alias en español, nulos e inválidos")
+    void shouldResolveConservationStatusFromString() {
+        assertEquals(ConservationStatus.NEW_WITH_TAGS, ConservationStatus.fromString("NEW_WITH_TAGS"));
+        assertEquals(ConservationStatus.NEW_WITH_TAGS, ConservationStatus.fromString("Nuevo con etiquetas"));
+        assertEquals(ConservationStatus.LIKE_NEW, ConservationStatus.fromString("LIKE_NEW"));
+        assertEquals(ConservationStatus.LIKE_NEW, ConservationStatus.fromString("Como nuevo"));
+        assertEquals(ConservationStatus.LIKE_NEW, ConservationStatus.fromString("COMO_NUEVO"));
+        assertEquals(ConservationStatus.GOOD_CONDITION, ConservationStatus.fromString("GOOD_CONDITION"));
+        assertEquals(ConservationStatus.GOOD_CONDITION, ConservationStatus.fromString("Buen estado"));
+        assertEquals(ConservationStatus.GOOD_CONDITION, ConservationStatus.fromString("MUY_BUENO"));
+        assertEquals(ConservationStatus.ACCEPTABLE, ConservationStatus.fromString("ACCEPTABLE"));
+        assertEquals(ConservationStatus.ACCEPTABLE, ConservationStatus.fromString("Aceptable"));
+        assertEquals(ConservationStatus.ACCEPTABLE, ConservationStatus.fromString("BUENO"));
+
+        assertNull(ConservationStatus.fromString(null));
+        assertNull(ConservationStatus.fromString("  "));
+        assertThrows(IllegalArgumentException.class, () -> ConservationStatus.fromString("ROTO_DESCONOCIDO"));
     }
 
     @Test
