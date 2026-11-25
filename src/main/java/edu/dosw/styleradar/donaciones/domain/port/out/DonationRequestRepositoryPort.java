@@ -21,5 +21,7 @@ public interface DonationRequestRepositoryPort {
 
     List<DonationRequest> findByFoundationIdAndStatus(Long foundationId, DonationRequestStatus status);
 
+    List<DonationRequest> findActiveByFoundationId(Long foundationId);
+
     boolean existsActiveRequestForPublication(Long publicationId);
 }
