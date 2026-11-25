@@ -34,7 +34,9 @@ import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -151,44 +153,89 @@ class HandleFoundationDeletedUseCaseTest {
     }
 
     @Test
-    @DisplayName("DonationOutboxDispatcherService debe marcar SENT los exitosos, dejar PENDING los fallidos y propagar error")
+    @DisplayName("DonationOutboxDispatcherService debe reclamar atómicamente, confirmar ACK y liberar solo si falla el broker")
     void shouldDispatchOutboxEventsIndividuallyAndKeepFailedAsPending() {
         DonationOutboxRepositoryPort outboxRepo = mock(DonationOutboxRepositoryPort.class);
         DonationEventPublisherPort publisher = mock(DonationEventPublisherPort.class);
         DonationOutboxDispatcherService dispatcher = new DonationOutboxDispatcherService(outboxRepo, publisher);
 
         assertThat(dispatcher.dispatchPendingByFoundationId(null)).isZero();
-        when(outboxRepo.findPendingByFoundationId(88L)).thenReturn(List.of());
+        when(outboxRepo.findDispatchableByFoundationId(eq(88L), any())).thenReturn(List.of());
         assertThat(dispatcher.dispatchPendingByFoundationId(88L)).isZero();
 
         DonationOutboxEvent evt1 = DonationOutboxEvent.builder()
-                .id(10L).requestId(1L).foundationId(3L).donorId(101L)
+                .id(10L).eventId("evt-10").requestId(1L).foundationId(3L).donorId(101L)
                 .rejectionReason("Eliminada").eventType(DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED)
                 .status(OutboxEventStatus.PENDING).attempts(0).createdAt(LocalDateTime.now()).build();
         DonationOutboxEvent evt2 = DonationOutboxEvent.builder()
-                .id(11L).requestId(2L).foundationId(3L).donorId(102L)
+                .id(11L).eventId("evt-11").requestId(2L).foundationId(3L).donorId(102L)
                 .rejectionReason("Eliminada").eventType(DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED)
                 .status(OutboxEventStatus.PENDING).attempts(0).createdAt(LocalDateTime.now()).build();
 
-        when(outboxRepo.findPendingEvents()).thenReturn(List.of(evt1, evt2));
+        when(outboxRepo.findDispatchableEvents(any())).thenReturn(List.of(evt1, evt2));
+        when(outboxRepo.claimForDispatch(eq(10L), any(), any(), any())).thenReturn(Optional.of(evt1));
+        when(outboxRepo.claimForDispatch(eq(11L), any(), any(), any())).thenReturn(Optional.of(evt2));
         doAnswer(invocation -> {
             Object arg = invocation.getArgument(0);
             if (arg instanceof DonationRequestDecidedEvent d && Long.valueOf(2L).equals(d.requestId())) {
                 throw new RuntimeException("Broker down");
             }
             return null;
-        }).when(publisher).publishEvent(any());
+        }).when(publisher).publishEventConfirmed(any());
 
         assertThatThrownBy(dispatcher::dispatchAllPending)
                 .isInstanceOf(ExternalServiceUnavailableException.class);
 
-        assertThat(evt1.getStatus()).isEqualTo(OutboxEventStatus.SENT);
-        assertThat(evt1.getAttempts()).isEqualTo(1);
-        assertThat(evt1.getSentAt()).isNotNull();
+        verify(outboxRepo).markSent(eq(10L), any(), any());
+        verify(outboxRepo, never()).markSent(eq(11L), any(), any());
+        verify(outboxRepo, never()).releaseForRetry(eq(10L), any(), any());
+        verify(outboxRepo).releaseForRetry(eq(11L), any(), eq("Broker down"));
+    }
 
-        assertThat(evt2.getStatus()).isEqualTo(OutboxEventStatus.PENDING);
-        assertThat(evt2.getAttempts()).isEqualTo(1);
-        assertThat(evt2.getLastError()).isEqualTo("Broker down");
-        verify(outboxRepo, times(2)).save(any());
+    @Test
+    @DisplayName("DonationOutboxDispatcherService debe omitir registros ya reclamados atómicamente por otro worker")
+    void shouldSkipAlreadyClaimedOutboxEvent() {
+        DonationOutboxRepositoryPort outboxRepo = mock(DonationOutboxRepositoryPort.class);
+        DonationEventPublisherPort publisher = mock(DonationEventPublisherPort.class);
+        DonationOutboxDispatcherService dispatcher = new DonationOutboxDispatcherService(outboxRepo, publisher);
+
+        DonationOutboxEvent evt = DonationOutboxEvent.builder()
+                .id(20L).eventId("evt-20").requestId(5L).foundationId(3L).donorId(105L)
+                .rejectionReason("Eliminada").eventType(DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED)
+                .status(OutboxEventStatus.PENDING).attempts(0).createdAt(LocalDateTime.now()).build();
+
+        when(outboxRepo.findDispatchableEvents(any())).thenReturn(List.of(evt));
+        when(outboxRepo.claimForDispatch(eq(20L), any(), any(), any())).thenReturn(Optional.empty());
+
+        assertThat(dispatcher.dispatchAllPending()).isZero();
+        verifyNoInteractions(publisher);
+        verify(outboxRepo, never()).markSent(any(), any(), any());
+        verify(outboxRepo, never()).releaseForRetry(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("DonationOutboxDispatcherService no debe liberar el reclamo ni perder eventId si el broker confirma pero falla markSent")
+    void shouldPreserveClaimAndEventIdWhenMarkSentFailsAfterBrokerAck() {
+        DonationOutboxRepositoryPort outboxRepo = mock(DonationOutboxRepositoryPort.class);
+        DonationEventPublisherPort publisher = mock(DonationEventPublisherPort.class);
+        DonationOutboxDispatcherService dispatcher = new DonationOutboxDispatcherService(outboxRepo, publisher);
+
+        DonationOutboxEvent claimed = DonationOutboxEvent.builder()
+                .id(30L).eventId("evt-stable-30").requestId(6L).foundationId(3L).donorId(106L)
+                .rejectionReason("Eliminada").eventType(DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED)
+                .status(OutboxEventStatus.PROCESSING).attempts(1).createdAt(LocalDateTime.now()).build();
+
+        when(outboxRepo.findDispatchableEvents(any())).thenReturn(List.of(claimed));
+        when(outboxRepo.claimForDispatch(eq(30L), any(), any(), any())).thenReturn(Optional.of(claimed));
+        doThrow(new RuntimeException("DB lock timeout")).when(outboxRepo).markSent(eq(30L), any(), any());
+
+        assertThatThrownBy(dispatcher::dispatchAllPending)
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(publisher).publishEventConfirmed(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(DonationRequestDecidedEvent.class);
+        assertThat(((DonationRequestDecidedEvent) captor.getValue()).eventId()).isEqualTo("evt-stable-30");
+        verify(outboxRepo, never()).releaseForRetry(any(), any(), any());
     }
 }

@@ -2,8 +2,18 @@ package edu.dosw.styleradar.donaciones.application.usecase;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,9 +37,11 @@ import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
 import edu.dosw.styleradar.donaciones.domain.port.in.HandleFoundationDeletedUseCase;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.DonationOutboxRepositoryPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.messaging.FoundationDeletedConsumer;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.messaging.event.FoundationDeletedIntegrationEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence.DonationOutboxPersistenceAdapter;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence.entity.DonationOutboxEventEntity;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence.entity.DonationRequestEntity;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.persistence.entity.SecondHandPublicationEntity;
@@ -75,6 +87,12 @@ class FoundationDeletedOutboxIntegrationTest {
 
     @Autowired
     private SpringDataDonationOutboxRepository outboxRepository;
+
+    @Autowired
+    private DonationOutboxPersistenceAdapter outboxPersistenceAdapter;
+
+    @Autowired
+    private FoundationDeletionPersistenceService foundationDeletionPersistenceService;
 
     @BeforeEach
     void setUp() {
@@ -133,7 +151,7 @@ class FoundationDeletedOutboxIntegrationTest {
                 throw new RuntimeException("RabbitMQ caído al entregar el segundo aviso");
             }
             return null;
-        }).when(eventPublisherPort).publishEvent(any());
+        }).when(eventPublisherPort).publishEventConfirmed(any());
 
         FoundationDeletedIntegrationEvent deletedEvent = FoundationDeletedIntegrationEvent.builder()
                 .eventId("evt-partial-fail-1")
@@ -163,6 +181,8 @@ class FoundationDeletedOutboxIntegrationTest {
                 .filter(e -> e.getRequestId().equals(req1.getId())).findFirst().orElseThrow();
         DonationOutboxEventEntity outbox2 = outboxAfterFail.stream()
                 .filter(e -> e.getRequestId().equals(req2.getId())).findFirst().orElseThrow();
+        assertThat(outbox1.getEventId()).isNotBlank();
+        assertThat(outbox2.getEventId()).isNotBlank();
         assertThat(outbox1.getStatus()).isEqualTo(OutboxEventStatus.SENT);
         assertThat(outbox1.getAttempts()).isEqualTo(1);
         assertThat(outbox2.getStatus()).isEqualTo(OutboxEventStatus.PENDING);
@@ -175,10 +195,11 @@ class FoundationDeletedOutboxIntegrationTest {
         foundationDeletedConsumer.onFoundationDeleted(deletedEvent);
 
         ArgumentCaptor<Object> recoveryCaptor = ArgumentCaptor.forClass(Object.class);
-        verify(eventPublisherPort, times(1)).publishEvent(recoveryCaptor.capture());
+        verify(eventPublisherPort, times(1)).publishEventConfirmed(recoveryCaptor.capture());
         assertThat(recoveryCaptor.getValue()).isInstanceOf(DonationRequestDecidedEvent.class);
         DonationRequestDecidedEvent recoveredEvent = (DonationRequestDecidedEvent) recoveryCaptor.getValue();
         assertThat(recoveredEvent.requestId()).isEqualTo(req2.getId());
+        assertThat(recoveredEvent.eventId()).isEqualTo(outbox2.getEventId());
         assertThat(recoveredEvent.approved()).isFalse();
 
         // Ambas prendas siguen AVAILABLE y ninguna cancelación fue repetida (misma versión y decidedAt)
@@ -213,7 +234,7 @@ class FoundationDeletedOutboxIntegrationTest {
                 throw new RuntimeException("Timeout AMQPS");
             }
             return null;
-        }).when(eventPublisherPort).publishEvent(any());
+        }).when(eventPublisherPort).publishEventConfirmed(any());
 
         assertThatThrownBy(() -> handleFoundationDeletedUseCase.handleFoundationDeleted(foundationId))
                 .isInstanceOf(ExternalServiceUnavailableException.class);
@@ -224,11 +245,168 @@ class FoundationDeletedOutboxIntegrationTest {
         int dispatched = handleFoundationDeletedUseCase.dispatchPendingOutboxEvents();
 
         assertThat(dispatched).isEqualTo(1);
-        verify(eventPublisherPort, times(1)).publishEvent(any(DonationRequestDecidedEvent.class));
+        verify(eventPublisherPort, times(1)).publishEventConfirmed(any(DonationRequestDecidedEvent.class));
         assertThat(outboxRepository.findByStatusOrderByCreatedAtAscIdAsc(OutboxEventStatus.PENDING)).isEmpty();
         assertThat(donationRequestRepository.findById(req.getId()).orElseThrow().getStatus())
                 .isEqualTo(DonationRequestStatus.REJECTED);
         assertThat(publicationRepository.findById(pub.getId()).orElseThrow().getStatus())
                 .isEqualTo(PublicationStatus.AVAILABLE);
+    }
+
+    @Test
+    @DisplayName("Ejecución concurrente entre consumidor y scheduler no debe generar notificaciones duplicadas")
+    void shouldNotSendDuplicateNotificationsUnderConcurrentConsumerAndSchedulerExecution() throws Exception {
+        Long foundationId = 503L;
+        SecondHandPublicationEntity pub1 = createInDonationPublication(201L, "Chaqueta Denim");
+        SecondHandPublicationEntity pub2 = createInDonationPublication(202L, "Falda Midi");
+        DonationRequestEntity req1 = createActiveRequest(pub1, 201L, foundationId, DonationRequestStatus.PENDING);
+        DonationRequestEntity req2 = createActiveRequest(pub2, 202L, foundationId, DonationRequestStatus.IN_PICKUP);
+
+        foundationDeletionPersistenceService.cancelActiveRequestsAndEnqueueOutbox(foundationId);
+
+        List<Long> publishedRequestIds = new CopyOnWriteArrayList<>();
+        ConcurrentHashMap<Long, String> publishedEventIdsByRequest = new ConcurrentHashMap<>();
+        doAnswer(invocation -> {
+            Object arg = invocation.getArgument(0);
+            if (arg instanceof DonationRequestDecidedEvent decided) {
+                publishedRequestIds.add(decided.requestId());
+                publishedEventIdsByRequest.put(decided.requestId(), decided.eventId());
+                Thread.sleep(60L);
+            }
+            return null;
+        }).when(eventPublisherPort).publishEventConfirmed(any());
+
+        FoundationDeletedIntegrationEvent deletedEvent = FoundationDeletedIntegrationEvent.builder()
+                .eventId("evt-concurrent-503")
+                .foundationId(foundationId)
+                .deletedAt("2026-11-24T22:10:00Z")
+                .build();
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch startGate = new CountDownLatch(1);
+        try {
+            Future<Void> consumerFuture = pool.submit(() -> {
+                ready.countDown();
+                startGate.await(5, TimeUnit.SECONDS);
+                foundationDeletedConsumer.onFoundationDeleted(deletedEvent);
+                return null;
+            });
+            Future<Integer> schedulerFuture = pool.submit(() -> {
+                ready.countDown();
+                startGate.await(5, TimeUnit.SECONDS);
+                return handleFoundationDeletedUseCase.dispatchPendingOutboxEvents();
+            });
+
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            startGate.countDown();
+
+            consumerFuture.get(15, TimeUnit.SECONDS);
+            int schedulerDispatched = schedulerFuture.get(15, TimeUnit.SECONDS);
+            assertThat(schedulerDispatched).isBetween(0, 2);
+        } finally {
+            pool.shutdownNow();
+        }
+
+        assertThat(publishedRequestIds).containsExactlyInAnyOrder(req1.getId(), req2.getId());
+        assertThat(publishedEventIdsByRequest).containsKeys(req1.getId(), req2.getId());
+        verify(eventPublisherPort, times(2)).publishEventConfirmed(any(DonationRequestDecidedEvent.class));
+        assertThat(outboxRepository.findAll())
+                .hasSize(2)
+                .allMatch(e -> e.getStatus() == OutboxEventStatus.SENT && e.getClaimedBy() == null);
+    }
+
+    @Test
+    @DisplayName("Debe conservar el mismo eventId si RabbitMQ confirma pero falla actualizar a SENT")
+    void shouldPreserveSameEventIdAcrossRetryWhenBrokerAcksButMarkSentFails() {
+        Long foundationId = 504L;
+        SecondHandPublicationEntity pub = createInDonationPublication(301L, "Suéter Lana");
+        DonationRequestEntity req = createActiveRequest(pub, 301L, foundationId, DonationRequestStatus.PENDING);
+
+        foundationDeletionPersistenceService.cancelActiveRequestsAndEnqueueOutbox(foundationId);
+        DonationOutboxEventEntity initialEntity = outboxRepository.findAll().stream()
+                .filter(e -> e.getRequestId().equals(req.getId()))
+                .findFirst()
+                .orElseThrow();
+        String expectedEventId = initialEntity.getEventId();
+        assertThat(expectedEventId).isNotBlank();
+
+        AtomicInteger markSentAttempts = new AtomicInteger(0);
+        DonationOutboxRepositoryPort flakyMarkSentRepo = new DonationOutboxRepositoryPort() {
+            @Override
+            public DonationOutboxEvent save(DonationOutboxEvent event) {
+                return outboxPersistenceAdapter.save(event);
+            }
+
+            @Override
+            public boolean existsByRequestIdAndEventType(Long requestId, String eventType) {
+                return outboxPersistenceAdapter.existsByRequestIdAndEventType(requestId, eventType);
+            }
+
+            @Override
+            public List<DonationOutboxEvent> findDispatchableEvents(LocalDateTime staleBefore) {
+                return outboxPersistenceAdapter.findDispatchableEvents(staleBefore);
+            }
+
+            @Override
+            public List<DonationOutboxEvent> findDispatchableByFoundationId(Long fid, LocalDateTime staleBefore) {
+                return outboxPersistenceAdapter.findDispatchableByFoundationId(fid, staleBefore);
+            }
+
+            @Override
+            public Optional<DonationOutboxEvent> claimForDispatch(
+                    Long id, String claimToken, LocalDateTime now, LocalDateTime staleBefore) {
+                return outboxPersistenceAdapter.claimForDispatch(id, claimToken, now, staleBefore);
+            }
+
+            @Override
+            public boolean markSent(Long id, String claimToken, LocalDateTime sentAt) {
+                if (markSentAttempts.incrementAndGet() == 1) {
+                    throw new RuntimeException("Fallo transitorio actualizando a SENT tras ACK");
+                }
+                return outboxPersistenceAdapter.markSent(id, claimToken, sentAt);
+            }
+
+            @Override
+            public void releaseForRetry(Long id, String claimToken, String errorMessage) {
+                outboxPersistenceAdapter.releaseForRetry(id, claimToken, errorMessage);
+            }
+        };
+
+        DonationOutboxDispatcherService dispatcher = new DonationOutboxDispatcherService(
+                flakyMarkSentRepo, eventPublisherPort, 60L);
+
+        // 1. El broker confirma ACK pero falla el update local a SENT
+        assertThatThrownBy(dispatcher::dispatchAllPending)
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+
+        DonationOutboxEventEntity processingEntity = outboxRepository.findById(initialEntity.getId()).orElseThrow();
+        assertThat(processingEntity.getStatus()).isEqualTo(OutboxEventStatus.PROCESSING);
+        assertThat(processingEntity.getEventId()).isEqualTo(expectedEventId);
+        assertThat(processingEntity.getClaimedBy()).isNotBlank();
+
+        // Mientras el lease siga vigente, otra ejecución no debe duplicar la entrega
+        assertThat(dispatcher.dispatchAllPending()).isZero();
+
+        // 2. Expirado el lease, el reintento debe recuperar el registro preservando el mismo eventId
+        processingEntity.setClaimedAt(LocalDateTime.now(ZoneOffset.UTC).minusMinutes(2));
+        outboxRepository.save(processingEntity);
+
+        assertThat(dispatcher.dispatchAllPending()).isEqualTo(1);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisherPort, times(2)).publishEventConfirmed(captor.capture());
+        List<DonationRequestDecidedEvent> sentEvents = captor.getAllValues().stream()
+                .map(DonationRequestDecidedEvent.class::cast)
+                .toList();
+        assertThat(sentEvents).hasSize(2);
+        assertThat(sentEvents.get(0).eventId()).isEqualTo(expectedEventId);
+        assertThat(sentEvents.get(1).eventId()).isEqualTo(expectedEventId);
+
+        DonationOutboxEventEntity finalEntity = outboxRepository.findById(initialEntity.getId()).orElseThrow();
+        assertThat(finalEntity.getStatus()).isEqualTo(OutboxEventStatus.SENT);
+        assertThat(finalEntity.getEventId()).isEqualTo(expectedEventId);
+        assertThat(finalEntity.getClaimedBy()).isNull();
+        assertThat(finalEntity.getClaimedAt()).isNull();
     }
 }
