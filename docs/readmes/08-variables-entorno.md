@@ -36,8 +36,11 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 | `RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA` | Routing key de venta hacia `ms-notificaciones` | `styleradar.segundavida.prenda.vendida` | Sí |
 | `JWT_SECRET_BASE64` | Clave Base64 HMAC-SHA256 compartida con `ms-auth` (≥ 256 bits) | Clave local dev/test | Sí |
 | `TIENDAS_SERVICE_URL` | URL base de `ms-tiendas` para fundaciones (`SR-RF-45`) | `http://localhost:8140` (`qa`/`prod` Azure) | Sí |
-| `TIENDAS_FOUNDATIONS_PATH` | Ruta del listado de fundaciones en `ms-tiendas` | `/api/v1/admin/foundations` (`/api/v1/foundations` en `qa`/`prod`) | Opcional |
-| `TIENDAS_FOUNDATION_BY_ID_PATH` | Ruta de detalle por ID (si está vacía, resuelve desde el listado general) | `/api/v1/admin/foundations/{id}` *(vacío en `qa`/`prod`)* | Opcional |
+| `TIENDAS_FOUNDATIONS_PATH` | Ruta del listado público de fundaciones en `ms-tiendas` | `/api/v1/foundations` | Opcional |
+| `TIENDAS_FOUNDATION_BY_ID_PATH` | Ruta interna de detalle por ID (si está vacía, resuelve desde el listado general) | `/api/v1/internal/foundations/{id}` | Opcional |
+| `TIENDAS_FOUNDATION_BY_REPRESENTATIVE_PATH` | Ruta interna de consulta por `representativeId` (si está vacía, resuelve desde el listado general) | `/api/v1/internal/foundations?representativeId={representativeId}` | Opcional |
+| `TIENDAS_INTERNAL_USERNAME` | Usuario HTTP Basic para endpoints internos de `ms-tiendas` | `ms-donaciones` | Sí (QA/PROD) |
+| `TIENDAS_INTERNAL_PASSWORD` | Contraseña HTTP Basic para endpoints internos de `ms-tiendas` | Vacío *(secreto en Azure)* | Sí (QA/PROD) |
 | `TIENDAS_VALIDATION_ENABLED` | Activa/desactiva validación remota de fundaciones en `ms-tiendas` | `true` (`false` en test) | Opcional |
 | `TIENDAS_SERVICE_TOKEN` | Token Bearer de servicio/admin para consultar endpoints protegidos de `ms-tiendas` | Vacío *(configurable)* | Opcional |
 | `TIENDAS_FORWARD_BEARER_TOKEN` | Reenvía el token `Authorization: Bearer` del usuario entrante | `false` (`false` en `qa`/`prod`) | Opcional |
