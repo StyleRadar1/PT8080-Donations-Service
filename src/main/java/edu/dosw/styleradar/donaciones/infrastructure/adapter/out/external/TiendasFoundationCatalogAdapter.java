@@ -124,6 +124,7 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
             String target,
             String publicMessage,
             String notFoundLogMessage) {
+        ensureInternalCredentialsConfigured(target);
         try {
             TiendasFoundationResponseDTO response = tiendasRestClient.get()
                     .uri(pathTemplate, identifier)
@@ -137,6 +138,16 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
             return Optional.empty();
         } catch (RestClientException ex) {
             throw handleTiendasFailure(target, publicMessage, ex);
+        }
+    }
+
+    private void ensureInternalCredentialsConfigured(String target) {
+        if (!hasText(tiendasProperties.getInternalUsername()) || !hasText(tiendasProperties.getInternalPassword())) {
+            log.error("Credenciales Basic internas de ms-tiendas no configuradas para consultar {} "
+                            + "(styleradar.tiendas.internal-username / internal-password). Se cancela la llamada saliente.",
+                    target);
+            throw new ExternalServiceUnavailableException(
+                    "La integración interna con ms-tiendas no se encuentra configurada correctamente. Intente nuevamente más tarde.");
         }
     }
 
@@ -158,11 +169,8 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
     }
 
     private void applyInternalAuthHeaders(HttpHeaders headers) {
-        if (hasText(tiendasProperties.getInternalUsername()) && hasText(tiendasProperties.getInternalPassword())) {
-            headers.setBasicAuth(tiendasProperties.getInternalUsername().trim(), tiendasProperties.getInternalPassword());
-            return;
-        }
-        applyAuthHeaders(headers);
+        ensureInternalCredentialsConfigured("el endpoint interno de ms-tiendas");
+        headers.setBasicAuth(tiendasProperties.getInternalUsername().trim(), tiendasProperties.getInternalPassword());
     }
 
     private void applyAuthHeaders(HttpHeaders headers) {
