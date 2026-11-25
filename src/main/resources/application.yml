@@ -91,8 +91,11 @@ styleradar:
       duration: ${JWT_DURATION:PT24H}
   tiendas:
     base-url: ${TIENDAS_SERVICE_URL:http://localhost:8140}
-    foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/admin/foundations}
-    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/admin/foundations/{id}}
+    foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/foundations}
+    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/internal/foundations/{id}}
+    foundation-by-representative-path: ${TIENDAS_FOUNDATION_BY_REPRESENTATIVE_PATH:/api/v1/internal/foundations?representativeId={representativeId}}
+    internal-username: ${TIENDAS_INTERNAL_USERNAME:ms-donaciones}
+    internal-password: ${TIENDAS_INTERNAL_PASSWORD:}
     validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
     service-bearer-token: ${TIENDAS_SERVICE_TOKEN:}
     forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:false}

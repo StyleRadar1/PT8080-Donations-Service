@@ -122,12 +122,17 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
             throw new InvalidDonationRequestException("El ID del representante de la fundación es obligatorio");
         }
 
-        return foundationCatalogPort.findAllActiveFoundations().stream()
+        FoundationSummary foundation = foundationCatalogPort.findFoundationByRepresentativeId(representativeUserId)
                 .filter(FoundationSummary::activa)
-                .filter(foundation -> representativeUserId.equals(foundation.representanteId()))
-                .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId));
+
+        if (foundation.representanteId() != null && !representativeUserId.equals(foundation.representanteId())) {
+            throw new ResourceNotFoundException(
+                    "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId);
+        }
+
+        return foundation;
     }
 
     private String normalizeText(String rawCategory) {

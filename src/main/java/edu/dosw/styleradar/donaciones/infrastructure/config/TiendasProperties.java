@@ -18,7 +18,10 @@ public class TiendasProperties {
     private String baseUrl = "http://localhost:8140";
     private String foundationsPath;
     private String foundationByIdPath;
+    private String foundationByRepresentativePath;
     private boolean validationEnabled = true;
+    private String internalUsername = "ms-donaciones";
+    private String internalPassword = "";
     private String serviceBearerToken = "";
     private boolean forwardBearerToken = false;
     private String serviceRolesHeaderName = "X-User-Roles";

@@ -80,30 +80,74 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
             return Optional.empty();
         }
 
-        // Si ms-tiendas solo expone el catálogo general (/api/v1/foundations) sin endpoint por ID,
-        // consultamos la lista y filtramos por ID en memoria.
+        // Si no hay endpoint por ID configurado, consultamos la lista general y filtramos en memoria.
         if (!hasText(tiendasProperties.getFoundationByIdPath())) {
             return fetchAllFoundations().stream()
                     .filter(foundation -> foundationId.equals(foundation.id()))
                     .findFirst();
         }
 
+        return fetchSingleFoundation(
+                tiendasProperties.getFoundationByIdPath(),
+                foundationId,
+                "la fundación ID: " + foundationId,
+                "No fue posible validar la fundación con ms-tiendas. Intente nuevamente más tarde.",
+                "Fundación ID: {} no encontrada en ms-tiendas"
+        );
+    }
+
+    @Override
+    public Optional<FoundationSummary> findFoundationByRepresentativeId(Long representativeId) {
+        if (representativeId == null || !tiendasProperties.isValidationEnabled()) {
+            return Optional.empty();
+        }
+
+        // Si no hay endpoint interno por representante configurado, consultamos la lista general y filtramos en memoria.
+        if (!hasText(tiendasProperties.getFoundationByRepresentativePath())) {
+            return fetchAllFoundations().stream()
+                    .filter(foundation -> representativeId.equals(foundation.representanteId()))
+                    .findFirst();
+        }
+
+        return fetchSingleFoundation(
+                tiendasProperties.getFoundationByRepresentativePath(),
+                representativeId,
+                "la fundación del representante ID: " + representativeId,
+                "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.",
+                "No se encontró fundación asociada al representante ID: {} en ms-tiendas"
+        );
+    }
+
+    private Optional<FoundationSummary> fetchSingleFoundation(
+            String pathTemplate,
+            Long identifier,
+            String target,
+            String publicMessage,
+            String notFoundLogMessage) {
+        ensureInternalCredentialsConfigured(target);
         try {
             TiendasFoundationResponseDTO response = tiendasRestClient.get()
-                    .uri(tiendasProperties.getFoundationByIdPath(), foundationId)
-                    .headers(this::applyAuthHeaders)
+                    .uri(pathTemplate, identifier)
+                    .headers(this::applyInternalAuthHeaders)
                     .retrieve()
                     .body(TiendasFoundationResponseDTO.class);
 
             return Optional.ofNullable(response).map(this::toDomain);
         } catch (HttpClientErrorException.NotFound ex) {
-            log.warn("Fundación ID: {} no encontrada en ms-tiendas", foundationId);
+            log.warn(notFoundLogMessage, identifier);
             return Optional.empty();
         } catch (RestClientException ex) {
-            throw handleTiendasFailure(
-                    "la fundación ID: " + foundationId,
-                    "No fue posible validar la fundación con ms-tiendas. Intente nuevamente más tarde.",
-                    ex);
+            throw handleTiendasFailure(target, publicMessage, ex);
+        }
+    }
+
+    private void ensureInternalCredentialsConfigured(String target) {
+        if (!hasText(tiendasProperties.getInternalUsername()) || !hasText(tiendasProperties.getInternalPassword())) {
+            log.error("Credenciales Basic internas de ms-tiendas no configuradas para consultar {} "
+                            + "(styleradar.tiendas.internal-username / internal-password). Se cancela la llamada saliente.",
+                    target);
+            throw new ExternalServiceUnavailableException(
+                    "La integración interna con ms-tiendas no se encuentra configurada correctamente. Intente nuevamente más tarde.");
         }
     }
 
@@ -122,6 +166,11 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
                     target, tiendasProperties.getBaseUrl(), ex);
         }
         return new ExternalServiceUnavailableException(publicMessage, ex);
+    }
+
+    private void applyInternalAuthHeaders(HttpHeaders headers) {
+        ensureInternalCredentialsConfigured("el endpoint interno de ms-tiendas");
+        headers.setBasicAuth(tiendasProperties.getInternalUsername().trim(), tiendasProperties.getInternalPassword());
     }
 
     private void applyAuthHeaders(HttpHeaders headers) {
