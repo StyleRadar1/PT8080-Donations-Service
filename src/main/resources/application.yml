@@ -70,6 +70,7 @@ app:
       donations: ${RABBITMQ_EXCHANGE:styleradar.exchange}
     routing-keys:
       donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
+      donation-completed: ${RABBITMQ_ROUTING_KEY_DONACION_COMPLETADA:styleradar.donaciones.completada}
       second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:segunda-mano.prenda.vendida}
       notifications-second-hand-sold: ${RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA:styleradar.segundavida.prenda.vendida}
       donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION_CREATED:styleradar.donaciones.solicitud.creada}
