@@ -1,6 +1,9 @@
 package edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +18,7 @@ import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
+import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationRequestCreatedIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.IntegrationDateFormatter;
@@ -37,6 +41,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     private static final String STATUS_DELIVERED = "ENTREGADA";
     private static final String DEFAULT_CHAT_SOLD_KEY = "segunda-mano.prenda.vendida";
     private static final String DEFAULT_NOTIFICATIONS_SOLD_KEY = "styleradar.segundavida.prenda.vendida";
+    private static final long DEFAULT_CONFIRM_TIMEOUT_MS = 5000L;
 
     private final RabbitTemplate rabbitTemplate;
     private final String exchangeName;
@@ -45,6 +50,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     private final String secondHandSoldRoutingKey;
     private final String notificationsSecondHandSoldRoutingKey;
     private final String donationRequestCreatedRoutingKey;
+    private long confirmTimeoutMs = DEFAULT_CONFIRM_TIMEOUT_MS;
 
     @Autowired
     public DonationEventPublisherAdapter(
@@ -96,12 +102,25 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     @Override
     public void publishEvent(Object event) {
-        if (event == null) {
-            log.warn("Se omitió publicación de evento nulo hacia RabbitMQ.");
+        publishEventInternal(event);
+    }
+
+    @Override
+    public void publishEventConfirmed(Object event) {
+        CorrelationData correlationData = publishEventInternal(event);
+        if (correlationData == null) {
             return;
         }
+        awaitBrokerConfirmation(correlationData);
+    }
 
-        switch (event) {
+    private CorrelationData publishEventInternal(Object event) {
+        if (event == null) {
+            log.warn("Se omitió publicación de evento nulo hacia RabbitMQ.");
+            return null;
+        }
+
+        return switch (event) {
             case DonationRequestCreatedEvent domainEvent -> publishDonationRequestCreated(domainEvent);
             case PublicationSoldEvent soldEvent -> publishPublicationSold(soldEvent);
             case DonationRequestDecidedEvent decidedEvent -> publishDonationDecided(decidedEvent);
@@ -112,11 +131,41 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         exchangeName, event.getClass().getSimpleName());
                 CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
                 rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
+                yield correlationData;
             }
+        };
+    }
+
+    private void awaitBrokerConfirmation(CorrelationData correlationData) {
+        try {
+            CorrelationData.Confirm confirm = correlationData.getFuture().get(confirmTimeoutMs, TimeUnit.MILLISECONDS);
+            if (confirm == null || !confirm.isAck()) {
+                String reason = confirm != null ? confirm.getReason() : "Confirmación nula";
+                throw new ExternalServiceUnavailableException(
+                        "El broker RabbitMQ rechazó (NACK) la publicación [EventId="
+                                + correlationData.getId() + "]: " + reason);
+            }
+            if (correlationData.getReturned() != null) {
+                throw new ExternalServiceUnavailableException(
+                        "El mensaje fue devuelto por RabbitMQ como no enrutable [EventId="
+                                + correlationData.getId() + ", ReplyText="
+                                + correlationData.getReturned().getReplyText() + "]");
+            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new ExternalServiceUnavailableException(
+                    "Interrupción esperando confirmación ACK de RabbitMQ [EventId=" + correlationData.getId() + "]", ex);
+        } catch (ExecutionException | TimeoutException ex) {
+            throw new ExternalServiceUnavailableException(
+                    "Error o timeout esperando confirmación ACK de RabbitMQ [EventId=" + correlationData.getId() + "]", ex);
         }
     }
 
-    private void publishDonationRequestCreated(DonationRequestCreatedEvent domainEvent) {
+    public void setConfirmTimeoutMs(long confirmTimeoutMs) {
+        this.confirmTimeoutMs = Math.max(1L, confirmTimeoutMs);
+    }
+
+    private CorrelationData publishDonationRequestCreated(DonationRequestCreatedEvent domainEvent) {
         DonationRequestCreatedIntegrationEvent integrationEvent = DonationRequestCreatedIntegrationEvent.from(domainEvent);
         CorrelationData correlationData = new CorrelationData(integrationEvent.getEventId());
 
@@ -124,9 +173,10 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 integrationEvent.getEventType(), exchangeName, donationRequestCreatedRoutingKey);
 
         rabbitTemplate.convertAndSend(exchangeName, donationRequestCreatedRoutingKey, integrationEvent, correlationData);
+        return correlationData;
     }
 
-    private void publishPublicationSold(PublicationSoldEvent domainEvent) {
+    private CorrelationData publishPublicationSold(PublicationSoldEvent domainEvent) {
         SegundaVidaDonacionPrendaVendidaIntegrationEvent event = SegundaVidaDonacionPrendaVendidaIntegrationEvent.from(domainEvent);
         CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
 
@@ -143,11 +193,15 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                     exchangeName, notificationsSecondHandSoldRoutingKey);
             rabbitTemplate.convertAndSend(exchangeName, notificationsSecondHandSoldRoutingKey, event, correlationData);
         }
+        return correlationData;
     }
 
-    private void publishDonationDecided(DonationRequestDecidedEvent domainEvent) {
+    private CorrelationData publishDonationDecided(DonationRequestDecidedEvent domainEvent) {
         String newStatus = domainEvent.approved() ? "APROBADA" : "RECHAZADA";
         String fechaCambio = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
+        String effectiveEventId = (domainEvent.eventId() != null && !domainEvent.eventId().isBlank())
+                ? domainEvent.eventId().trim()
+                : UUID.randomUUID().toString();
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
                 SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
                         .donacionId(domainEvent.requestId())
@@ -167,6 +221,9 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         .build();
 
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent event = SegundaVidaDonacionEstadoCambiadoIntegrationEvent.builder()
+                .eventoId(effectiveEventId)
+                .eventId(effectiveEventId)
+                .correlationId(effectiveEventId)
                 .donacionId(domainEvent.requestId())
                 .solicitudId(domainEvent.requestId())
                 .requestId(domainEvent.requestId())
@@ -184,15 +241,16 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                 .fechaEvento(fechaCambio)
                 .data(data)
                 .build();
-        CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
+        CorrelationData correlationData = new CorrelationData(effectiveEventId);
 
         log.info(">>> [RabbitMQ PUBLISH] Publicando decisión donación '{}' desde ms-segunda-vida-donaciones hacia Exchange '{}' con Routing Key '{}'",
                 event.getTipoEvento(), exchangeName, donationStatusUpdatedRoutingKey);
 
         rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
+        return correlationData;
     }
 
-    private void publishPickupScheduled(PickupScheduledEvent domainEvent) {
+    private CorrelationData publishPickupScheduled(PickupScheduledEvent domainEvent) {
         String fechaCambio = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
         String scheduledDate = IntegrationDateFormatter.formatLocalDateTime(domainEvent.startTime());
         String reason = domainEvent.deliveryPoint() != null && !domainEvent.deliveryPoint().isBlank()
@@ -239,9 +297,10 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
         CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
 
         rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
+        return correlationData;
     }
 
-    private void publishDonationDelivered(DonationDeliveredEvent domainEvent) {
+    private CorrelationData publishDonationDelivered(DonationDeliveredEvent domainEvent) {
         String fechaCambio = IntegrationDateFormatter.formatLocalDateTime(domainEvent.occurredOn());
         SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData data =
                 SegundaVidaDonacionEstadoCambiadoIntegrationEvent.EstadoCambiadoData.builder()
@@ -282,6 +341,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
         CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
 
         rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
+        return correlationData;
     }
 
     public String getExchangeName() {

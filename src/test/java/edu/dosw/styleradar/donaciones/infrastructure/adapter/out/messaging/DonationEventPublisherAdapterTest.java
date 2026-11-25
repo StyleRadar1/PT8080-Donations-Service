@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.core.ReturnedMessage;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -22,14 +23,18 @@ import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
+import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationRequestCreatedIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionEstadoCambiadoIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionPrendaVendidaIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.config.RabbitMQConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -273,5 +278,99 @@ class DonationEventPublisherAdapterTest {
         adapter.publishEvent(genericEvent);
 
         verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), eq(genericEvent), any(CorrelationData.class));
+    }
+
+    @Test
+    @DisplayName("Debe preservar el eventId explícito en payload y CorrelationData para entregas idempotentes")
+    void shouldPreserveExplicitEventIdInDonationRequestDecidedEvent() {
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.parse("2026-11-24T22:00:00Z"), "evt-fixed-123");
+
+        adapter.publishEvent(domainEvent);
+
+        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> captor =
+                ArgumentCaptor.forClass(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class);
+        ArgumentCaptor<CorrelationData> correlationCaptor =
+                ArgumentCaptor.forClass(CorrelationData.class);
+
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), captor.capture(), correlationCaptor.capture());
+
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
+        assertThat(published.getEventoId()).isEqualTo("evt-fixed-123");
+        assertThat(published.getEventId()).isEqualTo("evt-fixed-123");
+        assertThat(published.getCorrelationId()).isEqualTo("evt-fixed-123");
+        assertThat(correlationCaptor.getValue().getId()).isEqualTo("evt-fixed-123");
+    }
+
+    @Test
+    @DisplayName("publishEventConfirmed debe completarse únicamente tras recibir ACK del broker sin devolución")
+    void shouldSucceedPublishEventConfirmedWhenBrokerAcks() {
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.now(), "evt-ack-1");
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            cd.getFuture().complete(new CorrelationData.Confirm(true, null));
+            return null;
+        }).when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        adapter.publishEventConfirmed(domainEvent);
+
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), any(Object.class), any(CorrelationData.class));
+    }
+
+    @Test
+    @DisplayName("publishEventConfirmed debe lanzar ExternalServiceUnavailableException cuando el broker responde NACK")
+    void shouldThrowWhenBrokerNacksOnPublishEventConfirmed() {
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.now(), "evt-nack-1");
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            cd.getFuture().complete(new CorrelationData.Confirm(false, "channel closed"));
+            return null;
+        }).when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        assertThatThrownBy(() -> adapter.publishEventConfirmed(domainEvent))
+                .isInstanceOf(ExternalServiceUnavailableException.class)
+                .hasMessageContaining("NACK");
+    }
+
+    @Test
+    @DisplayName("publishEventConfirmed debe fallar si RabbitMQ devuelve el mensaje como no enrutable")
+    void shouldThrowWhenBrokerReturnsUnroutableMessageOnPublishEventConfirmed() {
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.now(), "evt-return-1");
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            cd.setReturned(new ReturnedMessage(
+                    new Message(new byte[0], new MessageProperties()),
+                    312,
+                    "NO_ROUTE",
+                    EXCHANGE,
+                    ROUTING_KEY_UPDATED));
+            cd.getFuture().complete(new CorrelationData.Confirm(true, null));
+            return null;
+        }).when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        assertThatThrownBy(() -> adapter.publishEventConfirmed(domainEvent))
+                .isInstanceOf(ExternalServiceUnavailableException.class)
+                .hasMessageContaining("devuelto por RabbitMQ");
+    }
+
+    @Test
+    @DisplayName("publishEventConfirmed debe fallar por timeout cuando no llega confirmación del broker y omitir nulos")
+    void shouldThrowWhenBrokerConfirmTimesOutAndIgnoreNull() {
+        adapter.publishEventConfirmed(null);
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        adapter.setConfirmTimeoutMs(25L);
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.now(), "evt-timeout-1");
+
+        assertThatThrownBy(() -> adapter.publishEventConfirmed(domainEvent))
+                .isInstanceOf(ExternalServiceUnavailableException.class)
+                .hasMessageContaining("confirmación");
     }
 }

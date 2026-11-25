@@ -27,6 +27,11 @@ spring:
       simple:
         auto-startup: false
 
+app:
+  outbox:
+    scheduler:
+      enabled: false
+
 management:
   endpoints:
     web:

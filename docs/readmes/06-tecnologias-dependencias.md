@@ -11,12 +11,12 @@ El stack tecnológico de `PT8080-Donations-Service` cumple con el estándar unif
 | **Cloud Storage** | Azure Blob Storage SDK | `12.28.0` | `com.azure:azure-storage-blob` para almacenamiento de fotos en nube con fallback local. |
 | **Seguridad y Tokens** | Spring Security + JJWT | `6.3.x` / `0.13.0` | Validación stateless de JWT con firma HMAC-SHA256 (`HS256`) y claim `exp`. |
 | **Base de Datos** | PostgreSQL | `16` | Integridad ACID, bloqueo optimista (`@Version`) y aislamiento *Database-per-Service*. |
-| **Control de Esquema** | Flyway Core | `10.10.0` | Migraciones reproducibles (`V1__init_schema.sql` .. `V5__migrate_garment_type_and_size_enums.sql`). |
-| **Broker de Mensajería** | RabbitMQ (Spring AMQP) | `3.12` | Topic Exchanges durables sobre AMQPS TLS `5671` con *Publisher Confirms* y certificados en `certs/`. |
+| **Control de Esquema** | Flyway Core | `10.10.0` | Migraciones reproducibles (`V1__init_schema.sql` .. `V7__harden_donation_outbox_delivery.sql`). |
+| **Broker de Mensajería** | RabbitMQ (Spring AMQP) | `3.12` | Topic Exchanges durables sobre AMQPS TLS `5671` con *Publisher Confirms*, Outbox transaccional y certificados en `certs/`. |
 | **Mapeo y Boilerplate** | MapStruct + Lombok | `1.5.5` / `1.18.38` | Reducción de código repetitivo compatible con JDK 21. |
 | **Documentación API** | SpringDoc OpenAPI | `2.5.0` | Especificación OpenAPI 3.0 en inglés técnico, esquemas RFC 7807 y ejemplos interactivos. |
-| **Testing Automatizado** | JUnit 5 + Mockito + H2 + Testcontainers | `5.10.3` | **279 pruebas aprobadas en entorno local** *(de 280 totales en Surefire: 0 fallos, 0 errores, 1 clase condicional PostgreSQL omitida sin Docker)*; en CI con Docker se ejecutan las **282** pruebas *(último baseline en `develop`/`main`: 277; en PR #18 con `593a043`: 281)*. Ver [detalle y enlaces](./09-pruebas-cobertura.md). |
-| **Métricas de Cobertura** | JaCoCo Maven Plugin | `0.8.12` | Verificación estricta de cobertura mínima (`≥ 85%` de líneas en `verify`), alcanzando en local: **98.21% líneas (`2198/2238`)**, **98.09% instrucciones (`9860/10052`)**, **89.01% ramas (`680/764`)** y **96.34% métodos (`368/382`)**. |
+| **Testing Automatizado** | JUnit 5 + Mockito + H2 + Testcontainers | `5.10.3` | **301 pruebas aprobadas en entorno local** *(de 302 totales en Surefire: 0 fallos, 0 errores, 1 clase condicional PostgreSQL omitida sin Docker)*; baselines en CI con Docker: **282** en `develop` (`952da52`) y **277** en `main`. Ver [detalle y enlaces](./09-pruebas-cobertura.md). |
+| **Métricas de Cobertura** | JaCoCo Maven Plugin | `0.8.12` | Verificación estricta de cobertura mínima (`≥ 85%` de líneas en `verify`), alcanzando en local: **97.80% líneas (`2441/2496`)**, **97.80% instrucciones (`10737/10978`)**, **89.42% ramas (`744/832`)** y **96.00% métodos (`408/425`)**. |
 
 ---
 

@@ -169,4 +169,19 @@ class DonationRequestPersistenceAdapterTest {
         assertThat(adapter.existsActiveRequestForPublication(testPublicationId2)).isFalse();
         assertThat(adapter.existsActiveRequestForPublication(999L)).isFalse();
     }
+
+    @Test
+    @DisplayName("Debe recuperar únicamente las solicitudes activas (PENDING, APPROVED, IN_PICKUP) de una fundación")
+    void shouldFindActiveByFoundationId() {
+        adapter.save(buildSampleRequest(testPublicationId1, 101L, 501L, DonationRequestStatus.PENDING));
+        adapter.save(buildSampleRequest(testPublicationId2, 102L, 501L, DonationRequestStatus.IN_PICKUP));
+        adapter.save(buildSampleRequest(testPublicationId3, 103L, 501L, DonationRequestStatus.DELIVERED));
+        adapter.save(buildSampleRequest(testPublicationId1, 104L, 502L, DonationRequestStatus.APPROVED));
+
+        List<DonationRequest> activeFor501 = adapter.findActiveByFoundationId(501L);
+
+        assertThat(activeFor501).hasSize(2)
+                .extracting(DonationRequest::getStatus)
+                .containsExactlyInAnyOrder(DonationRequestStatus.PENDING, DonationRequestStatus.IN_PICKUP);
+    }
 }

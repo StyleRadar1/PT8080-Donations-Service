@@ -22,5 +22,8 @@ public interface SpringDataDonationRequestRepository extends JpaRepository<Donat
     List<DonationRequestEntity> findByFoundationIdAndStatusOrderByRequestedAtDesc(
             Long foundationId, DonationRequestStatus status);
 
+    List<DonationRequestEntity> findByFoundationIdAndStatusIn(
+            Long foundationId, Collection<DonationRequestStatus> statuses);
+
     boolean existsByPublicationIdAndStatusIn(Long publicationId, Collection<DonationRequestStatus> statuses);
 }

@@ -170,4 +170,20 @@ public class DonationRequest {
         this.status = DonationRequestStatus.DELIVERED;
         this.receivedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
+
+    /**
+     * Cancela una solicitud activa cuando la fundación destinataria es eliminada de la plataforma.
+     */
+    public void cancelDueToFoundationDeletion(String reason) {
+        if (status == null || !status.isInProgress()) {
+            throw new InvalidStateTransitionException(
+                    "Solo se pueden cancelar solicitudes activas ante la eliminación de la fundación. Estado actual: " + status);
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new InvalidDonationRequestException("El motivo de cancelación es obligatorio");
+        }
+        this.status = DonationRequestStatus.REJECTED;
+        this.rejectionReason = reason.trim();
+        this.decidedAt = LocalDateTime.now(ZoneOffset.UTC);
+    }
 }

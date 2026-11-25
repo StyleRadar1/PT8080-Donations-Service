@@ -66,8 +66,10 @@ app:
       second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:segunda-mano.prenda.vendida}
       notifications-second-hand-sold: ${RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA:styleradar.segundavida.prenda.vendida}
       donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION_CREATED:styleradar.donaciones.solicitud.creada}
+      foundation-deleted: ${RABBITMQ_ROUTING_KEY_FOUNDATION_DELETED:foundation.deleted}
     queues:
       dlq: ${RABBITMQ_DLQ:styleradar.donaciones.dlq}
+      foundation-deleted: ${RABBITMQ_FOUNDATION_DELETED_QUEUE:styleradar.donaciones.foundation-deleted.q}
       notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
       simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
     simulator:

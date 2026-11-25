@@ -75,6 +75,16 @@ public class DonationRequestPersistenceAdapter implements DonationRequestReposit
 
     @Override
     @Transactional(readOnly = true)
+    public List<DonationRequest> findActiveByFoundationId(Long foundationId) {
+        return donationRequestRepository.findByFoundationIdAndStatusIn(
+                        foundationId, DonationRequestStatus.ACTIVE_STATUSES)
+                .stream()
+                .map(donationRequestMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public boolean existsActiveRequestForPublication(Long publicationId) {
         return donationRequestRepository.existsByPublicationIdAndStatusIn(
                 publicationId, DonationRequestStatus.ACTIVE_STATUSES);

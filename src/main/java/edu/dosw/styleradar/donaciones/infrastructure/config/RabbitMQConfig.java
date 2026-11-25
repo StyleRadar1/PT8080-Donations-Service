@@ -11,7 +11,7 @@ import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.DefaultClassMapper;
+import org.springframework.amqp.support.converter.DefaultJackson2JavaTypeMapper;
 import org.springframework.amqp.support.converter.Jackson2JavaTypeMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +44,8 @@ public class RabbitMQConfig {
     public static final String DONATIONS_EXCHANGE_DEFAULT = STYLERADAR_EXCHANGE_DEFAULT;
     public static final String DONATION_REQUEST_CREATED_ROUTING_KEY_DEFAULT = "styleradar.donaciones.solicitud.creada";
     public static final String DONATION_STATUS_UPDATED_ROUTING_KEY_DEFAULT = DONACION_ESTADO_CAMBIADO_ROUTING_KEY_DEFAULT;
+    public static final String FOUNDATION_DELETED_ROUTING_KEY_DEFAULT = "foundation.deleted";
+    public static final String FOUNDATION_DELETED_QUEUE_DEFAULT = "styleradar.donaciones.foundation-deleted.q";
     public static final String NOTIFICATIONS_QUEUE_DEFAULT = "q.notificaciones.donacion-solicitud-creada";
     public static final String SIMULATOR_QUEUE_DEFAULT = "q.donaciones.simulador-notificaciones";
 
@@ -134,20 +136,48 @@ public class RabbitMQConfig {
                 .with(routingKey);
     }
 
+    /**
+     * Cola durable de consumo para eventos 'foundation.deleted' de ms-tiendas (con DLQ en styleradar.dlx).
+     * En QA/PROD esta topología es aprovisionada por administración de RabbitMQ (topology.enabled=false).
+     */
+    @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
+    public Queue foundationDeletedQueue(
+            @Value("${app.rabbitmq.queues.foundation-deleted:" + FOUNDATION_DELETED_QUEUE_DEFAULT + "}") String queueName,
+            @Value("${app.rabbitmq.exchange.dlx:" + STYLERADAR_DLX_DEFAULT + "}") String dlxName,
+            @Value("${app.rabbitmq.queues.dlq:" + DONACIONES_DLQ_DEFAULT + "}") String dlqName) {
+        return QueueBuilder.durable(queueName)
+                .deadLetterExchange(dlxName)
+                .deadLetterRoutingKey(dlqName)
+                .build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.rabbitmq.topology.enabled", havingValue = "true", matchIfMissing = true)
+    public Binding foundationDeletedBinding(
+            Queue foundationDeletedQueue,
+            TopicExchange donationsTopicExchange,
+            @Value("${app.rabbitmq.routing-keys.foundation-deleted:" + FOUNDATION_DELETED_ROUTING_KEY_DEFAULT + "}") String routingKey) {
+        return BindingBuilder.bind(foundationDeletedQueue)
+                .to(donationsTopicExchange)
+                .with(routingKey);
+    }
+
     @Bean
     public Jackson2JsonMessageConverter jackson2JsonMessageConverter(ObjectMapper objectMapper) {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
-        DefaultClassMapper classMapper = new DefaultClassMapper();
-        classMapper.setTrustedPackages(
+        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
+        typeMapper.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.INFERRED);
+        typeMapper.setTrustedPackages(
                 "edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event",
+                "edu.dosw.styleradar.donaciones.infrastructure.adapter.in.messaging.event",
                 "edu.dosw.styleradar.donaciones.domain.event",
                 "edu.dosw.styleradar",
                 "java.util",
                 "java.lang",
                 "java.time"
         );
-        converter.setClassMapper(classMapper);
-        converter.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.INFERRED);
+        converter.setJavaTypeMapper(typeMapper);
         return converter;
     }
 

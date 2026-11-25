@@ -31,8 +31,8 @@
     <a href="docs/readmes/04-endpoints-swagger.md"><img src="https://img.shields.io/badge/PROD_CLOUD-Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="PROD Cloud Active" /></a>
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439"><img src="https://img.shields.io/badge/CI_MAIN-aprobado-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Main Status" /></a>
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/44974140792"><img src="https://img.shields.io/badge/CI_DEVELOP-aprobado-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Develop Status" /></a>
-    <a href="docs/readmes/09-pruebas-cobertura.md"><img src="https://img.shields.io/badge/Pruebas-279_aprobadas_(local)_%7C_282_CI-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Pruebas Aprobadas" /></a>
-    <a href="docs/readmes/09-pruebas-cobertura.md"><img src="https://img.shields.io/badge/JaCoCo_L%C3%ADneas-98.21%25_(local)-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Cobertura de Líneas JaCoCo" /></a>
+    <a href="docs/readmes/09-pruebas-cobertura.md"><img src="https://img.shields.io/badge/Pruebas-301_aprobadas_(local)_%7C_282_develop-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Pruebas Aprobadas" /></a>
+    <a href="docs/readmes/09-pruebas-cobertura.md"><img src="https://img.shields.io/badge/JaCoCo_L%C3%ADneas-97.80%25_(local)-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Cobertura de Líneas JaCoCo" /></a>
   </p>
 
   <h3>Tecnologías y Dependencias Principales</h3>
