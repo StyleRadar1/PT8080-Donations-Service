@@ -113,13 +113,13 @@ class GetPartnerFoundationsUseCaseTest {
     }
 
     @Test
-    @DisplayName("Debe encontrar la fundación activa únicamente por representanteId y rechazar coincidencia numérica con id")
+    @DisplayName("Debe encontrar la fundación activa únicamente por representanteId y rechazar inactivas o inconsistencias")
     void shouldGetFoundationByRepresentativeId() {
         FoundationSummary matched = new FoundationSummary(
                 3L, "Abrigo Solidario", "Chapinero", "Desc", "Dir", "Tel",
                 "contacto@abrigosolidario.org", List.of("SUPERIOR"), "Niñez", "08:00-17:00", "Política", true, 24L
         );
-        when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(matched));
+        when(foundationCatalogPort.findFoundationByRepresentativeId(24L)).thenReturn(Optional.of(matched));
 
         FoundationSummary found = useCase.getFoundationByRepresentativeId(24L);
 
@@ -127,8 +127,23 @@ class GetPartnerFoundationsUseCaseTest {
         assertThat(found.representanteId()).isEqualTo(24L);
 
         // Coincidencia numérica con foundation.id (3L) sin ser representanteId (24L) debe ser rechazada
+        when(foundationCatalogPort.findFoundationByRepresentativeId(3L)).thenReturn(Optional.of(matched));
         assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(3L))
                 .isInstanceOf(ResourceNotFoundException.class);
+
+        // Fundación inactiva debe ser rechazada
+        FoundationSummary inactive = new FoundationSummary(
+                5L, "Inactiva", "Chapinero", "Desc", "Dir", "Tel",
+                "inactiva@org.co", List.of("SUPERIOR"), "Niñez", "08:00-17:00", "Política", false, 55L
+        );
+        when(foundationCatalogPort.findFoundationByRepresentativeId(55L)).thenReturn(Optional.of(inactive));
+        assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(55L))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        // Respuesta sin representanteId explícito (p. ej. mock minimal) pero activa es aceptada
+        FoundationSummary activeWithoutRepField = foundation(6L, "Mínima", List.of("SUPERIOR"), true);
+        when(foundationCatalogPort.findFoundationByRepresentativeId(66L)).thenReturn(Optional.of(activeWithoutRepField));
+        assertThat(useCase.getFoundationByRepresentativeId(66L).id()).isEqualTo(6L);
 
         FoundationSummary withoutRep = new FoundationSummary(
                 88L, null, "Suba", "Desc", "Dir", "Tel",
@@ -140,6 +155,7 @@ class GetPartnerFoundationsUseCaseTest {
         );
         when(foundationCatalogPort.findAllActiveFoundations()).thenReturn(List.of(withoutRep, nullCats));
 
+        when(foundationCatalogPort.findFoundationByRepresentativeId(88L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(88L))
                 .isInstanceOf(ResourceNotFoundException.class);
         assertThat(useCase.getActiveFoundations("   ")).hasSize(2);
@@ -149,6 +165,7 @@ class GetPartnerFoundationsUseCaseTest {
                 .isInstanceOf(InvalidDonationRequestException.class);
         assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(null))
                 .isInstanceOf(InvalidDonationRequestException.class);
+        when(foundationCatalogPort.findFoundationByRepresentativeId(999L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(999L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
