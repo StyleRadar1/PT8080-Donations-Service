@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -517,6 +519,64 @@ public class DonationRequestController {
         DonationRequest request = createDonationRequestUseCase.create(command);
         DonationRequestResponseDTO response = donationRequestRestMapper.toResponse(request);
         return ResponseEntity.created(URI.create("/api/v1/donations/" + request.getId())).body(response);
+    }
+
+    @Operation(
+            summary = "List donations for authenticated actor",
+            description = "Lists donation requests belonging to the authenticated user. If the caller has FOUNDATION role, resolves their allied foundation by representative ID and returns its inbox; otherwise returns the donor's donation history.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Authenticated actor's donation requests",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthenticated",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
+    public ResponseEntity<List<DonationRequestResponseDTO>> listAuthenticatedActorDonations(
+            @Parameter(description = "Optional status filter", example = "PENDING")
+            @RequestParam(required = false) DonationRequestStatus status) {
+        Long authenticatedUserId = resourceOwnershipValidator.extractAuthenticatedUserId();
+        if (authenticatedUserId == null) {
+            throw new InvalidDonationRequestException(
+                    "El identificador del usuario autenticado no está disponible en el token de sesión JWT");
+        }
+
+        List<DonationRequest> results;
+        if (isFoundationCaller()) {
+            FoundationSummary foundation = getPartnerFoundationsUseCase.getFoundationByRepresentativeId(authenticatedUserId);
+            results = createDonationRequestUseCase.getByFoundationId(foundation.id(), status);
+        } else {
+            List<DonationRequest> donorDonations = createDonationRequestUseCase.getByDonorId(authenticatedUserId);
+            results = (status == null)
+                    ? donorDonations
+                    : donorDonations.stream().filter(d -> status == d.getStatus()).toList();
+        }
+        return ResponseEntity.ok(donationRequestRestMapper.toResponseList(results));
+    }
+
+    private boolean isFoundationCaller() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        boolean hasFoundation = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_FOUNDATION".equals(a.getAuthority()) || "FOUNDATION".equals(a.getAuthority()));
+        boolean hasDonorOrAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_USER".equals(a.getAuthority())
+                        || "ROLE_STORE".equals(a.getAuthority())
+                        || "ROLE_ADMIN".equals(a.getAuthority()));
+        return hasFoundation && !hasDonorOrAdmin;
     }
 
     @Operation(

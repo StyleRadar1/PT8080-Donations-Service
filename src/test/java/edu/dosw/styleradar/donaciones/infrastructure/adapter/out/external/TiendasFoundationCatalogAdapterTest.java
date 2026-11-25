@@ -172,6 +172,9 @@ class TiendasFoundationCatalogAdapterTest {
         mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withServerError());
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
 
         assertThatThrownBy(() -> adapter.validateActiveFoundation(3L))
                 .isInstanceOf(ExternalServiceUnavailableException.class);
@@ -339,6 +342,9 @@ class TiendasFoundationCatalogAdapterTest {
         mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
 
         assertThatThrownBy(() -> adapter.findFoundationById(3L))
                 .isInstanceOf(ExternalServiceUnavailableException.class);
@@ -495,7 +501,7 @@ class TiendasFoundationCatalogAdapterTest {
         assertThat(fallbackResult).isPresent();
         assertThat(fallbackResult.get().id()).isEqualTo(3L);
 
-        // Error 401/500 en endpoint por representante mapea a ExternalServiceUnavailableException
+        // Error 401/500 en endpoint por representante intenta fallback /api/v1/foundations/representative con Bearer o lanza 503
         properties.setFoundationByRepresentativePath("/api/v1/internal/foundations?representativeId={representativeId}");
         mockServer.reset();
         mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=24"))
@@ -511,33 +517,94 @@ class TiendasFoundationCatalogAdapterTest {
     }
 
     @Test
-    @DisplayName("Debe fallar de forma controlada sin hacer ninguna llamada HTTP saliente cuando falta la credencial Basic interna aunque exista JWT entrante")
-    void shouldFailWithoutOutgoingRequestWhenInternalCredentialsMissingEvenWithIncomingJwt() {
+    @DisplayName("Debe aplicar fallback controlado cuando falta TIENDAS_INTERNAL_PASSWORD o el endpoint interno responde 401/403/5xx")
+    void shouldFallbackGracefullyWhenInternalPasswordBlankOrInternalCallFails() {
         MockHttpServletRequest incomingRequest = new MockHttpServletRequest();
         incomingRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(incomingRequest));
 
+        properties.setFoundationsPath("/api/v1/foundations");
         properties.setFoundationByIdPath("/api/v1/internal/foundations/{id}");
         properties.setFoundationByRepresentativePath("/api/v1/internal/foundations?representativeId={representativeId}");
         properties.setForwardBearerToken(true);
-        properties.setServiceBearerToken("svc-bearer-token");
         properties.setInternalUsername("ms-donaciones");
         properties.setInternalPassword("");
 
-        // Sin expectativas registradas en mockServer: si intenta salir cualquier petición HTTP, la prueba falla.
-        assertThatThrownBy(() -> adapter.findFoundationById(3L))
-                .isInstanceOf(ExternalServiceUnavailableException.class)
-                .hasMessageContaining("no se encuentra configurada");
+        String listJson = """
+                [
+                  {"id": 3, "name": "Fundación Fallback ID", "active": true, "representativeId": 24}
+                ]
+                """;
+        String repJson = """
+                {"id": 3, "name": "Fundación Fallback Rep", "active": true, "representativeId": 24}
+                """;
 
+        // 1. Sin internal-password: findFoundationById cae a /api/v1/foundations
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt"))
+                .andRespond(withSuccess(listJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byIdNoPass = adapter.findFoundationById(3L);
+        mockServer.verify();
+        assertThat(byIdNoPass).isPresent();
+        assertThat(byIdNoPass.get().nombre()).isEqualTo("Fundación Fallback ID");
+
+        // 2. Sin internal-password: findFoundationByRepresentativeId cae a /api/v1/foundations/representative con Bearer entrante
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt"))
+                .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byRepNoPass = adapter.findFoundationByRepresentativeId(24L);
+        mockServer.verify();
+        assertThat(byRepNoPass).isPresent();
+        assertThat(byRepNoPass.get().id()).isEqualTo(3L);
+
+        // 3. Con internal-password pero 401 en interno: findFoundationByRepresentativeId hace fallback a /api/v1/foundations/representative
+        properties.setInternalPassword("wrong-password");
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=24"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt"))
+                .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byRepAfter401 = adapter.findFoundationByRepresentativeId(24L);
+        mockServer.verify();
+        assertThat(byRepAfter401).isPresent();
+
+        // 4. Con internal-password pero 500 en interno: findFoundationById hace fallback a /api/v1/foundations
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(listJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byIdAfter500 = adapter.findFoundationById(3L);
+        mockServer.verify();
+        assertThat(byIdAfter500).isPresent();
+
+        // 5. Fallback representative con 404 retorna empty; con 500 lanza 503
+        mockServer.reset();
+        properties.setInternalPassword("");
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withResourceNotFound());
+        assertThat(adapter.findFoundationByRepresentativeId(24L)).isEmpty();
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
         assertThatThrownBy(() -> adapter.findFoundationByRepresentativeId(24L))
-                .isInstanceOf(ExternalServiceUnavailableException.class)
-                .hasMessageContaining("no se encuentra configurada");
-
-        properties.setInternalUsername("   ");
-        properties.setInternalPassword("some-secret");
-        assertThatThrownBy(() -> adapter.findFoundationById(3L))
                 .isInstanceOf(ExternalServiceUnavailableException.class);
-
         mockServer.verify();
     }
 }

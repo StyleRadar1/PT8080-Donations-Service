@@ -108,6 +108,7 @@ public class SecurityConfig {
                             .hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN);
 
                     // Operaciones de Donación - Donante (USER, STORE) y coordinación logística con Fundación (FOUNDATION)
+                    auth.requestMatchers(HttpMethod.GET, "/api/v1/donations").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN);
                     auth.requestMatchers(HttpMethod.POST, "/api/v1/donations").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN);
                     auth.requestMatchers(HttpMethod.PATCH, "/api/v1/donations/{id}/pickup").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_FOUNDATION, ROLE_ADMIN);
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/donations/donors/{donorId}").hasAnyRole(ROLE_USER, ROLE_STORE, ROLE_ADMIN);
