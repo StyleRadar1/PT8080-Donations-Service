@@ -2,18 +2,19 @@
 
 # 9. Pruebas y Cobertura (≥ 85%)
 
-El proyecto exige una cobertura de código mínima del **85%** verificada automáticamente mediante **JaCoCo** durante la fase `verify` de Maven (`mvn -B clean verify "-Dapi.version=1.44"`).
+El proyecto exige una cobertura mínima de **líneas** del **85.00%** verificada automáticamente mediante **JaCoCo** durante la fase `verify` de Maven (`mvn -B clean verify` / `mvn -B clean verify "-Dapi.version=1.44"`).
 
 ## Resumen de Métricas de Pruebas y Cobertura
 
-| Métrica | Valor Alcanzado | Umbral Exigido | Estado |
-| :--- | :---: | :---: | :---: |
-| **Pruebas Automatizadas Ejecutadas** | **276 pasando** *(277 totales: 0 fallos, 0 errores, 1 prueba PostgreSQL condicional CI omitida en local: `VitrinaAbiertaPostgresConcurrencyIntegrationTest`)* | Suite completa | ✅ **0 fallos, 0 errores** |
-| **Cobertura de Instrucciones (JaCoCo)** | **98.07%** (`9763 / 9955`) | `≥ 85.00%` | ✅ **Aprobado (+13.07%)** |
-| **Cobertura de Líneas (JaCoCo)** | **98.20%** (`2177 / 2217`) | `≥ 85.00%` | ✅ **Aprobado (+13.20%)** |
-| **Cobertura de Ramas (JaCoCo)** | **88.80%** (`666 / 750`) | `≥ 85.00%` | ✅ **Aprobado (+3.80%)** |
-| **Cobertura de Métodos (JaCoCo)** | **96.30%** (`364 / 378`) | `≥ 85.00%` | ✅ **Aprobado (+11.30%)** |
-| **Auditoría SonarQube** | **Quality Gate Passed (Rating A)** | 0 Bugs, 0 Vuln, 0 Smells | ✅ **Calificación A** |
+| Métrica | Valor Alcanzado | Entorno y Condición | Umbral Exigido | Respaldo / Enlace de Ejecución |
+| :--- | :---: | :--- | :---: | :--- |
+| **Pruebas Automatizadas (Entorno Local - Rama Actual)** | **278 pruebas aprobadas** *(de 279 totales: 0 fallos, 0 errores, 1 omitida)* | **Local** (sin Docker: se omite la prueba condicional PostgreSQL `VitrinaAbiertaPostgresConcurrencyIntegrationTest`) | Suite completa sin fallos | Evidencia local [`docs/evidencias/`](../evidencias/) y comando `mvn -B clean verify` |
+| **Pruebas Automatizadas (CI `develop` / `main` - Baseline)** | **277 pruebas aprobadas** *(incluye Testcontainers PostgreSQL 16; con los 2 tests nuevos de esta rama sube a 279)* | **CI GitHub Actions** (`ubuntu-latest` con Docker Engine activo) | `≥ 85.00%` cobertura de líneas + 0 fallos | [Run CI QA `develop` (#44974140792)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/44974140792) · [Run CD PROD `main` (#45525360439)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
+| **Cobertura de Líneas (JaCoCo `LINE`)** | **98.21%** (`2195 / 2235`) | **Local** (`mvn -B clean verify`, 82 clases analizadas) | `≥ 85.00%` *(umbral obligatorio del gate)* | Reporte `target/site/jacoco/jacoco.xml` · [`cobertura-jacoco-sprint3.png`](../evidencias/cobertura-jacoco-sprint3.png) |
+| **Cobertura de Instrucciones (JaCoCo `INSTRUCTION`)** | **98.09%** (`9848 / 10040`) | **Local** (`mvn -B clean verify`, 82 clases analizadas) | Referencia (`≥ 85.00%`) | Reporte `target/site/jacoco/jacoco.xml` · [Run CI `develop` (#44974140792)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/44974140792) |
+| **Cobertura de Ramas (JaCoCo `BRANCH`)** | **88.87%** (`679 / 764`) | **Local** (`mvn -B clean verify`, 82 clases analizadas) | Referencia (`≥ 85.00%`) | Reporte `target/site/jacoco/jacoco.xml` |
+| **Cobertura de Métodos (JaCoCo `METHOD`)** | **96.33%** (`367 / 381`) | **Local** (`mvn -B clean verify`, 82 clases analizadas) | Referencia (`≥ 85.00%`) | Reporte `target/site/jacoco/jacoco.xml` |
+| **Auditoría SonarQube** | **Quality Gate Passed (Rating A)** | **Análisis estático local / SonarQube** (0 Bugs, 0 Vulnerabilidades, 0 Code Smells críticos) | Quality Gate Aprobado | [`analisis-sonarqube.png`](../evidencias/analisis-sonarqube.png) |
 
 ---
 

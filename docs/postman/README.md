@@ -82,7 +82,7 @@ npx newman run docs/postman/StyleRadar-Donations-Service.postman_collection.json
 | `GET /api/v1/second-hand/publications/{id}` | `200`, `404` |
 | `GET /api/v1/second-hand/publications/users/{userId}` | `200`, `401`, `403` |
 | `PUT /api/v1/second-hand/publications/{id}` | `200`, `400`, `401`, `403`, `404`, `409` |
-| `PATCH /api/v1/second-hand/publications/{id}/sale` | `200`, `400`, `401`, `403`, `404`, `409` |
+| `PATCH /api/v1/second-hand/publications/{id}/sale?userId={userId}&compradorId={compradorId}` | `200`, `400`, `401`, `403`, `404`, `409` |
 | `DELETE /api/v1/second-hand/publications/{id}` | `204`, `401`, `403`, `404`, `409` |
 | `PATCH /api/v1/second-hand/publications/{id}/donation` | `200`, `401`, `403`, `404`, `409` |
 | `GET /api/v1/donations/foundations` | `200`, `401`, `503` |
