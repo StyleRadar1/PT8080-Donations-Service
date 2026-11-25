@@ -190,4 +190,36 @@ class DonationRequestTest {
         // No puede volver a confirmar si ya está DELIVERED
         assertThrows(InvalidStateTransitionException.class, request::confirmDelivery);
     }
+
+    @Test
+    @DisplayName("Debe cancelar solicitudes activas (PENDING/APPROVED/IN_PICKUP) por eliminación de fundación y rechazar estados terminales")
+    void shouldCancelActiveRequestsDueToFoundationDeletion() {
+        DonationRequest pending = validProposalBuilder().publicationId(10L).donorId(2L).foundationId(3L).build();
+        pending.initiate();
+        assertThrows(InvalidDonationRequestException.class, () -> pending.cancelDueToFoundationDeletion("  "));
+        assertThrows(InvalidDonationRequestException.class, () -> pending.cancelDueToFoundationDeletion(null));
+
+        pending.cancelDueToFoundationDeletion("  Fundación eliminada  ");
+        assertEquals(DonationRequestStatus.REJECTED, pending.getStatus());
+        assertEquals("Fundación eliminada", pending.getRejectionReason());
+        assertNotNull(pending.getDecidedAt());
+
+        // Ya está en estado terminal REJECTED
+        assertThrows(InvalidStateTransitionException.class,
+                () -> pending.cancelDueToFoundationDeletion("Motivo"));
+
+        // En estado IN_PICKUP también debe permitir cancelación
+        DonationRequest inPickup = validProposalBuilder().publicationId(11L).donorId(2L).foundationId(3L).build();
+        inPickup.initiate();
+        inPickup.approve();
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        inPickup.schedulePickup("Punto Acopio", start, start.plusHours(2));
+        inPickup.cancelDueToFoundationDeletion("Fundación eliminada");
+        assertEquals(DonationRequestStatus.REJECTED, inPickup.getStatus());
+
+        // En estado nulo debe fallar
+        DonationRequest withoutStatus = DonationRequest.builder().build();
+        assertThrows(InvalidStateTransitionException.class,
+                () -> withoutStatus.cancelDueToFoundationDeletion("Motivo"));
+    }
 }
