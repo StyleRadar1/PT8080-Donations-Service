@@ -14,21 +14,28 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
+import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.model.ConservationStatus;
+import edu.dosw.styleradar.donaciones.domain.model.DonationOutboxEvent;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequestStatus;
 import edu.dosw.styleradar.donaciones.domain.model.Garment;
 import edu.dosw.styleradar.donaciones.domain.model.GarmentType;
+import edu.dosw.styleradar.donaciones.domain.model.OutboxEventStatus;
 import edu.dosw.styleradar.donaciones.domain.model.PublicationStatus;
 import edu.dosw.styleradar.donaciones.domain.model.SecondHandPublication;
 import edu.dosw.styleradar.donaciones.domain.model.Size;
 import edu.dosw.styleradar.donaciones.domain.model.Style;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
+import edu.dosw.styleradar.donaciones.domain.port.out.DonationOutboxRepositoryPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationRequestRepositoryPort;
 import edu.dosw.styleradar.donaciones.domain.port.out.PublicationRepositoryPort;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -36,17 +43,14 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Pruebas Unitarias - HandleFoundationDeletedUseCaseImpl")
+@DisplayName("Pruebas Unitarias - Outbox y Caso de Uso foundation.deleted")
 class HandleFoundationDeletedUseCaseTest {
 
     @Mock
-    private DonationRequestRepositoryPort donationRequestRepositoryPort;
+    private FoundationDeletionPersistenceService persistenceService;
 
     @Mock
-    private PublicationRepositoryPort publicationRepositoryPort;
-
-    @Mock
-    private DonationEventPublisherPort eventPublisherPort;
+    private DonationOutboxDispatcherService outboxDispatcherService;
 
     @InjectMocks
     private HandleFoundationDeletedUseCaseImpl useCase;
@@ -72,8 +76,31 @@ class HandleFoundationDeletedUseCaseTest {
     }
 
     @Test
-    @DisplayName("Debe cerrar solicitudes activas (PENDING/APPROVED/IN_PICKUP), revertir prendas IN_DONATION a AVAILABLE y emitir eventos")
-    void shouldCancelAllActiveRequestsAndRevertPublications() {
+    @DisplayName("Debe orquestar cancelación transaccional + despacho Outbox y soportar dispatchPendingOutboxEvents")
+    void shouldOrchestratePersistenceAndOutboxDispatch() {
+        assertThat(useCase.handleFoundationDeleted(null)).isZero();
+        verifyNoInteractions(persistenceService, outboxDispatcherService);
+
+        when(persistenceService.cancelActiveRequestsAndEnqueueOutbox(3L)).thenReturn(2);
+        when(outboxDispatcherService.dispatchPendingByFoundationId(3L)).thenReturn(2);
+        when(outboxDispatcherService.dispatchAllPending()).thenReturn(1);
+
+        assertThat(useCase.handleFoundationDeleted(3L)).isEqualTo(2);
+        assertThat(useCase.dispatchPendingOutboxEvents()).isEqualTo(1);
+        verify(persistenceService).cancelActiveRequestsAndEnqueueOutbox(3L);
+        verify(outboxDispatcherService).dispatchPendingByFoundationId(3L);
+        verify(outboxDispatcherService).dispatchAllPending();
+    }
+
+    @Test
+    @DisplayName("FoundationDeletionPersistenceService debe cancelar solicitudes activas, revertir prendas y registrar Outbox sin duplicar")
+    void shouldCancelActiveRequestsAndEnqueueOutboxWithoutDuplicates() {
+        DonationRequestRepositoryPort reqRepo = mock(DonationRequestRepositoryPort.class);
+        PublicationRepositoryPort pubRepo = mock(PublicationRepositoryPort.class);
+        DonationOutboxRepositoryPort outboxRepo = mock(DonationOutboxRepositoryPort.class);
+        FoundationDeletionPersistenceService service =
+                new FoundationDeletionPersistenceService(reqRepo, pubRepo, outboxRepo);
+
         DonationRequest pending = DonationRequest.builder()
                 .id(1L).publicationId(10L).donorId(101L).foundationId(3L)
                 .status(DonationRequestStatus.PENDING).requestedAt(LocalDateTime.now()).build();
@@ -87,45 +114,81 @@ class HandleFoundationDeletedUseCaseTest {
         SecondHandPublication pubInDonation = donationPublication(10L, PublicationStatus.IN_DONATION);
         SecondHandPublication pubAlreadyAvailable = donationPublication(11L, PublicationStatus.AVAILABLE);
 
-        when(donationRequestRepositoryPort.findActiveByFoundationId(3L))
-                .thenReturn(List.of(pending, approved, inPickup));
-        when(publicationRepositoryPort.findById(10L)).thenReturn(Optional.of(pubInDonation));
-        when(publicationRepositoryPort.findById(11L)).thenReturn(Optional.of(pubAlreadyAvailable));
-        when(donationRequestRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(reqRepo.findActiveByFoundationId(3L)).thenReturn(List.of(pending, approved, inPickup));
+        when(pubRepo.findById(10L)).thenReturn(Optional.of(pubInDonation));
+        when(pubRepo.findById(11L)).thenReturn(Optional.of(pubAlreadyAvailable));
+        when(reqRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(outboxRepo.existsByRequestIdAndEventType(1L, DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED))
+                .thenReturn(false);
+        when(outboxRepo.existsByRequestIdAndEventType(2L, DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED))
+                .thenReturn(false);
+        when(outboxRepo.existsByRequestIdAndEventType(3L, DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED))
+                .thenReturn(true);
 
-        int cancelled = useCase.handleFoundationDeleted(3L);
+        int cancelled = service.cancelActiveRequestsAndEnqueueOutbox(3L);
 
         assertThat(cancelled).isEqualTo(3);
         assertThat(pending.getStatus()).isEqualTo(DonationRequestStatus.REJECTED);
         assertThat(approved.getStatus()).isEqualTo(DonationRequestStatus.REJECTED);
         assertThat(inPickup.getStatus()).isEqualTo(DonationRequestStatus.REJECTED);
-        assertThat(pending.getRejectionReason()).isEqualTo(HandleFoundationDeletedUseCaseImpl.CANCELLATION_REASON);
         assertThat(pubInDonation.getStatus()).isEqualTo(PublicationStatus.AVAILABLE);
-        assertThat(pubAlreadyAvailable.getStatus()).isEqualTo(PublicationStatus.AVAILABLE);
 
-        verify(publicationRepositoryPort, times(1)).save(pubInDonation);
-        verify(publicationRepositoryPort, never()).save(pubAlreadyAvailable);
-        verify(donationRequestRepositoryPort, times(3)).save(any());
+        verify(pubRepo, times(1)).save(pubInDonation);
+        verify(pubRepo, never()).save(pubAlreadyAvailable);
+        verify(reqRepo, times(3)).save(any());
 
-        ArgumentCaptor<DonationRequestDecidedEvent> eventCaptor = ArgumentCaptor.forClass(DonationRequestDecidedEvent.class);
-        verify(eventPublisherPort, times(3)).publishEvent(eventCaptor.capture());
-        assertThat(eventCaptor.getAllValues())
-                .extracting(DonationRequestDecidedEvent::requestId, DonationRequestDecidedEvent::approved)
+        ArgumentCaptor<DonationOutboxEvent> outboxCaptor = ArgumentCaptor.forClass(DonationOutboxEvent.class);
+        verify(outboxRepo, times(2)).save(outboxCaptor.capture());
+        assertThat(outboxCaptor.getAllValues())
+                .extracting(DonationOutboxEvent::getRequestId, DonationOutboxEvent::getStatus)
                 .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple(1L, false),
-                        org.assertj.core.groups.Tuple.tuple(2L, false),
-                        org.assertj.core.groups.Tuple.tuple(3L, false)
+                        org.assertj.core.groups.Tuple.tuple(1L, OutboxEventStatus.PENDING),
+                        org.assertj.core.groups.Tuple.tuple(2L, OutboxEventStatus.PENDING)
                 );
+
+        when(reqRepo.findActiveByFoundationId(99L)).thenReturn(List.of());
+        assertThat(service.cancelActiveRequestsAndEnqueueOutbox(99L)).isZero();
     }
 
     @Test
-    @DisplayName("Debe ser idempotente cuando no hay solicitudes activas o foundationId es nulo")
-    void shouldBeIdempotentWhenNoActiveRequestsOrNullFoundationId() {
-        assertThat(useCase.handleFoundationDeleted(null)).isZero();
-        verifyNoInteractions(donationRequestRepositoryPort, publicationRepositoryPort, eventPublisherPort);
+    @DisplayName("DonationOutboxDispatcherService debe marcar SENT los exitosos, dejar PENDING los fallidos y propagar error")
+    void shouldDispatchOutboxEventsIndividuallyAndKeepFailedAsPending() {
+        DonationOutboxRepositoryPort outboxRepo = mock(DonationOutboxRepositoryPort.class);
+        DonationEventPublisherPort publisher = mock(DonationEventPublisherPort.class);
+        DonationOutboxDispatcherService dispatcher = new DonationOutboxDispatcherService(outboxRepo, publisher);
 
-        when(donationRequestRepositoryPort.findActiveByFoundationId(99L)).thenReturn(List.of());
-        assertThat(useCase.handleFoundationDeleted(99L)).isZero();
-        verifyNoInteractions(publicationRepositoryPort, eventPublisherPort);
+        assertThat(dispatcher.dispatchPendingByFoundationId(null)).isZero();
+        when(outboxRepo.findPendingByFoundationId(88L)).thenReturn(List.of());
+        assertThat(dispatcher.dispatchPendingByFoundationId(88L)).isZero();
+
+        DonationOutboxEvent evt1 = DonationOutboxEvent.builder()
+                .id(10L).requestId(1L).foundationId(3L).donorId(101L)
+                .rejectionReason("Eliminada").eventType(DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED)
+                .status(OutboxEventStatus.PENDING).attempts(0).createdAt(LocalDateTime.now()).build();
+        DonationOutboxEvent evt2 = DonationOutboxEvent.builder()
+                .id(11L).requestId(2L).foundationId(3L).donorId(102L)
+                .rejectionReason("Eliminada").eventType(DonationOutboxEvent.TYPE_DONATION_CANCELLED_FOUNDATION_DELETED)
+                .status(OutboxEventStatus.PENDING).attempts(0).createdAt(LocalDateTime.now()).build();
+
+        when(outboxRepo.findPendingEvents()).thenReturn(List.of(evt1, evt2));
+        doAnswer(invocation -> {
+            Object arg = invocation.getArgument(0);
+            if (arg instanceof DonationRequestDecidedEvent d && Long.valueOf(2L).equals(d.requestId())) {
+                throw new RuntimeException("Broker down");
+            }
+            return null;
+        }).when(publisher).publishEvent(any());
+
+        assertThatThrownBy(dispatcher::dispatchAllPending)
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+
+        assertThat(evt1.getStatus()).isEqualTo(OutboxEventStatus.SENT);
+        assertThat(evt1.getAttempts()).isEqualTo(1);
+        assertThat(evt1.getSentAt()).isNotNull();
+
+        assertThat(evt2.getStatus()).isEqualTo(OutboxEventStatus.PENDING);
+        assertThat(evt2.getAttempts()).isEqualTo(1);
+        assertThat(evt2.getLastError()).isEqualTo("Broker down");
+        verify(outboxRepo, times(2)).save(any());
     }
 }
