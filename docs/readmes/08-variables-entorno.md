@@ -34,6 +34,8 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 | `RABBITMQ_ROUTING_KEY_DONACION` | Routing key de cambio de estado hacia `ms-notificaciones` | `styleradar.donaciones.estado.cambiado` | Sí |
 | `RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA` | Routing key de venta hacia `ms-chat` | `segunda-mano.prenda.vendida` | Sí |
 | `RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA` | Routing key de venta hacia `ms-notificaciones` | `styleradar.segundavida.prenda.vendida` | Sí |
+| `RABBITMQ_ROUTING_KEY_FOUNDATION_DELETED` | Routing key de fundación eliminada desde `ms-tiendas` | `foundation.deleted` | Opcional |
+| `RABBITMQ_FOUNDATION_DELETED_QUEUE` | Cola durable de consumo para `foundation.deleted` | `styleradar.donaciones.foundation-deleted.q` | Opcional |
 | `JWT_SECRET_BASE64` | Clave Base64 HMAC-SHA256 compartida con `ms-auth` (≥ 256 bits) | Clave local dev/test | Sí |
 | `TIENDAS_SERVICE_URL` | URL base de `ms-tiendas` para fundaciones (`SR-RF-45`) | `http://localhost:8140` (`qa`/`prod` Azure) | Sí |
 | `TIENDAS_FOUNDATIONS_PATH` | Ruta del listado público de fundaciones en `ms-tiendas` | `/api/v1/foundations` | Opcional |
