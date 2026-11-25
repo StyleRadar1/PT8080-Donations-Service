@@ -20,17 +20,20 @@ import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.port.out.DonationEventPublisherPort;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationCompletedStatisticsIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationRequestCreatedIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.IntegrationDateFormatter;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionEstadoCambiadoIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionPrendaVendidaIntegrationEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.config.RabbitMQConfig;
 
 /**
  * Adaptador de salida RabbitMQ para la publicación asíncrona hacia 'styleradar.exchange' (puerto 5671 TLS / 5672).
  * Flujos de 'ms-segunda-vida-donaciones':
  * 1) 'styleradar.donaciones.solicitud.creada' y 'styleradar.donaciones.estado.cambiado' hacia ms-notificaciones.
- * 2) 'segunda-mano.prenda.vendida' hacia ms-chat para cierre de salas.
- * 3) 'styleradar.segundavida.prenda.vendida' hacia ms-notificaciones para alertas de venta C2C.
+ * 2) 'styleradar.donaciones.completada' hacia ms-estadisticas cuando se confirma recepción de donación.
+ * 3) 'segunda-mano.prenda.vendida' hacia ms-chat para cierre de salas.
+ * 4) 'styleradar.segundavida.prenda.vendida' hacia ms-notificaciones para alertas de venta C2C.
  */
 @Component("donacionEventPublisherAdapter")
 public class DonationEventPublisherAdapter implements DonationEventPublisherPort {
@@ -41,12 +44,14 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
     private static final String STATUS_DELIVERED = "ENTREGADA";
     private static final String DEFAULT_CHAT_SOLD_KEY = "segunda-mano.prenda.vendida";
     private static final String DEFAULT_NOTIFICATIONS_SOLD_KEY = "styleradar.segundavida.prenda.vendida";
+    private static final String DEFAULT_DONATION_COMPLETED_KEY = RabbitMQConfig.DONACION_COMPLETADA_ROUTING_KEY_DEFAULT;
     private static final long DEFAULT_CONFIRM_TIMEOUT_MS = 5000L;
 
     private final RabbitTemplate rabbitTemplate;
     private final String exchangeName;
     private final String chatExchangeName;
     private final String donationStatusUpdatedRoutingKey;
+    private final String donationCompletedRoutingKey;
     private final String secondHandSoldRoutingKey;
     private final String notificationsSecondHandSoldRoutingKey;
     private final String donationRequestCreatedRoutingKey;
@@ -58,6 +63,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             @Value("${app.rabbitmq.exchange.main:${app.rabbitmq.exchange.donations:styleradar.exchange}}") String exchangeName,
             @Value("${app.rabbitmq.exchange.chat:styleradar.exchange}") String chatExchangeName,
             @Value("${app.rabbitmq.routing-keys.donation-status-updated:styleradar.donaciones.estado.cambiado}") String donationStatusUpdatedRoutingKey,
+            @Value("${app.rabbitmq.routing-keys.donation-completed:" + DEFAULT_DONATION_COMPLETED_KEY + "}") String donationCompletedRoutingKey,
             @Value("${app.rabbitmq.routing-keys.second-hand-sold:segunda-mano.prenda.vendida}") String secondHandSoldRoutingKey,
             @Value("${app.rabbitmq.routing-keys.notifications-second-hand-sold:styleradar.segundavida.prenda.vendida}") String notificationsSecondHandSoldRoutingKey,
             @Value("${app.rabbitmq.routing-keys.donation-request-created:styleradar.donaciones.solicitud.creada}") String donationRequestCreatedRoutingKey) {
@@ -65,6 +71,7 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
         this.exchangeName = exchangeName;
         this.chatExchangeName = chatExchangeName;
         this.donationStatusUpdatedRoutingKey = donationStatusUpdatedRoutingKey;
+        this.donationCompletedRoutingKey = donationCompletedRoutingKey;
         this.secondHandSoldRoutingKey = secondHandSoldRoutingKey;
         this.notificationsSecondHandSoldRoutingKey = notificationsSecondHandSoldRoutingKey;
         this.donationRequestCreatedRoutingKey = donationRequestCreatedRoutingKey;
@@ -76,8 +83,22 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             String chatExchangeName,
             String donationStatusUpdatedRoutingKey,
             String secondHandSoldRoutingKey,
+            String notificationsSecondHandSoldRoutingKey,
             String donationRequestCreatedRoutingKey) {
-        this(rabbitTemplate, exchangeName, chatExchangeName, donationStatusUpdatedRoutingKey, secondHandSoldRoutingKey,
+        this(rabbitTemplate, exchangeName, chatExchangeName, donationStatusUpdatedRoutingKey,
+                DEFAULT_DONATION_COMPLETED_KEY, secondHandSoldRoutingKey,
+                notificationsSecondHandSoldRoutingKey, donationRequestCreatedRoutingKey);
+    }
+
+    public DonationEventPublisherAdapter(
+            RabbitTemplate rabbitTemplate,
+            String exchangeName,
+            String chatExchangeName,
+            String donationStatusUpdatedRoutingKey,
+            String secondHandSoldRoutingKey,
+            String donationRequestCreatedRoutingKey) {
+        this(rabbitTemplate, exchangeName, chatExchangeName, donationStatusUpdatedRoutingKey,
+                DEFAULT_DONATION_COMPLETED_KEY, secondHandSoldRoutingKey,
                 DEFAULT_NOTIFICATIONS_SOLD_KEY, donationRequestCreatedRoutingKey);
     }
 
@@ -87,7 +108,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             String donationStatusUpdatedRoutingKey,
             String secondHandSoldRoutingKey,
             String donationRequestCreatedRoutingKey) {
-        this(rabbitTemplate, exchangeName, "styleradar.exchange", donationStatusUpdatedRoutingKey, secondHandSoldRoutingKey,
+        this(rabbitTemplate, exchangeName, "styleradar.exchange", donationStatusUpdatedRoutingKey,
+                DEFAULT_DONATION_COMPLETED_KEY, secondHandSoldRoutingKey,
                 DEFAULT_NOTIFICATIONS_SOLD_KEY, donationRequestCreatedRoutingKey);
     }
 
@@ -96,7 +118,8 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
             String exchangeName,
             String donationRequestCreatedRoutingKey,
             String donationStatusUpdatedRoutingKey) {
-        this(rabbitTemplate, exchangeName, "styleradar.exchange", donationStatusUpdatedRoutingKey, DEFAULT_CHAT_SOLD_KEY,
+        this(rabbitTemplate, exchangeName, "styleradar.exchange", donationStatusUpdatedRoutingKey,
+                DEFAULT_DONATION_COMPLETED_KEY, DEFAULT_CHAT_SOLD_KEY,
                 DEFAULT_NOTIFICATIONS_SOLD_KEY, donationRequestCreatedRoutingKey);
     }
 
@@ -341,6 +364,22 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
         CorrelationData correlationData = new CorrelationData(event.getCorrelationId());
 
         rabbitTemplate.convertAndSend(exchangeName, donationStatusUpdatedRoutingKey, event, correlationData);
+
+        if (exchangeName != null && donationCompletedRoutingKey != null && !donationCompletedRoutingKey.isBlank()) {
+            if (domainEvent.foundationId() == null) {
+                log.warn("Se omitió publicación estadística '{}' para solicitud ID={} por falta de foundationId.",
+                        donationCompletedRoutingKey, domainEvent.requestId());
+                return correlationData;
+            }
+            DonationCompletedStatisticsIntegrationEvent statsEvent =
+                    DonationCompletedStatisticsIntegrationEvent.from(domainEvent);
+            CorrelationData statsCorrelation = new CorrelationData(statsEvent.getEventId());
+
+            log.info(">>> [RabbitMQ PUBLISH] Publicando '{}' desde ms-segunda-vida-donaciones hacia Exchange '{}' con Routing Key '{}' para ms-estadisticas",
+                    statsEvent.getEventType(), exchangeName, donationCompletedRoutingKey);
+
+            rabbitTemplate.convertAndSend(exchangeName, donationCompletedRoutingKey, statsEvent, statsCorrelation);
+        }
         return correlationData;
     }
 
@@ -358,6 +397,10 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
 
     public String getDonationStatusUpdatedRoutingKey() {
         return donationStatusUpdatedRoutingKey;
+    }
+
+    public String getDonationCompletedRoutingKey() {
+        return donationCompletedRoutingKey;
     }
 
     public String getSecondHandSoldRoutingKey() {
