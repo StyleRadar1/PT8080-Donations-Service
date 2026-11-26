@@ -1,0 +1,102 @@
+name: CI Pipeline - ms-segunda-vida-donaciones
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-and-quality:
+    name: Build, Test, JaCoCo (>= 85% Line / >= 80% Branch) & SonarQube Gate
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_HOST: unix:///var/run/docker.sock
+      DOCKER_API_VERSION: "1.44"
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Verify Docker Daemon & Socket Permissions
+        run: |
+          docker version
+          sudo systemctl start docker || true
+          sudo chmod 666 /var/run/docker.sock || true
+
+      - name: Grant execute permission for Maven Wrapper
+        run: chmod +x mvnw
+
+      - name: Execute Maven Clean Verify (Tests & JaCoCo >= 85% Line / >= 80% Branch)
+        run: ./mvnw -B clean verify -Dapi.version=1.44
+
+      - name: Run SonarQube / SonarCloud Quality Gate Analysis
+        if: env.SONAR_TOKEN != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION || vars.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY || vars.SONAR_PROJECT_KEY }}
+        run: |
+          SONAR_ARGS="-Dsonar.qualitygate.wait=true"
+          if [ -n "$SONAR_HOST_URL" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=$SONAR_HOST_URL"
+          elif [ -n "$SONAR_ORGANIZATION" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=https://sonarcloud.io"
+          fi
+          if [ -n "$SONAR_ORGANIZATION" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.organization=$SONAR_ORGANIZATION"
+          fi
+          if [ -n "$SONAR_PROJECT_KEY" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.projectKey=$SONAR_PROJECT_KEY"
+          fi
+          ./mvnw -B sonar:sonar $SONAR_ARGS
+
+      - name: Upload JaCoCo Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-coverage-report-ci
+          path: target/site/jacoco/
+          retention-days: 7
+
+  docker-build-check:
+    name: Verify Docker Container Build
+    needs: build-test-and-quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image (Packaging Validation)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: styleradar/pt8080-donations-service:ci-test
