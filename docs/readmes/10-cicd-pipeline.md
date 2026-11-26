@@ -8,9 +8,9 @@ El ciclo de integración y despliegue continuo está automatizado en **GitHub Ac
 
 | Pipeline | Rama / Entorno | Trigger | Quality Gate Requerido | Ejecución y Estado |
 | :--- | :---: | :---: | :--- | :---: |
-| **CI - PR #22 (`fix/auditoria-integral`)** | `fix/auditoria-integral` → `develop` | Merge PR #22 (`5f896e9`) | **Build, pruebas con Docker y JaCoCo aprobados en CI** (rama actual en local: **330 aprobadas** de 331 en Surefire, `96.62%` Líneas JaCoCo `≥ 85%`) | [![CI PR #22](https://img.shields.io/badge/PR_%2322-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45728107219) |
-| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR hacia `develop` | **330 pruebas aprobadas en local** *(331 en Surefire; build QA `4a2cbec` aprobado y desplegado)* + JaCoCo Líneas `≥ 85%` (`96.62%` en local) + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45548074249) |
-| **CI - Main** | `main`<br>*(Producción)* | Push / PR (`develop → main`) | **330 pruebas aprobadas en local** *(baseline `main` en CI con Docker: 277)* + JaCoCo Líneas `≥ 85%` (`96.62%` en local) + Docker Build | [![CI Main](https://img.shields.io/badge/main-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
+| **CI - PR #22 (`fix/auditoria-integral`)** | `fix/auditoria-integral` → `develop` | Merge PR #22 (`5f896e9`) | **Build, pruebas con Docker y JaCoCo aprobados en CI** (rama actual: **339 pruebas aprobadas**, `97.50%` Líneas / `88.24%` Ramas JaCoCo) | [![CI PR #22](https://img.shields.io/badge/PR_%2322-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45728107219) |
+| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR hacia `develop` | **339 pruebas aprobadas** *(0 fallos, 0 omitidas con Docker)* + JaCoCo `97.50%` Líneas / `88.24%` Ramas (`≥ 85%`) + Deploy QA `4a2cbec` verificado | [![CI Develop](https://img.shields.io/badge/develop-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45728635298) |
+| **CI - Main** | `main`<br>*(Producción)* | Push / PR (`develop → main`) | **339 pruebas aprobadas** *(baseline `main` en CI con Docker: 277)* + JaCoCo `97.50%` Líneas / `88.24%` Ramas (`≥ 85%`) + Docker Build | [![CI Main](https://img.shields.io/badge/main-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
 | **CD - Despliegue QA** | Azure QA (`rg-styleradar`) | Push / Merge a `develop` | Deploy Web App + Smoke Test `/api/v1/health` | [![Deploy QA](https://img.shields.io/badge/Deploy_QA-Azure_Active-5600EF?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health) |
 | **CD - Despliegue PROD** | Azure PROD (`rg-styleradar`) | Push / Merge `develop → main` (CMV) | Aprobación CMV + Smoke Test `/api/v1/health` | [![Deploy PROD](https://img.shields.io/badge/Deploy_PROD-Azure_Active-16A34A?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health) |
 
@@ -19,7 +19,7 @@ El ciclo de integración y despliegue continuo está automatizado en **GitHub Ac
 ```mermaid
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
-    B --> C["330 Pruebas Aprobadas (Local) & JaCoCo<br>(96.62% Líneas ≥ 85%)"]
+    B --> C["339 Pruebas Aprobadas & JaCoCo<br>(97.50% Líneas · 88.24% Ramas ≥ 85%)"]
     C --> D["Empaquetado JAR &<br>Docker OCI Image"]
     D -->|Rama develop| E["Deploy Automático QA<br>(Smoke Test /api/v1/health)"]
     D -->|Cierre develop → main + CMV| F["Deploy Producción PROD<br>(Smoke Test /api/v1/health)"]
