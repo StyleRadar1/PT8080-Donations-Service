@@ -162,7 +162,7 @@ jobs:
           echo "======================================================================"
           echo " Iniciando Smoke Test en PROD:"
           echo "   Health Check : $PROD_HEALTH_URL"
-          echo "   Swagger Off  : $PROD_SWAGGER_DOCS_URL & $PROD_SWAGGER_UI_URL (esperado != 200)"
+          echo "   Swagger Off  : $PROD_SWAGGER_DOCS_URL & $PROD_SWAGGER_UI_URL (esperado 401/403/404)"
           echo "   Commit SHA   : $EXPECTED_COMMIT_SHA"
           echo "======================================================================"
 
@@ -190,12 +190,12 @@ jobs:
                   SWAGGER_DOCS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_SWAGGER_DOCS_URL" || true)
                   SWAGGER_UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_SWAGGER_UI_URL" || true)
                   echo "PROD Swagger OpenAPI HTTP -> $SWAGGER_DOCS_STATUS | PROD Swagger UI HTTP -> $SWAGGER_UI_STATUS"
-                  if [ "$SWAGGER_DOCS_STATUS" != "200" ] && [ "$SWAGGER_UI_STATUS" != "200" ]; then
-                    echo "✅ Commit SHA desplegado ($COMMIT_SHA_FIELD) y restricción de Swagger en PROD verificados exitosamente."
+                  if [[ "$SWAGGER_DOCS_STATUS" =~ ^(401|403|404)$ ]] && [[ "$SWAGGER_UI_STATUS" =~ ^(401|403|404)$ ]]; then
+                    echo "✅ Commit SHA desplegado ($COMMIT_SHA_FIELD) y restricción de Swagger en PROD (401/403/404) verificados exitosamente."
                     SUCCESS=true
                     break
                   fi
-                  echo "❌ ADVERTENCIA: Swagger sigue expuesto en PROD (HTTP 200) durante propagación..."
+                  echo "⏳ Swagger en PROD respondió HTTP $SWAGGER_DOCS_STATUS / $SWAGGER_UI_STATUS (esperado 401/403/404). Reintentando..."
                 fi
               fi
             fi

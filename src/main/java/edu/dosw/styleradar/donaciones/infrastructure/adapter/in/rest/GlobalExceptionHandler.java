@@ -25,6 +25,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -97,6 +98,14 @@ public class GlobalExceptionHandler {
         return buildProblem(HttpStatus.BAD_REQUEST, "Parte multipart faltante",
                 "Falta la parte requerida '" + ex.getRequestPartName() + "' en la solicitud.",
                 "MISSING_REQUEST_PART", List.of(), request);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        log.warn("Archivo o solicitud multipart supera el tamaño máximo permitido: {}", ex.getMessage());
+        return buildProblem(HttpStatus.PAYLOAD_TOO_LARGE, "Archivo demasiado grande",
+                "La fotografía o solicitud supera el límite máximo permitido (5 MB por archivo / 6 MB por solicitud).",
+                "PAYLOAD_TOO_LARGE", List.of(), request);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
