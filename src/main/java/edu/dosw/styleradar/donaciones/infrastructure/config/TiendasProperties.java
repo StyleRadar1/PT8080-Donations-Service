@@ -19,6 +19,7 @@ public class TiendasProperties {
     private String foundationsPath;
     private String foundationByIdPath;
     private String foundationByRepresentativePath;
+    private String representativeFallbackPath;
     private boolean validationEnabled = true;
     private String internalUsername = "ms-donaciones";
     private String internalPassword = "";

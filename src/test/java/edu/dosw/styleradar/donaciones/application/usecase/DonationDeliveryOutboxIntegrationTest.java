@@ -339,8 +339,8 @@ class DonationDeliveryOutboxIntegrationTest {
 
         assertThat(dispatcher.dispatchAllPending()).isEqualTo(1);
 
-        assertThat(statsAttempts).hasSize(3);
         assertThat(statsAttempts)
+                .hasSize(3)
                 .allSatisfy(evt -> {
                     assertThat(evt.eventId()).isEqualTo(expectedEventId);
                     assertThat(evt.occurredOn()).isEqualTo(expectedOccurredAt);
@@ -356,7 +356,8 @@ class DonationDeliveryOutboxIntegrationTest {
         SecondHandPublicationEntity pub = createInDonationPublication(105L, "Pantalón Drill");
         DonationRequestEntity invalidStateReq = createRequest(pub, 105L, foundationId, DonationRequestStatus.APPROVED);
 
-        assertThatThrownBy(() -> confirmDonationReceiptUseCase.confirmReceipt(foundationId, invalidStateReq.getId()))
+        Long invalidStateReqId = invalidStateReq.getId();
+        assertThatThrownBy(() -> confirmDonationReceiptUseCase.confirmReceipt(foundationId, invalidStateReqId))
                 .isInstanceOf(InvalidStateTransitionException.class);
 
         SecondHandPublicationEntity pubValid = createInDonationPublication(106L, "Vestido Lino");

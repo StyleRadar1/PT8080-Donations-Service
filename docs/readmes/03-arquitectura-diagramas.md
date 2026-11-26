@@ -21,22 +21,24 @@ Diseñado siguiendo el formato y paleta visual oficial de **StyleRadar** (`#4811
 ### Capas y Flujos Arquitectónicos Representados:
 1. **Adaptadores de Entrada (`infrastructure.adapter.in`):**
    - `SecondHandPublicationController`: Catálogo unificado C2C y vitrina benéfica en Bogotá D.C.
-   - `DonationRequestController`: Reclamo de vitrina, radicación (con `DeliveryProposalDTO` y `donorId` resuelto desde JWT) y coordinación logística de donaciones.
-   - `PhotoUploadController`: Endpoint de subida binaria `multipart/form-data` para fotografías de prendas.
-   - `MapperIn` (`PublicationRestMapper` & `DonationRestMapper`): Conversión MapStruct entre DTOs REST y comandos de entrada.
-   - `JwtAuthenticationFilter & SecurityConfig` + `CorrelationIdFilter` + `GlobalExceptionHandler`: Filtro JWT, propagación/generación de `X-Correlation-Id` y `X-Request-Id` en MDC, control RBAC (`ResourceOwnershipValidator`) y manejo centralizado de errores RFC 7807 (`ProblemDetail` con mensajes sanitizados y `correlationId`).
-2. **Casos de Uso & Dominio (`application & domain`):**
-   - Puertos de Entrada (`«port in»`): `CreatePublicationUseCase`, `ManagePublicationUseCase`, `GetPublicationsUseCase`, `ClaimDonationUseCase`, `CreateDonationRequestUseCase`, `DecideDonationRequestUseCase`, `ScheduleDonationPickupUseCase`, `ConfirmDonationReceiptUseCase`, `UploadGarmentPhotoUseCase`.
-   - Servicios de Aplicación: `PublicationCommandService`, `PublicationQueryService`, `DonationRequestService`, `GarmentPhotoService`.
-   - Validadores y Modelos de Dominio (`«validator»` / `«domain»`): `GarmentInvariantsValidator`, `BogotaLocalityBoundaryRule`, `PublicationLifecycleValidator`, `AntiSelfDonationValidator`, `OptimisticLockingRule`, `PhotoCountAndSizeRule` y entidades puras (`SecondHandPublication`, `DonationRequest`, `Garment`).
+   - `DonationRequestController`: Reclamo de vitrina, radicación (con `DeliveryProposalDTO` y `donorId` resuelto desde JWT), listado contextual por rol (`GET /api/v1/donations`) y coordinación logística de donaciones.
+   - `PhotoUploadController`: Endpoint de subida binaria `multipart/form-data` para fotografías de prendas (JPEG/PNG/WEBP, máximo 5 MB).
+   - `AuthController` *(solo perfiles `local`/`dev`/`test`)* y `HealthController`: Autenticación demo y diagnóstico `/api/v1/health`.
+   - `PublicationRestMapper` y `DonationRequestRestMapper`: Conversión entre DTOs REST y modelos/comandos de dominio.
+   - `JwtAuthenticationFilter`, `SecurityConfig`, `ResourceOwnershipValidator`, `CorrelationIdFilter` y `GlobalExceptionHandler`: Validación JWT HS256, trazabilidad `X-Correlation-Id`/`X-Request-Id` en MDC, control RBAC y errores RFC 7807 (`ProblemDetail`).
+2. **Casos de Uso y Dominio (`application & domain`):**
+   - Puertos de Entrada (`domain.port.in`, 11 interfaces `*UseCase`): `CreatePublicationUseCase`, `ManagePublicationUseCase`, `GetPublicationsUseCase`, `ClaimDonationUseCase`, `CreateDonationRequestUseCase`, `DecideDonationRequestUseCase`, `ScheduleDonationPickupUseCase`, `ConfirmDonationReceiptUseCase`, `GetPartnerFoundationsUseCase`, `HandleFoundationDeletedUseCase`, `UploadGarmentPhotoUseCase`.
+   - Implementaciones de Aplicación (`application.usecase`, 11 clases `*UseCaseImpl` agrupadas conceptualmente por módulo en el diagrama): `CreatePublicationUseCaseImpl`, `ManagePublicationUseCaseImpl`, `GetPublicationsUseCaseImpl`, `ClaimDonationUseCaseImpl`, `CreateDonationRequestUseCaseImpl`, `DecideDonationRequestUseCaseImpl`, `ScheduleDonationPickupUseCaseImpl`, `ConfirmDonationReceiptUseCaseImpl`, `GetPartnerFoundationsUseCaseImpl`, `HandleFoundationDeletedUseCaseImpl` y `UploadGarmentPhotoUseCaseImpl`.
+   - Invariantes y Modelos de Dominio (`domain.model`): entidades puras `SecondHandPublication`, `DonationRequest` y `Garment` (donde residen las validaciones de invariantes, ciclo de vida, localidad en Bogotá, precio 0 COP vs venta C2C, límite de 4 fotos y `@Version`; la regla anti-autodonación reside en `CreateDonationRequestUseCaseImpl`).
 3. **Adaptadores de Salida (`infrastructure.adapter.out`):**
-   - `SecondHandPublicationRepositoryAdapter` & `DonationRequestRepositoryAdapter` + `MapperOut` + `Spring Data JPA Repositories`: Persistencia relacional con PostgreSQL 16.
+   - `PublicationPersistenceAdapter` y `DonationRequestPersistenceAdapter` + `PublicationPersistenceMapper` / `DonationRequestPersistenceMapper` + `SpringDataPublicationRepository` / `SpringDataDonationRequestRepository`: Persistencia relacional con PostgreSQL 16.
+   - `TiendasFoundationCatalogAdapter`: Integración HTTP con `ms-tiendas` para fundaciones aliadas y verificación autenticada de `representanteId`.
    - `AzureBlobStorageAdapter`: Subida binaria de imágenes al contenedor `donaciones-fotos` en Azure Blob Storage vía SDK oficial con fallback local en perfiles `local/dev/test`.
-4. **Proveedores Cloud & Persistencia:**
-   - Base de Datos: `donaciones_db` en PostgreSQL 16 (`:5432`, Azure Database).
-   - Cloud Storage: `Azure Blob Storage` (contenedor `donaciones-fotos`, RG `styleradar`).
+4. **Proveedores Cloud y Persistencia:**
+   - Base de Datos: PostgreSQL 16 (`:5432` en Azure / `:5434` en Docker Compose).
+   - Cloud Storage: `Azure Blob Storage` (contenedor `donaciones-fotos`).
 5. **Arquitectura Orientada a Eventos Asíncronos (RabbitMQ):**
-   - `DonationEventPublisherAdapter` publica sobre `styleradar.exchange` (AMQPS TLS `5671`, *Publisher Confirms*) hacia `Chat Service` (`ms-chat`), `Notifications Service` (`ms-notificaciones`) y `Statistics Service` (`ms-estadisticas`).
+   - `DonationEventPublisherAdapter` publica sobre `styleradar.exchange` (AMQPS TLS `5671`, *Publisher Confirms*) hacia `ms-chat`, `ms-notificaciones` y `ms-estadisticas`, y `FoundationDeletedConsumer` consume `foundation.deleted` desde `ms-tiendas`.
 
 ---
 
@@ -60,7 +62,7 @@ Diseñado en inglés técnico alineado con el código fuente en Java 21 (Sprint 
   - Encapsula: `id: Long`, `name: String`, `description: String`, `type: GarmentType`, `brand: String`, `color: String`, `style: Style`.
 * **Entidad Raíz de Agregado `DonationRequest`:**
   - Atributos: `id: Long`, `publicationId: Long`, `donorId: Long`, `foundationId: Long`, `message: String`, `status: DonationRequestStatus`, `rejectionReason: String`, `deliveryMode: DeliveryMode`, `deliveryPoint: String`, `pickupStartTime: LocalDateTime`, `pickupEndTime: LocalDateTime`, `version: Long (@Version)`, `requestedAt: LocalDateTime`, `decidedAt: LocalDateTime`, `receivedAt: LocalDateTime`.
-  - Métodos de Negocio: `validateInitialInvariants()`, `initiate()`, `create()`, `claim(pubId, donId, foundId, msg)`, `accept()`, `approve()`, `reject(reason)`, `schedulePickup(point, start, end)`, `confirmDelivery()`.
+  - Métodos de Negocio: `validateInitialInvariants()`, `initiate()`, `create()`, `claim(pubId, donId, foundId, msg)`, `accept()`, `approve()`, `reject(reason)`, `schedulePickup(point, start, end)`, `confirmDelivery()`, `cancelDueToFoundationDeletion(reason)`.
 * **Enumeraciones de Dominio:**
   - `LocalidadBogota` *(20 localidades)*: `USAQUEN`, `CHAPINERO`, `SANTA_FE`, `SAN_CRISTOBAL`, `USME`, `TUNJUELITO`, `BOSA`, `KENNEDY`, `FONTIBON`, `ENGATIVA`, `SUBA`, `BARRIOS_UNIDOS`, `TEUSAQUILLO`, `LOS_MARTIRES`, `ANTONIO_NARINO`, `PUENTE_ARANDA`, `LA_CANDELARIA`, `RAFAEL_URIBE_URIBE`, `CIUDAD_BOLIVAR`, `SUMAPAZ`.
   - `ConservationStatus`: `NEW_WITH_TAGS`, `LIKE_NEW`, `GOOD_CONDITION`, `ACCEPTABLE`.
@@ -102,23 +104,23 @@ src/main/java/edu/dosw/styleradar/donaciones/
 │   ├── event/                                   <-- Eventos de dominio puros (PublicationCreatedEvent, PublicationSoldEvent, etc.)
 │   ├── exception/                               <-- DomainException, DomainConflictException, ResourceNotFoundException
 │   └── port/
-│       ├── in/                                  <-- 10 Interfaces *UseCase y Commands inmutables
-│       └── out/                                 <-- PublicationRepositoryPort, DonationRequestRepositoryPort, PhotoStoragePort, DonationEventPublisherPort, FoundationCatalogPort
+│       ├── in/                                  <-- 11 Interfaces *UseCase y Commands inmutables
+│       └── out/                                 <-- PublicationRepositoryPort, DonationRequestRepositoryPort, DonationOutboxRepositoryPort, PhotoStoragePort, DonationEventPublisherPort, FoundationCatalogPort
 ├── application/                                 <-- CAPA DE APLICACIÓN (Orquestación de Casos de Uso)
-│   ├── usecase/                                 <-- 10 Clases *UseCaseImpl (@Service / @Transactional) + TransactionEventHelper
-│   └── dto/                                     <-- Request DTOs (incl. DeliveryProposalDTO), Response DTOs y Mappers
+│   ├── usecase/                                 <-- 11 Clases *UseCaseImpl (@Service / @Transactional) + TransactionEventHelper
+│   └── dto/                                     <-- Request DTOs (incl. DeliveryProposalDTO) y Response DTOs
 └── infrastructure/                              <-- CAPA DE INFRAESTRUCTURA (Tecnologías y Frameworks)
     ├── adapter/
     │   ├── in/
     │   │   ├── rest/                            <-- SecondHandPublicationController, DonationRequestController, PhotoUploadController, AuthController, HealthController + filter.CorrelationIdFilter
-    │   │   └── messaging/                       <-- NotificationConsumerSimulator (Consumidor de prueba E2E)
+    │   │   └── messaging/                       <-- FoundationDeletedConsumer, DonationOutboxScheduler, NotificationConsumerSimulator
     │   └── out/
     │       ├── external/                        <-- TiendasFoundationCatalogAdapter + TiendasFoundationResponseDTO
-    │       ├── persistence/                     <-- PublicationPersistenceAdapter, DonationRequestPersistenceAdapter, JPA Repositories
+    │       ├── persistence/                     <-- PublicationPersistenceAdapter, DonationRequestPersistenceAdapter, DonationOutboxPersistenceAdapter, JPA Repositories
     │       ├── storage/                         <-- AzureBlobStorageAdapter (Azure Blob Storage SDK con fallback local)
     │       └── messaging/                       <-- DonationEventPublisherAdapter, IntegrationDateFormatter, IntegrationEvents
     ├── security/                                <-- SecurityConfig (CORS + RBAC), JwtAuthenticationFilter, JwtTokenProvider (ms-auth), ResourceOwnershipValidator
-    └── config/                                  <-- OpenApiConfig, RabbitMQConfig, TiendasClientConfig, TiendasProperties
+    └── config/                                  <-- OpenApiConfig, RabbitMQConfig, TiendasClientConfig, TiendasProperties, WebMvcEnumConfig
 ```
 
 ---

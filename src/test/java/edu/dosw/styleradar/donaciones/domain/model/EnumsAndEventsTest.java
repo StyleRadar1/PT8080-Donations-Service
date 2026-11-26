@@ -8,11 +8,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
+import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredStatisticsEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationCompletedStatisticsIntegrationEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -69,6 +71,10 @@ class EnumsAndEventsTest {
         assertEquals(GarmentType.PANTALONES, GarmentType.fromString("LOWER"));
         assertEquals(GarmentType.VESTIDOS, GarmentType.fromString("DRESS"));
         assertEquals(GarmentType.VESTIDOS, GarmentType.fromString("FULL_BODY"));
+        assertEquals(GarmentType.SUETERES, GarmentType.fromString("Saco"));
+        assertEquals(GarmentType.SUETERES, GarmentType.fromString("Sacos"));
+        assertEquals(GarmentType.VESTIDOS, GarmentType.fromString("Conjunto"));
+        assertEquals(GarmentType.VESTIDOS, GarmentType.fromString("Conjuntos"));
         assertEquals(GarmentType.CALZADO, GarmentType.fromString("FOOTWEAR"));
         assertEquals(GarmentType.ACCESORIOS, GarmentType.fromString("ACCESSORY"));
         assertEquals("Chaquetas", GarmentType.CHAQUETAS.getLabel());
@@ -79,32 +85,59 @@ class EnumsAndEventsTest {
     }
 
     @Test
-    @DisplayName("Debe resolver Size desde las 18 tallas oficiales, alias previos, nulos e inválidos")
+    @DisplayName("Debe resolver ConservationStatus desde valores oficiales, alias en español, nulos e inválidos")
+    void shouldResolveConservationStatusFromString() {
+        assertEquals(ConservationStatus.NEW_WITH_TAGS, ConservationStatus.fromString("NEW_WITH_TAGS"));
+        assertEquals(ConservationStatus.NEW_WITH_TAGS, ConservationStatus.fromString("Nuevo con etiquetas"));
+        assertEquals(ConservationStatus.LIKE_NEW, ConservationStatus.fromString("LIKE_NEW"));
+        assertEquals(ConservationStatus.LIKE_NEW, ConservationStatus.fromString("Como nuevo"));
+        assertEquals(ConservationStatus.LIKE_NEW, ConservationStatus.fromString("COMO_NUEVO"));
+        assertEquals(ConservationStatus.GOOD_CONDITION, ConservationStatus.fromString("GOOD_CONDITION"));
+        assertEquals(ConservationStatus.GOOD_CONDITION, ConservationStatus.fromString("Buen estado"));
+        assertEquals(ConservationStatus.GOOD_CONDITION, ConservationStatus.fromString("MUY_BUENO"));
+        assertEquals(ConservationStatus.ACCEPTABLE, ConservationStatus.fromString("ACCEPTABLE"));
+        assertEquals(ConservationStatus.ACCEPTABLE, ConservationStatus.fromString("Aceptable"));
+        assertEquals(ConservationStatus.ACCEPTABLE, ConservationStatus.fromString("BUENO"));
+
+        assertNull(ConservationStatus.fromString(null));
+        assertNull(ConservationStatus.fromString("  "));
+        assertThrows(IllegalArgumentException.class, () -> ConservationStatus.fromString("ROTO_DESCONOCIDO"));
+    }
+
+    @Test
+    @DisplayName("Debe resolver Size desde las 18 tallas oficiales")
     void shouldResolveSizeFromString() {
-        assertEquals(Size.XS, Size.fromString("XS"));
-        assertEquals(Size.S, Size.fromString("S"));
-        assertEquals(Size.M, Size.fromString("M"));
-        assertEquals(Size.L, Size.fromString("L"));
-        assertEquals(Size.XL, Size.fromString("XL"));
-        assertEquals(Size.XXL, Size.fromString("XXL"));
-        assertEquals(Size.TALLA_28, Size.fromString("28"));
-        assertEquals(Size.TALLA_30, Size.fromString("30"));
-        assertEquals(Size.TALLA_32, Size.fromString("32"));
-        assertEquals(Size.TALLA_34, Size.fromString("34"));
-        assertEquals(Size.TALLA_36, Size.fromString("36"));
-        assertEquals(Size.TALLA_37, Size.fromString("37"));
-        assertEquals(Size.TALLA_38, Size.fromString("38"));
-        assertEquals(Size.TALLA_39, Size.fromString("39"));
-        assertEquals(Size.TALLA_40, Size.fromString("40"));
-        assertEquals(Size.TALLA_41, Size.fromString("41"));
-        assertEquals(Size.TALLA_42, Size.fromString("42"));
-        assertEquals(Size.UNICA, Size.fromString("Unica"));
+        java.util.Map<String, Size> officialSizes = java.util.Map.ofEntries(
+                java.util.Map.entry("XS", Size.XS),
+                java.util.Map.entry("S", Size.S),
+                java.util.Map.entry("M", Size.M),
+                java.util.Map.entry("L", Size.L),
+                java.util.Map.entry("XL", Size.XL),
+                java.util.Map.entry("XXL", Size.XXL),
+                java.util.Map.entry("28", Size.TALLA_28),
+                java.util.Map.entry("30", Size.TALLA_30),
+                java.util.Map.entry("32", Size.TALLA_32),
+                java.util.Map.entry("34", Size.TALLA_34),
+                java.util.Map.entry("36", Size.TALLA_36),
+                java.util.Map.entry("37", Size.TALLA_37),
+                java.util.Map.entry("38", Size.TALLA_38),
+                java.util.Map.entry("39", Size.TALLA_39),
+                java.util.Map.entry("40", Size.TALLA_40),
+                java.util.Map.entry("41", Size.TALLA_41),
+                java.util.Map.entry("42", Size.TALLA_42),
+                java.util.Map.entry("Unica", Size.UNICA)
+        );
+        officialSizes.forEach((raw, expected) -> assertEquals(expected, Size.fromString(raw)));
+        assertEquals("38", Size.TALLA_38.getValue());
+        assertEquals("Unica", Size.UNICA.getValue());
+    }
+
+    @Test
+    @DisplayName("Debe resolver alias previos de Size y manejar nulos e inválidos")
+    void shouldResolveSizeAliasesAndRejectInvalid() {
         assertEquals(Size.UNICA, Size.fromString("Única"));
         assertEquals(Size.UNICA, Size.fromString("ONE_SIZE"));
         assertEquals(Size.TALLA_28, Size.fromString("TALLA_28"));
-        assertEquals("38", Size.TALLA_38.getValue());
-        assertEquals("Unica", Size.UNICA.getValue());
-
         assertNull(Size.fromString(null));
         assertNull(Size.fromString("  "));
         assertThrows(IllegalArgumentException.class, () -> Size.fromString("99"));
@@ -203,5 +236,29 @@ class EnumsAndEventsTest {
         assertEquals(BigDecimal.valueOf(20000.0), criteria.getMinPrice());
         assertEquals(BigDecimal.valueOf(80000.0), criteria.getMaxPrice());
         assertEquals(PublicationStatus.AVAILABLE, criteria.getStatus());
+    }
+
+    @Test
+    @DisplayName("Debe construir DonationCompletedStatisticsIntegrationEvent desde eventos válidos, nulos y con eventId vacío")
+    void shouldCoverDonationCompletedStatisticsIntegrationEventBranches() {
+        var fromNullStats = DonationCompletedStatisticsIntegrationEvent.from((DonationDeliveredStatisticsEvent) null);
+        assertNotNull(fromNullStats.getEventId());
+        assertNotNull(fromNullStats.getOccurredAt());
+        assertNull(fromNullStats.getData().getFundacionId());
+        assertEquals(1, fromNullStats.getData().getCantidad());
+
+        var fromNullDelivered = DonationCompletedStatisticsIntegrationEvent.from((DonationDeliveredEvent) null);
+        assertNotNull(fromNullDelivered.getEventId());
+        assertNull(fromNullDelivered.getData().getFundacionId());
+
+        var fromDelivered = DonationCompletedStatisticsIntegrationEvent.from(new DonationDeliveredEvent(10L, 1L, 3L));
+        assertEquals("3", fromDelivered.getData().getFundacionId());
+        assertNotNull(fromDelivered.getOccurredAt());
+
+        var fromBlankEventId = DonationCompletedStatisticsIntegrationEvent.from(
+                new DonationDeliveredStatisticsEvent(10L, 7L, null, "   "));
+        assertNotNull(fromBlankEventId.getEventId());
+        assertFalse(fromBlankEventId.getEventId().isBlank());
+        assertEquals("7", fromBlankEventId.getData().getFundacionId());
     }
 }

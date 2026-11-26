@@ -97,6 +97,7 @@ styleradar:
     foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/foundations}
     foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/internal/foundations/{id}}
     foundation-by-representative-path: ${TIENDAS_FOUNDATION_BY_REPRESENTATIVE_PATH:/api/v1/internal/foundations?representativeId={representativeId}}
+    representative-fallback-path: ${TIENDAS_REPRESENTATIVE_FALLBACK_PATH:/api/v1/foundations/representative}
     internal-username: ${TIENDAS_INTERNAL_USERNAME:ms-donaciones}
     internal-password: ${TIENDAS_INTERNAL_PASSWORD:}
     validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}

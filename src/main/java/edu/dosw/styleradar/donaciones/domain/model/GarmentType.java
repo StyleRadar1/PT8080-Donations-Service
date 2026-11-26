@@ -47,6 +47,8 @@ public enum GarmentType {
         ALIAS_MAP.put("BUSOS", SUETERES);
         ALIAS_MAP.put("BUZO", SUETERES);
         ALIAS_MAP.put("BUZOS", SUETERES);
+        ALIAS_MAP.put("SACO", SUETERES);
+        ALIAS_MAP.put("SACOS", SUETERES);
         ALIAS_MAP.put("SWEATER", SUETERES);
         ALIAS_MAP.put("CHAQUETA", CHAQUETAS);
         ALIAS_MAP.put("ABRIGO", CHAQUETAS);
@@ -57,6 +59,8 @@ public enum GarmentType {
         ALIAS_MAP.put("INFERIOR", PANTALONES);
         ALIAS_MAP.put("FALDA", FALDAS);
         ALIAS_MAP.put("VESTIDO", VESTIDOS);
+        ALIAS_MAP.put("CONJUNTO", VESTIDOS);
+        ALIAS_MAP.put("CONJUNTOS", VESTIDOS);
         ALIAS_MAP.put("DRESS", VESTIDOS);
         ALIAS_MAP.put("FULL_BODY", VESTIDOS);
         ALIAS_MAP.put("CUERPO_COMPLETO", VESTIDOS);
