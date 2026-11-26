@@ -143,8 +143,8 @@ jobs:
           echo "======================================================================"
 
           SUCCESS=false
-          for i in {1..20}; do
-            echo "Intento $i de 20..."
+          for i in {1..30}; do
+            echo "Intento $i de 30..."
             RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$PROD_HEALTH_URL" || true)
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
             BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
@@ -173,7 +173,7 @@ jobs:
           done
 
           if [ "$SUCCESS" = false ]; then
-            echo "❌ ERROR CRÍTICO: El health check de PROD no confirmó el despliegue del commit $EXPECTED_COMMIT_SHA con status UP tras 20 intentos (200s)."
+            echo "❌ ERROR CRÍTICO: El health check de PROD no confirmó el despliegue del commit $EXPECTED_COMMIT_SHA con status UP tras 30 intentos (300s)."
             echo "El nuevo artefacto no se desplegó correctamente en: $PROD_HEALTH_URL"
             exit 1
           fi
