@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.donaciones.application.usecase;
 
-import java.util.Set;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -20,11 +21,11 @@ public class UploadGarmentPhotoUseCaseImpl implements UploadGarmentPhotoUseCase 
     private static final Logger log = LoggerFactory.getLogger(UploadGarmentPhotoUseCaseImpl.class);
 
     public static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024; // 5 MB
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "image/webp"
+    private static final Map<String, String> ALLOWED_CONTENT_TYPES = Map.of(
+            "image/jpeg", "image/jpeg",
+            "image/jpg", "image/jpg",
+            "image/png", "image/png",
+            "image/webp", "image/webp"
     );
 
     private final PhotoStoragePort photoStoragePort;
@@ -41,20 +42,22 @@ public class UploadGarmentPhotoUseCaseImpl implements UploadGarmentPhotoUseCase 
         if (content.length > MAX_FILE_SIZE_BYTES) {
             throw new InvalidPublicationException("El tamaño de la imagen no puede superar los 5 MB (tamaño recibido: " + content.length + " bytes)");
         }
-        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+        String normalizedInput = contentType == null ? null : contentType.trim().toLowerCase(Locale.ROOT);
+        String canonicalContentType = normalizedInput == null ? null : ALLOWED_CONTENT_TYPES.get(normalizedInput);
+        if (canonicalContentType == null) {
             throw new InvalidPublicationException("Tipo de archivo no permitido: " + contentType + ". Solo se admiten formatos JPEG, PNG y WEBP.");
         }
         if (!isValidImageBinarySignature(content)) {
             throw new InvalidPublicationException("El contenido binario del archivo no corresponde a una firma de imagen válida (JPEG, PNG o WEBP).");
         }
 
-        String extension = extractExtension(originalFilename, contentType);
+        String extension = extractExtension(originalFilename, canonicalContentType);
         String uniqueFilename = "garment_" + UUID.randomUUID().toString().replace("-", "") + extension;
 
         log.info("Almacenando fotografía '{}' ({} bytes, tipo '{}') a través de PhotoStoragePort",
-                uniqueFilename, content.length, contentType);
+                uniqueFilename, content.length, canonicalContentType);
 
-        return photoStoragePort.storePhoto(content, uniqueFilename, contentType);
+        return photoStoragePort.storePhoto(content, uniqueFilename, canonicalContentType);
     }
 
     private String extractExtension(String filename, String contentType) {
