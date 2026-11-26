@@ -75,7 +75,7 @@ Diseñado en inglés técnico alineado con el código fuente en Java 21 (Sprint 
 
 ## 3.3 Diagrama Entidad-Relación de Base de Datos (PostgreSQL 16)
 
-Refleja el esquema físico consolidado de las migraciones Flyway `V2__align_domain_and_tables.sql`, `V3__unify_vitrina_bogota.sql`, `V4__add_delivery_mode_to_donations.sql` y `V5__migrate_garment_type_and_size_enums.sql`:
+Refleja el esquema físico consolidado de las migraciones Flyway `V1`–`V5` (catálogo, vitrina y solicitudes) y `V6`–`V8` (`eventos_outbox_donacion` para Outbox transaccional de notificaciones y estadísticas):
 
 <div align="center">
   <img src="../diagramas/png/Diagrama_BD_ER_Sprint4-Entity-Relationship%20Diagram%20(PostgreSQL%2016).drawio.png" width="98%" alt="Diagrama Entidad Relación PostgreSQL 16 Sprint 4" />
@@ -89,6 +89,7 @@ Refleja el esquema físico consolidado de las migraciones Flyway `V2__align_doma
 1. **`publicaciones_segunda_mano`:** Almacena prendas unificadas de C2C y donación (`es_donacion`, `localidad`, `version`, `tipo_prenda` y `talla` migrados en V5).
 2. **`fotos_publicacion`:** Galería fotográfica de 1 a 4 fotos alojadas en Azure Blob Storage (`ON DELETE CASCADE`).
 3. **`solicitudes_donacion`:** Registro trazable del ciclo logístico benéfico hacia fundaciones aliadas (`modo_entrega`, `punto_entrega`, `franja_inicio`, `franja_fin`, `version`).
+4. **`eventos_outbox_donacion`:** Cola transaccional Outbox (`V6`–`V8`) para despacho resiliente e idempotente de eventos hacia `ms-notificaciones` y `ms-estadisticas` (`PROCESSING` + *lease* y reintentos sin duplicados).
 
 ---
 
