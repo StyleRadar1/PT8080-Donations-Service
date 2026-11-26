@@ -663,6 +663,69 @@ class SecurityRbacIntegrationTest {
                 .andExpect(jsonPath("$.status").value(503));
     }
 
+    @Test
+    @DisplayName("GET /api/v1/donations/{id}: con ms-tiendas indisponible el donante propietario consulta su donación (200) y donante ajeno recibe 403 sin llamar a Tiendas")
+    void shouldAllowOwnerDonorAndDenyForeignDonorOnGetByIdWhenTiendasUnavailable() throws Exception {
+        String ownerToken = jwtTokenProvider.generateToken(101L, "donor@styleradar.com", Role.USER, "Donante Propietario");
+        String foreignDonorToken = jwtTokenProvider.generateToken(202L, "foreign@styleradar.com", Role.USER, "Donante Ajeno");
+
+        DonationRequest donation = buildSampleDonation(55L, 101L, 3L, DonationRequestStatus.PENDING);
+        when(createDonationRequestUseCase.getById(55L)).thenReturn(donation);
+        org.mockito.Mockito.doThrow(new edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException(
+                        "ms-tiendas no disponible"))
+                .when(foundationCatalogPort).isFoundationRepresentative(any(), any());
+
+        mockMvc.perform(get("/api/v1/donations/55")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(55L))
+                .andExpect(jsonPath("$.donorId").value(101L));
+
+        mockMvc.perform(get("/api/v1/donations/55")
+                        .header("Authorization", "Bearer " + foreignDonorToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+
+        org.mockito.Mockito.verify(foundationCatalogPort, org.mockito.Mockito.never())
+                .isFoundationRepresentative(any(), any());
+    }
+
+    @Test
+    @DisplayName("BUG-003 JWT real: GET /api/v1/donations debe ignorar cabeceras de identidad falsificadas con o sin token")
+    void shouldIgnoreSpoofedIdentityHeadersOnListDonationsEndpoint() throws Exception {
+        // 1. Sin JWT real pero con cabeceras de identidad falsificadas -> 401 Unauthorized
+        mockMvc.perform(get("/api/v1/donations")
+                        .header("X-User-Id", "1")
+                        .header("X-Authenticated-User-Id", "1")
+                        .header("X-User-Roles", "ROLE_ADMIN")
+                        .header("X-Roles", "ADMIN")
+                        .header("X-Donor-Id", "101")
+                        .header("X-Foundation-Id", "3"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+
+        // 2. Con JWT real USER (101L) y cabeceras falsificadas de ADMIN/FOUNDATION/otro usuario -> usa solo el JWT (101L)
+        String userToken = jwtTokenProvider.generateToken(101L, "donor@styleradar.com", Role.USER, "Donante");
+        DonationRequest ownDonation = buildSampleDonation(70L, 101L, 3L, DonationRequestStatus.PENDING);
+        when(createDonationRequestUseCase.getByDonorId(101L)).thenReturn(List.of(ownDonation));
+
+        mockMvc.perform(get("/api/v1/donations")
+                        .header("Authorization", "Bearer " + userToken)
+                        .header("X-User-Id", "999")
+                        .header("X-Authenticated-User-Id", "1")
+                        .header("X-User-Roles", "ROLE_ADMIN,ROLE_FOUNDATION")
+                        .header("X-Roles", "ROLE_ADMIN")
+                        .header("X-Donor-Id", "202")
+                        .header("X-Foundation-Id", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].donorId").value(101L));
+
+        org.mockito.Mockito.verify(createDonationRequestUseCase, org.mockito.Mockito.never()).getAll(any());
+        org.mockito.Mockito.verify(getPartnerFoundationsUseCase, org.mockito.Mockito.never())
+                .getFoundationByRepresentativeId(any());
+    }
+
     private DonationRequest buildSampleDonation(Long id, Long donorId, Long foundationId, DonationRequestStatus status) {
         LocalDateTime now = LocalDateTime.now();
         return DonationRequest.builder()
