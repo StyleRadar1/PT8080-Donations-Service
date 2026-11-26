@@ -48,6 +48,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -654,7 +657,7 @@ class SecurityRbacIntegrationTest {
                 .andExpect(jsonPath("$.status").value(404));
 
         // Fallo de ms-tiendas al resolver FOUNDATION en GET /api/v1/donations -> 503
-        org.mockito.Mockito.doThrow(new edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException(
+        doThrow(new edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException(
                         "ms-tiendas no disponible"))
                 .when(getPartnerFoundationsUseCase).getFoundationByRepresentativeId(999L);
         mockMvc.perform(get("/api/v1/donations")
@@ -671,7 +674,7 @@ class SecurityRbacIntegrationTest {
 
         DonationRequest donation = buildSampleDonation(55L, 101L, 3L, DonationRequestStatus.PENDING);
         when(createDonationRequestUseCase.getById(55L)).thenReturn(donation);
-        org.mockito.Mockito.doThrow(new edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException(
+        doThrow(new edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException(
                         "ms-tiendas no disponible"))
                 .when(foundationCatalogPort).isFoundationRepresentative(any(), any());
 
@@ -686,8 +689,7 @@ class SecurityRbacIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403));
 
-        org.mockito.Mockito.verify(foundationCatalogPort, org.mockito.Mockito.never())
-                .isFoundationRepresentative(any(), any());
+        verify(foundationCatalogPort, never()).isFoundationRepresentative(any(), any());
     }
 
     @Test
@@ -721,9 +723,8 @@ class SecurityRbacIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].donorId").value(101L));
 
-        org.mockito.Mockito.verify(createDonationRequestUseCase, org.mockito.Mockito.never()).getAll(any());
-        org.mockito.Mockito.verify(getPartnerFoundationsUseCase, org.mockito.Mockito.never())
-                .getFoundationByRepresentativeId(any());
+        verify(createDonationRequestUseCase, never()).getAll(any());
+        verify(getPartnerFoundationsUseCase, never()).getFoundationByRepresentativeId(any());
     }
 
     private DonationRequest buildSampleDonation(Long id, Long donorId, Long foundationId, DonationRequestStatus status) {

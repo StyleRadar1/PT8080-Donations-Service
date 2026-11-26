@@ -170,11 +170,12 @@ public class DonationEventPublisherAdapter implements DonationEventPublisherPort
                         "El broker RabbitMQ rechazó (NACK) la publicación [EventId="
                                 + correlationData.getId() + "]: " + reason);
             }
-            if (correlationData.getReturned() != null) {
+            var returned = correlationData.getReturned();
+            if (returned != null) {
                 throw new ExternalServiceUnavailableException(
                         "El mensaje fue devuelto por RabbitMQ como no enrutable [EventId="
                                 + correlationData.getId() + ", ReplyText="
-                                + correlationData.getReturned().getReplyText() + "]");
+                                + returned.getReplyText() + "]");
             }
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();

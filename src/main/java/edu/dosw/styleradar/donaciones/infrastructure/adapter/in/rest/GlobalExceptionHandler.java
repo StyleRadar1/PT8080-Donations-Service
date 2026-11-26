@@ -15,6 +15,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -49,6 +50,7 @@ public class GlobalExceptionHandler {
     private static final String CODE_PROPERTY = "code";
     private static final String ERRORS_PROPERTY = "errors";
     private static final String CORRELATION_ID_PROPERTY = "correlationId";
+    private static final String BAD_REQUEST_TYPE_URI = "https://styleradar.dosw.edu/errors/bad-request";
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
@@ -77,10 +79,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-        String paramName = (ex.getName() != null && !ex.getName().isBlank()) ? ex.getName() : "parámetro";
+        String paramName = StringUtils.hasText(ex.getName()) ? ex.getName() : "parámetro";
         log.warn("Parámetro '{}' con formato inválido: {}", paramName, ex.getMessage());
         return buildProblem(HttpStatus.BAD_REQUEST, "Parámetro inválido",
-                "https://styleradar.dosw.edu/errors/bad-request",
+                BAD_REQUEST_TYPE_URI,
                 "El parámetro '" + paramName + "' tiene un formato inválido.",
                 "BAD_REQUEST", List.of(), request);
     }
@@ -89,7 +91,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
         log.warn("Cuerpo de solicitud JSON no legible: {}", ex.getMessage());
         return buildProblem(HttpStatus.BAD_REQUEST, "Cuerpo de solicitud inválido",
-                "https://styleradar.dosw.edu/errors/bad-request",
+                BAD_REQUEST_TYPE_URI,
                 "El cuerpo de la solicitud JSON está malformado o contiene valores inválidos.",
                 "MALFORMED_REQUEST_BODY", List.of(), request);
     }
@@ -98,14 +100,14 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleMissingPart(MissingServletRequestPartException ex, HttpServletRequest request) {
         log.warn("Falta parte multipart requerida '{}': {}", ex.getRequestPartName(), ex.getMessage());
         return buildProblem(HttpStatus.BAD_REQUEST, "Parte multipart faltante",
-                "https://styleradar.dosw.edu/errors/bad-request",
+                BAD_REQUEST_TYPE_URI,
                 "Falta la parte requerida '" + ex.getRequestPartName() + "' en la solicitud.",
                 "MISSING_REQUEST_PART", List.of(), request);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ProblemDetail handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
-        String method = ex.getMethod() != null ? ex.getMethod() : "";
+        String method = StringUtils.hasText(ex.getMethod()) ? ex.getMethod() : "";
         log.warn("Método HTTP no soportado: {}", method);
         return buildProblem(HttpStatus.METHOD_NOT_ALLOWED, "Método HTTP no permitido",
                 "https://styleradar.dosw.edu/errors/method-not-allowed",
@@ -135,7 +137,7 @@ public class GlobalExceptionHandler {
                 ? "Falta el parámetro requerido '" + missingParam.getParameterName() + "' en la solicitud."
                 : sanitizeBadRequestMessage(ex.getMessage());
         return buildProblem(HttpStatus.BAD_REQUEST, "Solicitud inválida",
-                "https://styleradar.dosw.edu/errors/bad-request", detail,
+                BAD_REQUEST_TYPE_URI, detail,
                 "BAD_REQUEST", List.of(), request);
     }
 

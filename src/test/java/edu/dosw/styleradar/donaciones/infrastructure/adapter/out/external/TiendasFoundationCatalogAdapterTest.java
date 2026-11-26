@@ -267,14 +267,6 @@ class TiendasFoundationCatalogAdapterTest {
                   }
                 ]
                 """;
-        String byIdJson = """
-                {
-                  "id": 3,
-                  "nombre": "Fundación Abrigo Solidario",
-                  "activa": true,
-                  "representanteId": 24
-                }
-                """;
 
         // 1. Por defecto (forwardBearerToken=false, serviceBearerToken vacío): nunca propaga el token del donante
         mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
@@ -557,11 +549,11 @@ class TiendasFoundationCatalogAdapterTest {
         Optional<FoundationSummary> byIdNoPass = adapter.findFoundationById(3L);
         mockServer.verify();
         assertThat(byIdNoPass).isPresent();
-        assertThat(byIdNoPass.get().nombre()).isEqualTo("Fundación Pública");
-        assertThat(byIdNoPass.get().representanteId()).isNull();
+        assertThat(byIdNoPass.get())
+                .returns("Fundación Pública", FoundationSummary::nombre)
+                .returns(null, FoundationSummary::representanteId);
 
-        // 2. Autorización isFoundationRepresentative SIN internal-password NUNCA consulta /api/v1/foundations;
-        //    usa /api/v1/foundations/representative con el JWT entrante
+        // 2. Sin internal-password, la autorización usa /api/v1/foundations/representative con el JWT entrante
         mockServer.reset();
         mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
                 .andExpect(method(HttpMethod.GET))
@@ -588,10 +580,32 @@ class TiendasFoundationCatalogAdapterTest {
         mockServer.verify();
         assertThat(byRepNoPass).isPresent();
         assertThat(byRepNoPass.get().id()).isEqualTo(3L);
+    }
 
-        // 4. Con internal-password pero 401 en interno: findFoundationByRepresentativeId usa /api/v1/foundations/representative
+    @Test
+    @DisplayName("Debe aplicar fallback autenticado o catálogo público cuando los endpoints internos responden 401/500")
+    void shouldHandleInternalFailuresAndRepresentativeFallbackErrors() {
+        MockHttpServletRequest incomingRequest = new MockHttpServletRequest();
+        incomingRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(incomingRequest));
+
+        properties.setFoundationsPath("/api/v1/foundations");
+        properties.setFoundationByIdPath("/api/v1/internal/foundations/{id}");
+        properties.setFoundationByRepresentativePath("/api/v1/internal/foundations?representativeId={representativeId}");
+        properties.setForwardBearerToken(true);
+        properties.setInternalUsername("ms-donaciones");
         properties.setInternalPassword("wrong-password");
-        mockServer.reset();
+
+        String publicListJson = """
+                [
+                  {"id": 3, "name": "Fundación Pública", "active": true}
+                ]
+                """;
+        String repJson = """
+                {"id": 3, "name": "Fundación Fallback Rep", "active": true, "representativeId": 24}
+                """;
+
+        // 1. Con internal-password pero 401 en interno: findFoundationByRepresentativeId usa /api/v1/foundations/representative
         mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=24"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
@@ -600,11 +614,10 @@ class TiendasFoundationCatalogAdapterTest {
                 .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt"))
                 .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
 
-        Optional<FoundationSummary> byRepAfter401 = adapter.findFoundationByRepresentativeId(24L);
+        assertThat(adapter.findFoundationByRepresentativeId(24L)).isPresent();
         mockServer.verify();
-        assertThat(byRepAfter401).isPresent();
 
-        // 5. Con internal-password pero 500 en interno: findFoundationById usa catálogo público /api/v1/foundations
+        // 2. Con internal-password pero 500 en interno: findFoundationById usa catálogo público /api/v1/foundations
         mockServer.reset();
         mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
@@ -618,7 +631,7 @@ class TiendasFoundationCatalogAdapterTest {
         assertThat(byIdAfter500).isPresent();
         assertThat(byIdAfter500.get().representanteId()).isNull();
 
-        // 6. Fallback representative con 404 retorna empty; con 500 lanza 503
+        // 3. Fallback representative con 404 retorna empty y con 500 lanza 503
         mockServer.reset();
         properties.setInternalPassword("");
         mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))

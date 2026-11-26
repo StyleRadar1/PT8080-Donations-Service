@@ -140,11 +140,12 @@ class DonationCompleteFlowIntegrationTest {
                 true, LocalidadBogota.CHAPINERO, List.of("https://cdn.styleradar.com/chaqueta.jpg")
         ));
 
-        assertThat(directDonation.isEsDonacion()).isTrue();
+        assertThat(directDonation)
+                .returns(true, SecondHandPublication::isEsDonacion)
+                .returns(PublicationStatus.AVAILABLE, SecondHandPublication::getStatus)
+                .returns(Size.TALLA_38, SecondHandPublication::getSize);
         assertThat(directDonation.getPrice()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(directDonation.getStatus()).isEqualTo(PublicationStatus.AVAILABLE);
         assertThat(directDonation.getGarment().getType()).isEqualTo(GarmentType.CHAQUETAS);
-        assertThat(directDonation.getSize()).isEqualTo(Size.TALLA_38);
 
         // Verificar catálogo general SR-RF-36 con filtro de talla numérica y categoría
         List<SecondHandPublication> catalog = getPublicationsUseCase.search(PublicationSearchCriteria.builder()
@@ -168,13 +169,15 @@ class DonationCompleteFlowIntegrationTest {
                 102L, shoes, Size.TALLA_40, ConservationStatus.GOOD_CONDITION, new BigDecimal("85000.00"),
                 false, LocalidadBogota.SUBA, List.of("https://cdn.styleradar.com/tenis.jpg")
         ));
-        assertThat(salePub.isEsDonacion()).isFalse();
-        assertThat(salePub.getStatus()).isEqualTo(PublicationStatus.AVAILABLE);
+        assertThat(salePub)
+                .returns(false, SecondHandPublication::isEsDonacion)
+                .returns(PublicationStatus.AVAILABLE, SecondHandPublication::getStatus);
 
         SecondHandPublication converted = managePublicationUseCase.markForDonation(102L, salePub.getId());
-        assertThat(converted.isEsDonacion()).isTrue();
+        assertThat(converted)
+                .returns(true, SecondHandPublication::isEsDonacion)
+                .returns(PublicationStatus.IN_DONATION, SecondHandPublication::getStatus);
         assertThat(converted.getPrice()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(converted.getStatus()).isEqualTo(PublicationStatus.IN_DONATION);
 
         // 3. Selección de fundación y creación de solicitud con propuesta de entrega (POST /api/v1/donations)
         LocalDateTime start = LocalDateTime.now().plusDays(2);
@@ -189,23 +192,26 @@ class DonationCompleteFlowIntegrationTest {
                 start,
                 end
         ));
-        assertThat(createdRequest.getStatus()).isEqualTo(DonationRequestStatus.PENDING);
-        assertThat(createdRequest.getDeliveryMode()).isEqualTo(DeliveryMode.DROP_OFF_POINT);
+        assertThat(createdRequest)
+                .returns(DonationRequestStatus.PENDING, DonationRequest::getStatus)
+                .returns(DeliveryMode.DROP_OFF_POINT, DonationRequest::getDeliveryMode);
         verify(eventPublisherPort, atLeastOnce()).publishEvent(argThat((Object ev) ->
                 ev instanceof DonationRequestCreatedEvent createdEv
                         && Long.valueOf(901L).equals(createdEv.representanteId())));
 
         // 6a. Rechazo sin motivo debe fallar; rechazo con motivo revierte la prenda a AVAILABLE en vitrina abierta
-        assertThatThrownBy(() -> decideDonationRequestUseCase.decide(501L, createdRequest.getId(), false, "   "))
+        Long createdRequestId = createdRequest.getId();
+        assertThatThrownBy(() -> decideDonationRequestUseCase.decide(501L, createdRequestId, false, "   "))
                 .isInstanceOf(InvalidDonationRequestException.class);
 
         DonationRequest rejected = decideDonationRequestUseCase.decide(
-                501L, createdRequest.getId(), false, "No hay cupo para calzado esta semana");
+                501L, createdRequestId, false, "No hay cupo para calzado esta semana");
         assertThat(rejected.getStatus()).isEqualTo(DonationRequestStatus.REJECTED);
 
         SecondHandPublication reverted = getPublicationsUseCase.getById(converted.getId());
-        assertThat(reverted.getStatus()).isEqualTo(PublicationStatus.AVAILABLE);
-        assertThat(reverted.isEsDonacion()).isTrue();
+        assertThat(reverted)
+                .returns(PublicationStatus.AVAILABLE, SecondHandPublication::getStatus)
+                .returns(true, SecondHandPublication::isEsDonacion);
 
         // Ahora vuelve a postular hacia fundación 502 y ésta aprueba la solicitud (6b)
         managePublicationUseCase.markForDonation(102L, reverted.getId());
@@ -231,9 +237,11 @@ class DonationCompleteFlowIntegrationTest {
                 .isEqualTo(PublicationStatus.IN_DONATION);
 
         // 5. Validación de conflicto cuando una segunda fundación intenta reclamar la misma prenda (409 Conflict)
-        assertThatThrownBy(() -> claimDonationUseCase.claimDonation(new ClaimDonationCommand(
+        ClaimDonationCommand duplicateClaimCommand = new ClaimDonationCommand(
                 directDonation.getId(), 502L, "Segundo reclamo concurrente"
-        ))).isInstanceOf(DomainConflictException.class);
+        );
+        assertThatThrownBy(() -> claimDonationUseCase.claimDonation(duplicateClaimCommand))
+                .isInstanceOf(DomainConflictException.class);
 
         // 7. Programación de recogida (PATCH /{id}/pickup) y confirmación de recepción (PATCH /{id}/confirmation)
         DonationRequest inPickup = scheduleDonationPickupUseCase.schedulePickup(new SchedulePickupCommand(

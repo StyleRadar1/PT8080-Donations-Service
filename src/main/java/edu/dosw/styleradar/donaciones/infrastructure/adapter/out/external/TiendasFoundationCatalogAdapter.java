@@ -36,7 +36,9 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
 
     private static final Logger log = LoggerFactory.getLogger(TiendasFoundationCatalogAdapter.class);
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final String REPRESENTATIVE_FALLBACK_PATH = "/api/v1/foundations/representative";
+    private static final String REPRESENTATIVE_TARGET_PREFIX = "la fundación del representante ID: ";
+    private static final String REPRESENTATIVE_UNAVAILABLE_MSG =
+            "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.";
 
     private final RestClient tiendasRestClient;
     private final TiendasProperties tiendasProperties;
@@ -155,23 +157,23 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
             if (shouldFallbackFromInternal(ex)) {
                 log.warn("Acceso rechazado o error {} en endpoint interno de representante {} en ms-tiendas. "
                         + "Intentando verificación autenticada en {}.",
-                        ex.getStatusCode().value(), representativeId, REPRESENTATIVE_FALLBACK_PATH);
+                        ex.getStatusCode().value(), representativeId, tiendasProperties.getRepresentativeFallbackPath());
                 return fetchRepresentativeFoundationWithIncomingBearer(representativeId);
             }
             throw handleTiendasFailure(
-                    "la fundación del representante ID: " + representativeId,
-                    "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.",
+                    REPRESENTATIVE_TARGET_PREFIX + representativeId,
+                    REPRESENTATIVE_UNAVAILABLE_MSG,
                     ex);
         } catch (RestClientException ex) {
             if (isServerOrConnectivityFailure(ex)) {
                 log.warn("Fallo en endpoint interno de representante {} en ms-tiendas: {}. "
                         + "Intentando verificación autenticada en {}.",
-                        representativeId, ex.getMessage(), REPRESENTATIVE_FALLBACK_PATH);
+                        representativeId, ex.getMessage(), tiendasProperties.getRepresentativeFallbackPath());
                 return fetchRepresentativeFoundationWithIncomingBearer(representativeId);
             }
             throw handleTiendasFailure(
-                    "la fundación del representante ID: " + representativeId,
-                    "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.",
+                    REPRESENTATIVE_TARGET_PREFIX + representativeId,
+                    REPRESENTATIVE_UNAVAILABLE_MSG,
                     ex);
         }
     }
@@ -192,7 +194,7 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         }
         try {
             TiendasFoundationResponseDTO response = tiendasRestClient.get()
-                    .uri(REPRESENTATIVE_FALLBACK_PATH)
+                    .uri(tiendasProperties.getRepresentativeFallbackPath())
                     .header(HttpHeaders.AUTHORIZATION, incomingBearer.get())
                     .retrieve()
                     .body(TiendasFoundationResponseDTO.class);
@@ -206,8 +208,8 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
             return Optional.empty();
         } catch (RestClientException ex) {
             throw handleTiendasFailure(
-                    "la fundación del representante ID: " + representativeId,
-                    "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.",
+                    REPRESENTATIVE_TARGET_PREFIX + representativeId,
+                    REPRESENTATIVE_UNAVAILABLE_MSG,
                     ex);
         }
     }
@@ -404,7 +406,7 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         }
         try {
             TiendasFoundationResponseDTO response = tiendasRestClient.get()
-                    .uri(REPRESENTATIVE_FALLBACK_PATH)
+                    .uri(tiendasProperties.getRepresentativeFallbackPath())
                     .header(HttpHeaders.AUTHORIZATION, incomingBearer.get())
                     .retrieve()
                     .body(TiendasFoundationResponseDTO.class);

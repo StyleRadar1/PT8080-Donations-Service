@@ -103,32 +103,39 @@ class EnumsAndEventsTest {
     }
 
     @Test
-    @DisplayName("Debe resolver Size desde las 18 tallas oficiales, alias previos, nulos e inválidos")
+    @DisplayName("Debe resolver Size desde las 18 tallas oficiales")
     void shouldResolveSizeFromString() {
-        assertEquals(Size.XS, Size.fromString("XS"));
-        assertEquals(Size.S, Size.fromString("S"));
-        assertEquals(Size.M, Size.fromString("M"));
-        assertEquals(Size.L, Size.fromString("L"));
-        assertEquals(Size.XL, Size.fromString("XL"));
-        assertEquals(Size.XXL, Size.fromString("XXL"));
-        assertEquals(Size.TALLA_28, Size.fromString("28"));
-        assertEquals(Size.TALLA_30, Size.fromString("30"));
-        assertEquals(Size.TALLA_32, Size.fromString("32"));
-        assertEquals(Size.TALLA_34, Size.fromString("34"));
-        assertEquals(Size.TALLA_36, Size.fromString("36"));
-        assertEquals(Size.TALLA_37, Size.fromString("37"));
-        assertEquals(Size.TALLA_38, Size.fromString("38"));
-        assertEquals(Size.TALLA_39, Size.fromString("39"));
-        assertEquals(Size.TALLA_40, Size.fromString("40"));
-        assertEquals(Size.TALLA_41, Size.fromString("41"));
-        assertEquals(Size.TALLA_42, Size.fromString("42"));
-        assertEquals(Size.UNICA, Size.fromString("Unica"));
+        java.util.Map<String, Size> officialSizes = java.util.Map.ofEntries(
+                java.util.Map.entry("XS", Size.XS),
+                java.util.Map.entry("S", Size.S),
+                java.util.Map.entry("M", Size.M),
+                java.util.Map.entry("L", Size.L),
+                java.util.Map.entry("XL", Size.XL),
+                java.util.Map.entry("XXL", Size.XXL),
+                java.util.Map.entry("28", Size.TALLA_28),
+                java.util.Map.entry("30", Size.TALLA_30),
+                java.util.Map.entry("32", Size.TALLA_32),
+                java.util.Map.entry("34", Size.TALLA_34),
+                java.util.Map.entry("36", Size.TALLA_36),
+                java.util.Map.entry("37", Size.TALLA_37),
+                java.util.Map.entry("38", Size.TALLA_38),
+                java.util.Map.entry("39", Size.TALLA_39),
+                java.util.Map.entry("40", Size.TALLA_40),
+                java.util.Map.entry("41", Size.TALLA_41),
+                java.util.Map.entry("42", Size.TALLA_42),
+                java.util.Map.entry("Unica", Size.UNICA)
+        );
+        officialSizes.forEach((raw, expected) -> assertEquals(expected, Size.fromString(raw)));
+        assertEquals("38", Size.TALLA_38.getValue());
+        assertEquals("Unica", Size.UNICA.getValue());
+    }
+
+    @Test
+    @DisplayName("Debe resolver alias previos de Size y manejar nulos e inválidos")
+    void shouldResolveSizeAliasesAndRejectInvalid() {
         assertEquals(Size.UNICA, Size.fromString("Única"));
         assertEquals(Size.UNICA, Size.fromString("ONE_SIZE"));
         assertEquals(Size.TALLA_28, Size.fromString("TALLA_28"));
-        assertEquals("38", Size.TALLA_38.getValue());
-        assertEquals("Unica", Size.UNICA.getValue());
-
         assertNull(Size.fromString(null));
         assertNull(Size.fromString("  "));
         assertThrows(IllegalArgumentException.class, () -> Size.fromString("99"));

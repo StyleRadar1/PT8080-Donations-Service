@@ -26,6 +26,7 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static final String PRODUCER_NAME = "ms-segunda-vida-donaciones";
+    public static final String EVENT_TYPE_REQUEST_CREATED = "donacion.solicitud.creada";
 
     @Builder.Default
     private String eventId = UUID.randomUUID().toString();
@@ -34,10 +35,10 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
     private String eventoId = UUID.randomUUID().toString();
 
     @Builder.Default
-    private String eventType = "donacion.solicitud.creada";
+    private String eventType = EVENT_TYPE_REQUEST_CREATED;
 
     @Builder.Default
-    private String tipoEvento = "donacion.solicitud.creada";
+    private String tipoEvento = EVENT_TYPE_REQUEST_CREATED;
 
     @Builder.Default
     private String timestamp = Instant.now().toString();
@@ -137,8 +138,8 @@ public class DonationRequestCreatedIntegrationEvent implements Serializable {
         return DonationRequestCreatedIntegrationEvent.builder()
                 .eventId(eventUuid)
                 .eventoId(eventUuid)
-                .eventType("donacion.solicitud.creada")
-                .tipoEvento("donacion.solicitud.creada")
+                .eventType(EVENT_TYPE_REQUEST_CREATED)
+                .tipoEvento(EVENT_TYPE_REQUEST_CREATED)
                 .timestamp(nowStr)
                 .fechaHora(nowStr)
                 .fechaEvento(localFechaEvento)

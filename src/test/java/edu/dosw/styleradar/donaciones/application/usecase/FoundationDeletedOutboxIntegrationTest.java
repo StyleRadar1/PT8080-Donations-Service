@@ -165,15 +165,11 @@ class FoundationDeletedOutboxIntegrationTest {
 
         DonationRequestEntity req1AfterFail = donationRequestRepository.findById(req1.getId()).orElseThrow();
         DonationRequestEntity req2AfterFail = donationRequestRepository.findById(req2.getId()).orElseThrow();
-        assertThat(req1AfterFail.getStatus()).isEqualTo(DonationRequestStatus.REJECTED);
-        assertThat(req2AfterFail.getStatus()).isEqualTo(DonationRequestStatus.REJECTED);
-        assertThat(req1AfterFail.getDecidedAt()).isNotNull();
-        assertThat(req2AfterFail.getDecidedAt()).isNotNull();
-
-        assertThat(publicationRepository.findById(pub1.getId()).orElseThrow().getStatus())
-                .isEqualTo(PublicationStatus.AVAILABLE);
-        assertThat(publicationRepository.findById(pub2.getId()).orElseThrow().getStatus())
-                .isEqualTo(PublicationStatus.AVAILABLE);
+        assertThat(List.of(req1AfterFail, req2AfterFail))
+                .allMatch(r -> r.getStatus() == DonationRequestStatus.REJECTED && r.getDecidedAt() != null);
+        assertThat(publicationRepository.findAllById(List.of(pub1.getId(), pub2.getId())))
+                .extracting(SecondHandPublicationEntity::getStatus)
+                .containsOnly(PublicationStatus.AVAILABLE);
 
         List<DonationOutboxEventEntity> outboxAfterFail = outboxRepository.findAll();
         assertThat(outboxAfterFail).hasSize(2);
@@ -181,12 +177,14 @@ class FoundationDeletedOutboxIntegrationTest {
                 .filter(e -> e.getRequestId().equals(req1.getId())).findFirst().orElseThrow();
         DonationOutboxEventEntity outbox2 = outboxAfterFail.stream()
                 .filter(e -> e.getRequestId().equals(req2.getId())).findFirst().orElseThrow();
+        assertThat(outbox1)
+                .returns(OutboxEventStatus.SENT, DonationOutboxEventEntity::getStatus)
+                .returns(1, DonationOutboxEventEntity::getAttempts);
         assertThat(outbox1.getEventId()).isNotBlank();
+        assertThat(outbox2)
+                .returns(OutboxEventStatus.PENDING, DonationOutboxEventEntity::getStatus)
+                .returns(1, DonationOutboxEventEntity::getAttempts);
         assertThat(outbox2.getEventId()).isNotBlank();
-        assertThat(outbox1.getStatus()).isEqualTo(OutboxEventStatus.SENT);
-        assertThat(outbox1.getAttempts()).isEqualTo(1);
-        assertThat(outbox2.getStatus()).isEqualTo(OutboxEventStatus.PENDING);
-        assertThat(outbox2.getAttempts()).isEqualTo(1);
         assertThat(outbox2.getLastError()).contains("RabbitMQ caído");
 
         // 2. Recuperación (redelivery del evento cuando RabbitMQ vuelve): solo debe salir el aviso pendiente de req2
@@ -198,22 +196,24 @@ class FoundationDeletedOutboxIntegrationTest {
         verify(eventPublisherPort, times(1)).publishEventConfirmed(recoveryCaptor.capture());
         assertThat(recoveryCaptor.getValue()).isInstanceOf(DonationRequestDecidedEvent.class);
         DonationRequestDecidedEvent recoveredEvent = (DonationRequestDecidedEvent) recoveryCaptor.getValue();
-        assertThat(recoveredEvent.requestId()).isEqualTo(req2.getId());
-        assertThat(recoveredEvent.eventId()).isEqualTo(outbox2.getEventId());
-        assertThat(recoveredEvent.approved()).isFalse();
+        assertThat(recoveredEvent)
+                .returns(req2.getId(), DonationRequestDecidedEvent::requestId)
+                .returns(outbox2.getEventId(), DonationRequestDecidedEvent::eventId)
+                .returns(false, DonationRequestDecidedEvent::approved);
 
         // Ambas prendas siguen AVAILABLE y ninguna cancelación fue repetida (misma versión y decidedAt)
-        assertThat(publicationRepository.findById(pub1.getId()).orElseThrow().getStatus())
-                .isEqualTo(PublicationStatus.AVAILABLE);
-        assertThat(publicationRepository.findById(pub2.getId()).orElseThrow().getStatus())
-                .isEqualTo(PublicationStatus.AVAILABLE);
+        assertThat(publicationRepository.findAllById(List.of(pub1.getId(), pub2.getId())))
+                .extracting(SecondHandPublicationEntity::getStatus)
+                .containsOnly(PublicationStatus.AVAILABLE);
 
         DonationRequestEntity req1AfterRecovery = donationRequestRepository.findById(req1.getId()).orElseThrow();
         DonationRequestEntity req2AfterRecovery = donationRequestRepository.findById(req2.getId()).orElseThrow();
-        assertThat(req1AfterRecovery.getVersion()).isEqualTo(req1AfterFail.getVersion());
-        assertThat(req2AfterRecovery.getVersion()).isEqualTo(req2AfterFail.getVersion());
-        assertThat(req1AfterRecovery.getDecidedAt()).isEqualTo(req1AfterFail.getDecidedAt());
-        assertThat(req2AfterRecovery.getDecidedAt()).isEqualTo(req2AfterFail.getDecidedAt());
+        assertThat(req1AfterRecovery)
+                .returns(req1AfterFail.getVersion(), DonationRequestEntity::getVersion)
+                .returns(req1AfterFail.getDecidedAt(), DonationRequestEntity::getDecidedAt);
+        assertThat(req2AfterRecovery)
+                .returns(req2AfterFail.getVersion(), DonationRequestEntity::getVersion)
+                .returns(req2AfterFail.getDecidedAt(), DonationRequestEntity::getDecidedAt);
 
         assertThat(outboxRepository.findByStatusOrderByCreatedAtAscIdAsc(OutboxEventStatus.PENDING)).isEmpty();
         assertThat(outboxRepository.findAll())
@@ -271,7 +271,7 @@ class FoundationDeletedOutboxIntegrationTest {
             if (arg instanceof DonationRequestDecidedEvent decided) {
                 publishedRequestIds.add(decided.requestId());
                 publishedEventIdsByRequest.put(decided.requestId(), decided.eventId());
-                Thread.sleep(60L);
+                java.util.concurrent.locks.LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(60L));
             }
             return null;
         }).when(eventPublisherPort).publishEventConfirmed(any());
