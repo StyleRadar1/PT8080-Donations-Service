@@ -8,11 +8,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
+import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredStatisticsEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationCompletedStatisticsIntegrationEvent;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainConflictException;
 import edu.dosw.styleradar.donaciones.domain.exception.DomainException;
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
@@ -234,5 +236,29 @@ class EnumsAndEventsTest {
         assertEquals(BigDecimal.valueOf(20000.0), criteria.getMinPrice());
         assertEquals(BigDecimal.valueOf(80000.0), criteria.getMaxPrice());
         assertEquals(PublicationStatus.AVAILABLE, criteria.getStatus());
+    }
+
+    @Test
+    @DisplayName("Debe construir DonationCompletedStatisticsIntegrationEvent desde eventos válidos, nulos y con eventId vacío")
+    void shouldCoverDonationCompletedStatisticsIntegrationEventBranches() {
+        var fromNullStats = DonationCompletedStatisticsIntegrationEvent.from((DonationDeliveredStatisticsEvent) null);
+        assertNotNull(fromNullStats.getEventId());
+        assertNotNull(fromNullStats.getOccurredAt());
+        assertNull(fromNullStats.getData().getFundacionId());
+        assertEquals(1, fromNullStats.getData().getCantidad());
+
+        var fromNullDelivered = DonationCompletedStatisticsIntegrationEvent.from((DonationDeliveredEvent) null);
+        assertNotNull(fromNullDelivered.getEventId());
+        assertNull(fromNullDelivered.getData().getFundacionId());
+
+        var fromDelivered = DonationCompletedStatisticsIntegrationEvent.from(new DonationDeliveredEvent(10L, 1L, 3L));
+        assertEquals("3", fromDelivered.getData().getFundacionId());
+        assertNotNull(fromDelivered.getOccurredAt());
+
+        var fromBlankEventId = DonationCompletedStatisticsIntegrationEvent.from(
+                new DonationDeliveredStatisticsEvent(10L, 7L, null, "   "));
+        assertNotNull(fromBlankEventId.getEventId());
+        assertFalse(fromBlankEventId.getEventId().isBlank());
+        assertEquals("7", fromBlankEventId.getData().getFundacionId());
     }
 }

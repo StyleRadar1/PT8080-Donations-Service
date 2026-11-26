@@ -165,4 +165,38 @@ class GlobalExceptionHandlerTest {
         assertThat(sanitizedEnumPd.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(sanitizedEnumPd.getDetail()).doesNotContain("edu.dosw.");
     }
+
+    @Test
+    @DisplayName("Debe cubrir sanitización de mensajes nulos/vacíos/técnicos y resolución de correlationId desde cabecera HTTP")
+    void shouldCoverSanitizationAndHeaderCorrelationFallbackBranches() {
+        MockHttpServletRequest reqWithHeader = new MockHttpServletRequest("GET", "/api/v1/donations");
+        reqWithHeader.addHeader(CorrelationIdFilter.CORRELATION_ID_HEADER, "  corr-header-77  ");
+
+        MDC.put(CorrelationIdFilter.CORRELATION_ID_MDC_KEY, "   ");
+        ProblemDetail nullMsgPd = handler.handleBadRequest(new IllegalArgumentException((String) null), reqWithHeader);
+        assertThat(nullMsgPd.getDetail()).isEqualTo("La solicitud contiene parámetros inválidos.");
+        assertThat(nullMsgPd.getProperties()).containsEntry("correlationId", "corr-header-77");
+
+        MDC.clear();
+        MockHttpServletRequest reqBlankHeader = new MockHttpServletRequest("GET", "/api/v1/donations");
+        reqBlankHeader.addHeader(CorrelationIdFilter.CORRELATION_ID_HEADER, "   ");
+        ProblemDetail blankMsgPd = handler.handleBadRequest(new IllegalArgumentException("   "), reqBlankHeader);
+        assertThat(blankMsgPd.getDetail()).isEqualTo("La solicitud contiene parámetros inválidos.");
+        assertThat(blankMsgPd.getProperties()).doesNotContainKey("correlationId");
+
+        ProblemDetail javaMsgPd = handler.handleBadRequest(new IllegalArgumentException("Failed for java.lang.Long"), null);
+        assertThat(javaMsgPd.getDetail()).isEqualTo("Uno de los parámetros enviados tiene un formato inválido.");
+        assertThat(javaMsgPd.getInstance()).isNull();
+
+        ProblemDetail enumOnlyPd = handler.handleBadRequest(new IllegalArgumentException("No enum constant X"), reqBlankHeader);
+        assertThat(enumOnlyPd.getDetail()).isEqualTo("Uno de los parámetros enviados tiene un formato inválido.");
+
+        MethodArgumentTypeMismatchException blankNameEx = new MethodArgumentTypeMismatchException(
+                "bad", Long.class, "   ", null, new NumberFormatException("bad"));
+        ProblemDetail blankParamPd = handler.handleTypeMismatch(blankNameEx, reqBlankHeader);
+        assertThat(blankParamPd.getDetail()).isEqualTo("El parámetro 'parámetro' tiene un formato inválido.");
+
+        ProblemDetail blankMethodPd = handler.handleMethodNotSupported(new HttpRequestMethodNotSupportedException(""), reqBlankHeader);
+        assertThat(blankMethodPd.getDetail()).isEqualTo("El método HTTP '' no está soportado para este recurso.");
+    }
 }
