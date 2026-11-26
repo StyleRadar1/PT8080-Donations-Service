@@ -43,6 +43,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleAccessDenied(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/forbidden");
         assertThat(problem.getTitle()).isEqualTo("Acceso denegado");
         assertThat(problem.getDetail()).isEqualTo("Acceso denegado");
         assertThat(problem.getInstance().getPath()).isEqualTo("/api/v1/second-hand/publications");
@@ -60,6 +61,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleNotFound(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/resource-not-found");
         assertThat(problem.getTitle()).isEqualTo("Recurso no encontrado");
         assertThat(problem.getDetail()).isEqualTo("No encontrado");
         assertThat(problem.getInstance().getPath()).isEqualTo("/api/v1/second-hand/publications/99");
@@ -77,6 +79,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleBadRequest(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/bad-request");
         assertThat(problem.getTitle()).isEqualTo("Solicitud inválida");
         assertThat(problem.getDetail()).isEqualTo("Invariante violada");
         assertThat(problem.getProperties()).containsEntry("code", "BAD_REQUEST");
@@ -92,6 +95,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleConflict(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/domain-conflict");
         assertThat(problem.getTitle()).isEqualTo("Conflicto de dominio");
         assertThat(problem.getDetail()).isEqualTo("Conflicto");
         assertThat(problem.getProperties()).containsEntry("code", "DOMAIN_CONFLICT");
@@ -107,6 +111,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleGeneralException(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/internal-server-error");
         assertThat(problem.getTitle()).isEqualTo("Error interno del servidor");
         assertThat(problem.getProperties()).containsEntry("code", "INTERNAL_SERVER_ERROR");
         assertThat(problem.getProperties()).containsKey("errors");
@@ -150,12 +155,14 @@ class GlobalExceptionHandlerTest {
                 new HttpMessageNotReadableException("JSON parse error: java.lang.String", (HttpInputMessage) null), request
         );
         assertThat(notReadablePd.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(notReadablePd.getType()).hasToString("https://api.styleradar.com/errors/malformed-request-body");
         assertThat(notReadablePd.getDetail()).doesNotContain("java.lang.String");
 
         ProblemDetail missingPartPd = handler.handleMissingPart(
                 new MissingServletRequestPartException("file"), request
         );
         assertThat(missingPartPd.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(missingPartPd.getType()).hasToString("https://api.styleradar.com/errors/missing-request-part");
         assertThat(missingPartPd.getDetail()).isEqualTo("Falta la parte requerida 'file' en la solicitud.");
 
         ProblemDetail sanitizedEnumPd = handler.handleBadRequest(

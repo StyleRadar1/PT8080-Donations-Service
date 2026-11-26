@@ -120,7 +120,7 @@ class SecurityRbacIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.title").value("No autorizado"))
-                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/unauthorized"))
+                .andExpect(jsonPath("$.type").value("https://api.styleradar.com/errors/unauthorized"))
                 .andExpect(jsonPath("$.detail").isNotEmpty());
     }
 
@@ -136,7 +136,7 @@ class SecurityRbacIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.title").value("Acceso denegado"))
-                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"))
+                .andExpect(jsonPath("$.type").value("https://api.styleradar.com/errors/forbidden"))
                 .andExpect(jsonPath("$.detail").isNotEmpty());
     }
 
@@ -211,7 +211,7 @@ class SecurityRbacIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.title").value("Acceso denegado"))
-                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"));
+                .andExpect(jsonPath("$.type").value("https://api.styleradar.com/errors/forbidden"));
     }
 
     @Test

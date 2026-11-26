@@ -4,6 +4,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -50,31 +51,27 @@ public class GlobalExceptionHandler {
     private static final String CODE_PROPERTY = "code";
     private static final String ERRORS_PROPERTY = "errors";
     private static final String CORRELATION_ID_PROPERTY = "correlationId";
-    private static final String BAD_REQUEST_TYPE_URI = "https://styleradar.dosw.edu/errors/bad-request";
+    private static final String ERROR_TYPE_BASE_URI = "https://api.styleradar.com/errors/";
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         log.warn("Acceso denegado: {}", ex.getMessage());
         return buildProblem(HttpStatus.FORBIDDEN, "Acceso denegado",
-                "https://styleradar.dosw.edu/errors/forbidden", ex.getMessage(),
-                "FORBIDDEN", List.of(), request);
+                ex.getMessage(), "FORBIDDEN", List.of(), request);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
         log.warn("Recurso no encontrado: {}", ex.getMessage());
         return buildProblem(HttpStatus.NOT_FOUND, "Recurso no encontrado",
-                "https://styleradar.dosw.edu/errors/not-found", ex.getMessage(),
-                "RESOURCE_NOT_FOUND", List.of(), request);
+                ex.getMessage(), "RESOURCE_NOT_FOUND", List.of(), request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ProblemDetail handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
         log.warn("Ruta HTTP no encontrada: {}", ex.getResourcePath());
         return buildProblem(HttpStatus.NOT_FOUND, "Recurso no encontrado",
-                "https://styleradar.dosw.edu/errors/not-found",
-                "El recurso solicitado no existe.",
-                "RESOURCE_NOT_FOUND", List.of(), request);
+                "El recurso solicitado no existe.", "RESOURCE_NOT_FOUND", List.of(), request);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -82,7 +79,6 @@ public class GlobalExceptionHandler {
         String paramName = StringUtils.hasText(ex.getName()) ? ex.getName() : "parámetro";
         log.warn("Parámetro '{}' con formato inválido: {}", paramName, ex.getMessage());
         return buildProblem(HttpStatus.BAD_REQUEST, "Parámetro inválido",
-                BAD_REQUEST_TYPE_URI,
                 "El parámetro '" + paramName + "' tiene un formato inválido.",
                 "BAD_REQUEST", List.of(), request);
     }
@@ -91,7 +87,6 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
         log.warn("Cuerpo de solicitud JSON no legible: {}", ex.getMessage());
         return buildProblem(HttpStatus.BAD_REQUEST, "Cuerpo de solicitud inválido",
-                BAD_REQUEST_TYPE_URI,
                 "El cuerpo de la solicitud JSON está malformado o contiene valores inválidos.",
                 "MALFORMED_REQUEST_BODY", List.of(), request);
     }
@@ -100,7 +95,6 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleMissingPart(MissingServletRequestPartException ex, HttpServletRequest request) {
         log.warn("Falta parte multipart requerida '{}': {}", ex.getRequestPartName(), ex.getMessage());
         return buildProblem(HttpStatus.BAD_REQUEST, "Parte multipart faltante",
-                BAD_REQUEST_TYPE_URI,
                 "Falta la parte requerida '" + ex.getRequestPartName() + "' en la solicitud.",
                 "MISSING_REQUEST_PART", List.of(), request);
     }
@@ -110,7 +104,6 @@ public class GlobalExceptionHandler {
         String method = StringUtils.hasText(ex.getMethod()) ? ex.getMethod() : "";
         log.warn("Método HTTP no soportado: {}", method);
         return buildProblem(HttpStatus.METHOD_NOT_ALLOWED, "Método HTTP no permitido",
-                "https://styleradar.dosw.edu/errors/method-not-allowed",
                 "El método HTTP '" + method + "' no está soportado para este recurso.",
                 "METHOD_NOT_ALLOWED", List.of(), request);
     }
@@ -119,7 +112,6 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
         log.warn("Tipo de contenido no soportado: {}", ex.getContentType());
         return buildProblem(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Tipo de contenido no soportado",
-                "https://styleradar.dosw.edu/errors/unsupported-media-type",
                 "El tipo de contenido enviado no es compatible con este recurso.",
                 "UNSUPPORTED_MEDIA_TYPE", List.of(), request);
     }
@@ -137,8 +129,7 @@ public class GlobalExceptionHandler {
                 ? "Falta el parámetro requerido '" + missingParam.getParameterName() + "' en la solicitud."
                 : sanitizeBadRequestMessage(ex.getMessage());
         return buildProblem(HttpStatus.BAD_REQUEST, "Solicitud inválida",
-                BAD_REQUEST_TYPE_URI, detail,
-                "BAD_REQUEST", List.of(), request);
+                detail, "BAD_REQUEST", List.of(), request);
     }
 
     @ExceptionHandler({
@@ -150,8 +141,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleConflict(RuntimeException ex, HttpServletRequest request) {
         log.warn("Conflicto en estado o regla de negocio: {}", ex.getMessage());
         return buildProblem(HttpStatus.CONFLICT, "Conflicto de dominio",
-                "https://styleradar.dosw.edu/errors/conflict", ex.getMessage(),
-                "DOMAIN_CONFLICT", List.of(), request);
+                ex.getMessage(), "DOMAIN_CONFLICT", List.of(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -169,7 +159,6 @@ public class GlobalExceptionHandler {
         }
 
         ProblemDetail problem = buildProblem(HttpStatus.BAD_REQUEST, "Error de validación",
-                "https://styleradar.dosw.edu/errors/validation-error",
                 "Los datos enviados contienen errores de validación",
                 "VALIDATION_ERROR", structuredErrors, request);
         problem.setProperty("invalidParams", fieldErrors);
@@ -181,8 +170,7 @@ public class GlobalExceptionHandler {
                                                           HttpServletRequest request) {
         log.error("Servicio externo no disponible: {}", ex.getMessage(), ex);
         return buildProblem(HttpStatus.SERVICE_UNAVAILABLE, "Servicio externo no disponible",
-                "https://styleradar.dosw.edu/errors/service-unavailable", ex.getMessage(),
-                "SERVICE_UNAVAILABLE", List.of(), request);
+                ex.getMessage(), "SERVICE_UNAVAILABLE", List.of(), request);
     }
 
     @ExceptionHandler(Exception.class)
@@ -193,18 +181,17 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleUnhandledException(Exception ex, HttpServletRequest request) {
         log.error("Excepción no controlada detectada en el servidor: ", ex);
         return buildProblem(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor",
-                "https://styleradar.dosw.edu/errors/internal-server-error",
                 "Ha ocurrido un error inesperado en el servidor",
                 "INTERNAL_SERVER_ERROR", List.of(), request);
     }
 
-    private ProblemDetail buildProblem(HttpStatus status, String title, String typeUri,
+    private ProblemDetail buildProblem(HttpStatus status, String title,
                                        String detail, String code,
                                        List<Map<String, String>> errors,
                                        HttpServletRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setTitle(title);
-        problem.setType(URI.create(typeUri));
+        problem.setType(resolveProblemTypeUri(code));
         if (request != null && request.getRequestURI() != null) {
             problem.setInstance(URI.create(request.getRequestURI()));
         }
@@ -216,6 +203,13 @@ public class GlobalExceptionHandler {
             problem.setProperty(CORRELATION_ID_PROPERTY, correlationId);
         }
         return problem;
+    }
+
+    private static URI resolveProblemTypeUri(String code) {
+        String slug = (code == null || code.isBlank())
+                ? "internal-server-error"
+                : code.trim().toLowerCase(Locale.ROOT).replace('_', '-');
+        return URI.create(ERROR_TYPE_BASE_URI + slug);
     }
 
     private static String resolveCorrelationId(HttpServletRequest request) {

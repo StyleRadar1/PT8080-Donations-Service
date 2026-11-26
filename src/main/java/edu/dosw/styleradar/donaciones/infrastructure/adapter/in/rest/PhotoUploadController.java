@@ -78,7 +78,7 @@ public class PhotoUploadController {
                                     name = "InvalidFile",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "Tipo de archivo no permitido: text/plain. Solo se admiten formatos JPEG, PNG y WEBP.",
@@ -99,7 +99,7 @@ public class PhotoUploadController {
                                     name = "Unauthorized",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente, expirado o con firma no válida.",
@@ -120,7 +120,7 @@ public class PhotoUploadController {
                                     name = "Forbidden",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: Se requiere rol USER, STORE, FOUNDATION o ADMIN para subir fotos.",
@@ -141,7 +141,7 @@ public class PhotoUploadController {
                                     name = "ServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error de entrada/salida al transferir el flujo binario de la imagen hacia Azure Blob Storage.",
