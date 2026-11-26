@@ -34,6 +34,7 @@
     <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45728107219"><img src="https://img.shields.io/badge/CI_PR_22-aprobado-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI PR 22 Status" /></a>
     <a href="docs/readmes/09-pruebas-cobertura.md"><img src="https://img.shields.io/badge/Pruebas-339_aprobadas_(0_fallos)-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Pruebas Aprobadas" /></a>
     <a href="docs/readmes/09-pruebas-cobertura.md"><img src="https://img.shields.io/badge/JaCoCo_L%C3%ADneas-97.50%25_%7C_Ramas_88.24%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Cobertura JaCoCo" /></a>
+    <a href="docs/evidencias/sonarqube-final.png"><img src="https://img.shields.io/badge/SonarQube-Passed_(0_Issues_%C2%B7_A)-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="SonarQube Passed" /></a>
   </p>
 
   <h3>Tecnologías y Dependencias Principales</h3>
