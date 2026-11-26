@@ -5,10 +5,6 @@ on:
     branches:
       - master
       - main
-  pull_request:
-    branches:
-      - master
-      - main
   workflow_dispatch:
 
 permissions:
@@ -27,6 +23,8 @@ jobs:
     steps:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 2. Set up JDK 21 (Eclipse Temurin)
         uses: actions/setup-java@v4
@@ -35,8 +33,11 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: 2.1 Grant execute permission for Maven Wrapper
+        run: chmod +x mvnw
+
       - name: 3. Clean & Compile
-        run: mvn -B clean compile
+        run: ./mvnw -B clean compile
 
       - name: 4. Verify Docker Daemon & Socket Permissions
         run: |
@@ -44,20 +45,38 @@ jobs:
           sudo systemctl start docker || true
           sudo chmod 666 /var/run/docker.sock || true
 
-      - name: 5. Unit & Integration Tests with JaCoCo Report
+      - name: 5. Unit & Integration Tests with JaCoCo Report & Quality Gate (>= 85% Line / >= 80% Branch)
         env:
           DOCKER_HOST: unix:///var/run/docker.sock
           DOCKER_API_VERSION: "1.44"
-        run: mvn -B test jacoco:report -Dapi.version=1.44
+        run: ./mvnw -B verify -Dapi.version=1.44
 
-      - name: 6. Verify Quality Gate & JaCoCo Coverage (Threshold >= 85%)
+      - name: 6. SonarQube / SonarCloud Quality Gate Analysis
         env:
-          DOCKER_HOST: unix:///var/run/docker.sock
-          DOCKER_API_VERSION: "1.44"
-        run: mvn -B verify -Dapi.version=1.44
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION || vars.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY || vars.SONAR_PROJECT_KEY }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "❌ ERROR: SONAR_TOKEN no está configurado en GitHub Repository Secrets (obligatorio en rama productiva main/master)."
+            exit 1
+          fi
+          SONAR_ARGS="-Dsonar.qualitygate.wait=true"
+          if [ -n "$SONAR_HOST_URL" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=$SONAR_HOST_URL"
+          fi
+          if [ -n "$SONAR_ORGANIZATION" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.organization=$SONAR_ORGANIZATION"
+          fi
+          if [ -n "$SONAR_PROJECT_KEY" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.projectKey=$SONAR_PROJECT_KEY"
+          fi
+          ./mvnw -B sonar:sonar $SONAR_ARGS
 
       - name: 7. Package Production Release JAR
-        run: mvn -B package -DskipTests -Dbuild.commit.sha=${{ github.sha }}
+        run: ./mvnw -B package -DskipTests -Dbuild.commit.sha=${{ github.sha }}
 
       - name: 8. Build Docker OCI Image
         run: |
@@ -133,13 +152,18 @@ jobs:
           fi
           echo "✅ Webhook de despliegue PROD ejecutado exitosamente (HTTP $HTTP_CODE)."
 
-      - name: 6. PROD Smoke Test, Health Check & Deployment Verification
+      - name: 6. PROD Smoke Test, Health Check & Swagger Restriction Verification
         run: |
-          PROD_HEALTH_URL="${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}/api/v1/health"
+          PROD_BASE_URL="${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}"
+          PROD_HEALTH_URL="$PROD_BASE_URL/api/v1/health"
+          PROD_SWAGGER_DOCS_URL="$PROD_BASE_URL/api/v1/v3/api-docs"
+          PROD_SWAGGER_UI_URL="$PROD_BASE_URL/api/v1/swagger-ui/index.html"
           EXPECTED_COMMIT_SHA="${{ github.sha }}"
           echo "======================================================================"
-          echo " Iniciando Smoke Test contra endpoint de salud de PROD: $PROD_HEALTH_URL"
-          echo " Commit SHA esperado a verificar: $EXPECTED_COMMIT_SHA"
+          echo " Iniciando Smoke Test en PROD:"
+          echo "   Health Check : $PROD_HEALTH_URL"
+          echo "   Swagger Off  : $PROD_SWAGGER_DOCS_URL & $PROD_SWAGGER_UI_URL (esperado 401/403/404)"
+          echo "   Commit SHA   : $EXPECTED_COMMIT_SHA"
           echo "======================================================================"
 
           SUCCESS=false
@@ -149,10 +173,10 @@ jobs:
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
             BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
 
-            echo "HTTP Status -> $HTTP_STATUS"
-            echo "Response Body -> $BODY"
+            echo "Health HTTP Status -> $HTTP_STATUS"
+            echo "Health Response Body -> $BODY"
 
-            if [ "$HTTP_STATUS" -eq 200 ]; then
+            if [ "$HTTP_STATUS" = "200" ]; then
               STATUS_FIELD=$(echo "$BODY" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || true)
               COMMIT_SHA_FIELD=$(echo "$BODY" | grep -o '"commitSha":"[^"]*"' | cut -d'"' -f4 || true)
 
@@ -163,9 +187,15 @@ jobs:
                 elif [ "$COMMIT_SHA_FIELD" != "$EXPECTED_COMMIT_SHA" ] && [[ "$EXPECTED_COMMIT_SHA" != "$COMMIT_SHA_FIELD"* ]]; then
                   echo "⏳ El commitSha reportado ($COMMIT_SHA_FIELD) aún no coincide con el nuevo commit ($EXPECTED_COMMIT_SHA). Esperando propagación del artefacto..."
                 else
-                  echo "✅ Commit SHA desplegado en PROD verificado exitosamente: $COMMIT_SHA_FIELD"
-                  SUCCESS=true
-                  break
+                  SWAGGER_DOCS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_SWAGGER_DOCS_URL" || true)
+                  SWAGGER_UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_SWAGGER_UI_URL" || true)
+                  echo "PROD Swagger OpenAPI HTTP -> $SWAGGER_DOCS_STATUS | PROD Swagger UI HTTP -> $SWAGGER_UI_STATUS"
+                  if [[ "$SWAGGER_DOCS_STATUS" =~ ^(401|403|404)$ ]] && [[ "$SWAGGER_UI_STATUS" =~ ^(401|403|404)$ ]]; then
+                    echo "✅ Commit SHA desplegado ($COMMIT_SHA_FIELD) y restricción de Swagger en PROD (401/403/404) verificados exitosamente."
+                    SUCCESS=true
+                    break
+                  fi
+                  echo "⏳ Swagger en PROD respondió HTTP $SWAGGER_DOCS_STATUS / $SWAGGER_UI_STATUS (esperado 401/403/404). Reintentando..."
                 fi
               fi
             fi
@@ -173,8 +203,7 @@ jobs:
           done
 
           if [ "$SUCCESS" = false ]; then
-            echo "❌ ERROR CRÍTICO: El health check de PROD no confirmó el despliegue del commit $EXPECTED_COMMIT_SHA con status UP tras 30 intentos (300s)."
-            echo "El nuevo artefacto no se desplegó correctamente en: $PROD_HEALTH_URL"
+            echo "❌ ERROR CRÍTICO: El Smoke Test de PROD no confirmó UP + commit $EXPECTED_COMMIT_SHA + Swagger deshabilitado tras 30 intentos (300s)."
             exit 1
           fi
           echo "✅ Despliegue en PROD completado y verificado con éxito."

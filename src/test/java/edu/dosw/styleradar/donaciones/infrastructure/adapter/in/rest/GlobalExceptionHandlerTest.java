@@ -14,6 +14,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -43,6 +44,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleAccessDenied(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/forbidden");
         assertThat(problem.getTitle()).isEqualTo("Acceso denegado");
         assertThat(problem.getDetail()).isEqualTo("Acceso denegado");
         assertThat(problem.getInstance().getPath()).isEqualTo("/api/v1/second-hand/publications");
@@ -60,6 +62,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleNotFound(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/resource-not-found");
         assertThat(problem.getTitle()).isEqualTo("Recurso no encontrado");
         assertThat(problem.getDetail()).isEqualTo("No encontrado");
         assertThat(problem.getInstance().getPath()).isEqualTo("/api/v1/second-hand/publications/99");
@@ -77,6 +80,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleBadRequest(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/bad-request");
         assertThat(problem.getTitle()).isEqualTo("Solicitud inválida");
         assertThat(problem.getDetail()).isEqualTo("Invariante violada");
         assertThat(problem.getProperties()).containsEntry("code", "BAD_REQUEST");
@@ -92,6 +96,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleConflict(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/domain-conflict");
         assertThat(problem.getTitle()).isEqualTo("Conflicto de dominio");
         assertThat(problem.getDetail()).isEqualTo("Conflicto");
         assertThat(problem.getProperties()).containsEntry("code", "DOMAIN_CONFLICT");
@@ -107,6 +112,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleGeneralException(ex, request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/internal-server-error");
         assertThat(problem.getTitle()).isEqualTo("Error interno del servidor");
         assertThat(problem.getProperties()).containsEntry("code", "INTERNAL_SERVER_ERROR");
         assertThat(problem.getProperties()).containsKey("errors");
@@ -150,12 +156,14 @@ class GlobalExceptionHandlerTest {
                 new HttpMessageNotReadableException("JSON parse error: java.lang.String", (HttpInputMessage) null), request
         );
         assertThat(notReadablePd.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(notReadablePd.getType()).hasToString("https://api.styleradar.com/errors/malformed-request-body");
         assertThat(notReadablePd.getDetail()).doesNotContain("java.lang.String");
 
         ProblemDetail missingPartPd = handler.handleMissingPart(
                 new MissingServletRequestPartException("file"), request
         );
         assertThat(missingPartPd.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(missingPartPd.getType()).hasToString("https://api.styleradar.com/errors/missing-request-part");
         assertThat(missingPartPd.getDetail()).isEqualTo("Falta la parte requerida 'file' en la solicitud.");
 
         ProblemDetail sanitizedEnumPd = handler.handleBadRequest(
@@ -198,5 +206,25 @@ class GlobalExceptionHandlerTest {
 
         ProblemDetail blankMethodPd = handler.handleMethodNotSupported(new HttpRequestMethodNotSupportedException(""), reqBlankHeader);
         assertThat(blankMethodPd.getDetail()).isEqualTo("El método HTTP '' no está soportado para este recurso.");
+    }
+
+    @Test
+    @DisplayName("Debe manejar MaxUploadSizeExceededException con HTTP 413 RFC 7807 (sin retornar 500)")
+    void shouldHandleMaxUploadSizeExceededWith413Rfc7807() {
+        MDC.put(CorrelationIdFilter.CORRELATION_ID_MDC_KEY, "corr-upload-413");
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/second-hand/photos");
+        MaxUploadSizeExceededException ex = new MaxUploadSizeExceededException(5L * 1024 * 1024);
+
+        ProblemDetail problem = handler.handleMaxUploadSizeExceeded(ex, request);
+
+        assertThat(problem.getStatus()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE.value());
+        assertThat(problem.getType()).hasToString("https://api.styleradar.com/errors/payload-too-large");
+        assertThat(problem.getTitle()).isEqualTo("Archivo demasiado grande");
+        assertThat(problem.getDetail()).contains("5 MB");
+        assertThat(problem.getInstance().getPath()).isEqualTo("/api/v1/second-hand/photos");
+        assertThat(problem.getProperties())
+                .containsEntry("code", "PAYLOAD_TOO_LARGE")
+                .containsEntry("correlationId", "corr-upload-413")
+                .containsKeys("errors", "timestamp");
     }
 }

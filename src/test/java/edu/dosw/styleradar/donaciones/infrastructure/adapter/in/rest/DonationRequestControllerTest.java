@@ -425,7 +425,7 @@ class DonationRequestControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.title").value("Acceso denegado"))
-                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"));
+                .andExpect(jsonPath("$.type").value("https://api.styleradar.com/errors/forbidden"));
     }
 
     @Test
@@ -491,7 +491,7 @@ class DonationRequestControllerTest {
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value(503))
                 .andExpect(jsonPath("$.title").value("Servicio externo no disponible"))
-                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/service-unavailable"));
+                .andExpect(jsonPath("$.type").value("https://api.styleradar.com/errors/service-unavailable"));
     }
 
     @Test

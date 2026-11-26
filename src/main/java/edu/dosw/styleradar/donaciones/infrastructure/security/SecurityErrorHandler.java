@@ -23,6 +23,8 @@ import java.util.List;
 @Component
 public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
+    private static final String ERROR_TYPE_BASE_URI = "https://api.styleradar.com/errors/";
+
     private final ObjectMapper objectMapper;
 
     public SecurityErrorHandler(ObjectMapper objectMapper) {
@@ -37,7 +39,7 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
                 "Acceso no autorizado. Se requiere un token Bearer JWT válido para acceder a este recurso."
         );
         problem.setTitle("No autorizado");
-        problem.setType(URI.create("https://styleradar.dosw.edu/errors/unauthorized"));
+        problem.setType(URI.create(ERROR_TYPE_BASE_URI + "unauthorized"));
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("code", "UNAUTHORIZED");
         problem.setProperty("errors", List.of());
@@ -54,7 +56,7 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
                 "Acceso denegado. No cuenta con el rol o permisos necesarios para ejecutar esta acción."
         );
         problem.setTitle("Acceso denegado");
-        problem.setType(URI.create("https://styleradar.dosw.edu/errors/forbidden"));
+        problem.setType(URI.create(ERROR_TYPE_BASE_URI + "forbidden"));
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("code", "FORBIDDEN");
         problem.setProperty("errors", List.of());

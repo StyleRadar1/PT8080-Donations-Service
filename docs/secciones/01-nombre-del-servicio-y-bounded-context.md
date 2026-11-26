@@ -1,4 +1,4 @@
-[← Volver al README Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 2. Equipo y Responsables →](./02-equipo-responsables.md)
+[← Volver al README Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 2. Arquitectura y Diagramas →](./02-arquitectura-hexagonal-y-diagramas.md)
 
 # 1. Nombre del Servicio y su Bounded Context
 
@@ -29,4 +29,4 @@ Este microservicio encapsula exclusivamente la lógica de negocio de economía c
 
 ---
 
-[← Volver al README Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 2. Equipo y Responsables →](./02-equipo-responsables.md)
+[← Volver al README Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 2. Arquitectura y Diagramas →](./02-arquitectura-hexagonal-y-diagramas.md)

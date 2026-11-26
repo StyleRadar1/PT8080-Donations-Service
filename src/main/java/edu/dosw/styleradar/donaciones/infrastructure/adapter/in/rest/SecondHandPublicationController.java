@@ -126,7 +126,7 @@ public class SecondHandPublicationController {
                                     summary = "District outside Bogota D.C. error",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "La localidad de Bogotá es obligatoria. StyleRadar opera exclusivamente en las 20 localidades de Bogotá D.C.",
@@ -147,7 +147,7 @@ public class SecondHandPublicationController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token JWT ausente, expirado o con firma no válida.",
@@ -168,7 +168,7 @@ public class SecondHandPublicationController {
                                     name = "ForbiddenError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado no posee privilegios para publicar.",
@@ -189,7 +189,7 @@ public class SecondHandPublicationController {
                                     name = "InternalServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al persistir la publicación.",
@@ -283,7 +283,7 @@ public class SecondHandPublicationController {
                                     name = "FilterValidationError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "Parámetro 'localidad' no válido. Solo se admiten las 20 localidades de Bogotá D.C.",
@@ -304,7 +304,7 @@ public class SecondHandPublicationController {
                                     name = "SearchServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al consultar el catálogo de publicaciones.",
@@ -415,7 +415,7 @@ public class SecondHandPublicationController {
                                     name = "PublicationNotFound",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
@@ -436,7 +436,7 @@ public class SecondHandPublicationController {
                                     name = "DetailServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al buscar la publicación por ID.",
@@ -507,7 +507,7 @@ public class SecondHandPublicationController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -528,7 +528,7 @@ public class SecondHandPublicationController {
                                     name = "NotOwnerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "El usuario autenticado (ID: 102) no tiene autorización para operar sobre publicaciones del usuario ID: 101.",
@@ -549,7 +549,7 @@ public class SecondHandPublicationController {
                                     name = "UserPublicationsServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al consultar publicaciones por usuario.",
@@ -620,7 +620,7 @@ public class SecondHandPublicationController {
                                     name = "InvalidEditInput",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "El precio para venta C2C debe ser superior a 0 COP.",
@@ -641,7 +641,7 @@ public class SecondHandPublicationController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -662,7 +662,7 @@ public class SecondHandPublicationController {
                                     name = "NotOwnerEdit",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado (ID: 102) no es propietario de la publicación ID: 10.",
@@ -683,7 +683,7 @@ public class SecondHandPublicationController {
                                     name = "PublicationNotFoundEdit",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
@@ -704,7 +704,7 @@ public class SecondHandPublicationController {
                                     name = "EditConflict",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "No se puede editar una publicación que ya ha sido vendida",
@@ -725,7 +725,7 @@ public class SecondHandPublicationController {
                                     name = "EditServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al actualizar la publicación.",
@@ -798,7 +798,7 @@ public class SecondHandPublicationController {
                                     name = "MissingBuyerId",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "El parámetro 'compradorId' es obligatorio para cerrar la venta C2C y coordinar la conversación con ms-chat.",
@@ -819,7 +819,7 @@ public class SecondHandPublicationController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -840,7 +840,7 @@ public class SecondHandPublicationController {
                                     name = "NotSellerOwner",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado (ID: 102) no es el vendedor de la publicación ID: 10.",
@@ -861,7 +861,7 @@ public class SecondHandPublicationController {
                                     name = "PublicationNotFoundSale",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
@@ -882,7 +882,7 @@ public class SecondHandPublicationController {
                                     name = "SaleConflict",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La publicación ya se encuentra marcada como vendida o no está disponible para reventa C2C.",
@@ -903,7 +903,7 @@ public class SecondHandPublicationController {
                                     name = "SaleServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al registrar la venta y publicar el evento a RabbitMQ.",
@@ -951,7 +951,7 @@ public class SecondHandPublicationController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -972,7 +972,7 @@ public class SecondHandPublicationController {
                                     name = "NotOwnerRetire",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado (ID: 102) no es propietario de la publicación ID: 10.",
@@ -993,7 +993,7 @@ public class SecondHandPublicationController {
                                     name = "PublicationNotFoundRetire",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
@@ -1014,7 +1014,7 @@ public class SecondHandPublicationController {
                                     name = "RetireStateConflict",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "No se puede retirar una prenda que ya ha sido donada a una fundación.",
@@ -1035,7 +1035,7 @@ public class SecondHandPublicationController {
                                     name = "RetireServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al retirar la publicación de la vitrina.",
@@ -1108,7 +1108,7 @@ public class SecondHandPublicationController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -1129,7 +1129,7 @@ public class SecondHandPublicationController {
                                     name = "NotOwnerDonation",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: El usuario autenticado (ID: 102) no es propietario de la prenda ID: 10.",
@@ -1150,7 +1150,7 @@ public class SecondHandPublicationController {
                                     name = "PublicationNotFoundDonation",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
@@ -1171,7 +1171,7 @@ public class SecondHandPublicationController {
                                     name = "NotAvailableForDonation",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La publicación no se encuentra en estado AVAILABLE para ser transferida al canal benéfico.",
@@ -1192,7 +1192,7 @@ public class SecondHandPublicationController {
                                     name = "DonationConversionServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al destinar la prenda al canal de donación.",

@@ -308,7 +308,7 @@ class SecondHandPublicationControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.title").value("Acceso denegado"))
-                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"));
+                .andExpect(jsonPath("$.type").value("https://api.styleradar.com/errors/forbidden"));
     }
 
     @Test

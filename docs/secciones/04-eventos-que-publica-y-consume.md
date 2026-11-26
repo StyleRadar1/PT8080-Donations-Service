@@ -1,6 +1,6 @@
-[← Anterior: 4. Endpoints y Swagger](./04-endpoints-swagger.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 6. Tecnologías y Dependencias →](./06-tecnologias-dependencias.md)
+[← Anterior: 3. Endpoints y Swagger](./03-endpoints-y-enlace-a-swagger.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 5. Tecnologías y Dependencias →](./05-tecnologias-y-dependencias.md)
 
-# 5. Eventos que Publica y Consume (RabbitMQ)
+# 4. Eventos que Publica y Consume (RabbitMQ)
 
 La integración asíncrona se realiza a través de **RabbitMQ 3.12** mediante conexión segura **AMQPS con TLS (puerto `5671`)** y Topic Exchange compartido en StyleRadar:
 
@@ -28,4 +28,4 @@ La integración asíncrona se realiza a través de **RabbitMQ 3.12** mediante co
 
 ---
 
-[← Anterior: 4. Endpoints y Swagger](./04-endpoints-swagger.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 6. Tecnologías y Dependencias →](./06-tecnologias-dependencias.md)
+[← Anterior: 3. Endpoints y Swagger](./03-endpoints-y-enlace-a-swagger.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 5. Tecnologías y Dependencias →](./05-tecnologias-y-dependencias.md)

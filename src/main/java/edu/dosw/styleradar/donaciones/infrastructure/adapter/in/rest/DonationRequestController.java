@@ -215,7 +215,7 @@ public class DonationRequestController {
                                     name = "SelfDonationError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "Regla de negocio: Una fundación no puede reclamar o aceptar su propia donación",
@@ -236,7 +236,7 @@ public class DonationRequestController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente, expirado o con firma no válida.",
@@ -257,7 +257,7 @@ public class DonationRequestController {
                                     name = "InsufficientRoleError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: Se requiere rol FOUNDATION o ADMIN para reclamar donaciones de la vitrina.",
@@ -278,7 +278,7 @@ public class DonationRequestController {
                                     name = "PublicationNotFoundError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999 en el catálogo de donaciones",
@@ -299,7 +299,7 @@ public class DonationRequestController {
                                     name = "ConcurrencyConflictError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La prenda ya fue reclamada concurrentemente por otra fundación o cambió de estado.",
@@ -320,7 +320,7 @@ public class DonationRequestController {
                                     name = "ClaimServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Ocurrió un error inesperado al procesar el reclamo de la donación.",
@@ -389,7 +389,7 @@ public class DonationRequestController {
                                     name = "InvalidInputError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "El identificador de publicación (publicationId) y de fundación (foundationId) son obligatorios.",
@@ -410,7 +410,7 @@ public class DonationRequestController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -431,7 +431,7 @@ public class DonationRequestController {
                                     name = "ForbiddenError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "El usuario autenticado (ID: 102) no es propietario de la prenda ni administrador.",
@@ -452,7 +452,7 @@ public class DonationRequestController {
                                     name = "PublicationNotFoundError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe publicación con ID: 999",
@@ -473,7 +473,7 @@ public class DonationRequestController {
                                     name = "DuplicateDonationConflict",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La publicación ID: 10 ya cuenta con una solicitud de donación activa en estado PENDING.",
@@ -494,7 +494,7 @@ public class DonationRequestController {
                                     name = "CreateDonationServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al registrar la solicitud de donación.",
@@ -645,7 +645,7 @@ public class DonationRequestController {
                                     name = "RequestNotFoundError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe solicitud de donación con ID: 999",
@@ -666,7 +666,7 @@ public class DonationRequestController {
                                     name = "GetRequestServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al consultar la solicitud de donación.",
@@ -733,7 +733,7 @@ public class DonationRequestController {
                                     name = "MissingRejectionReasonError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "Debe especificar el motivo de rechazo (rejectionReason) cuando la solicitud es denegada.",
@@ -754,7 +754,7 @@ public class DonationRequestController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -775,7 +775,7 @@ public class DonationRequestController {
                                     name = "NotTargetFoundationError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "La fundación autenticada (ID: 502) no es la destinataria de la solicitud ID: 1.",
@@ -796,7 +796,7 @@ public class DonationRequestController {
                                     name = "RequestNotFoundError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe solicitud de donación con ID: 999",
@@ -817,7 +817,7 @@ public class DonationRequestController {
                                     name = "InvalidStateForDecisionError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La solicitud con ID: 1 no se encuentra en estado PENDING para ser evaluada.",
@@ -838,7 +838,7 @@ public class DonationRequestController {
                                     name = "DecisionServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al registrar la decisión de la fundación.",
@@ -911,7 +911,7 @@ public class DonationRequestController {
                                     name = "InvalidTimeSlotError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "La hora de inicio (slotStart) debe ser estrictamente anterior a la hora de fin (slotEnd).",
@@ -932,7 +932,7 @@ public class DonationRequestController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -953,7 +953,7 @@ public class DonationRequestController {
                                     name = "UnauthorizedForPickupError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "El usuario autenticado no está autorizado para agendar la recogida de esta solicitud.",
@@ -974,7 +974,7 @@ public class DonationRequestController {
                                     name = "RequestNotFoundError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe solicitud de donación con ID: 999",
@@ -995,7 +995,7 @@ public class DonationRequestController {
                                     name = "InvalidStateForPickupError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La solicitud con ID: 1 debe estar en estado APPROVED para agendar logística de recogida.",
@@ -1016,7 +1016,7 @@ public class DonationRequestController {
                                     name = "PickupServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al agendar la recogida de la donación.",
@@ -1085,7 +1085,7 @@ public class DonationRequestController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -1106,7 +1106,7 @@ public class DonationRequestController {
                                     name = "NotReceivingFoundationError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "Acceso denegado: Solo la fundación receptora (ID: 501) puede confirmar la recepción física de la prenda.",
@@ -1127,7 +1127,7 @@ public class DonationRequestController {
                                     name = "RequestNotFoundError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/not-found",
+                                      "type": "https://api.styleradar.com/errors/resource-not-found",
                                       "title": "Recurso no encontrado",
                                       "status": 404,
                                       "detail": "No existe solicitud de donación con ID: 999",
@@ -1148,7 +1148,7 @@ public class DonationRequestController {
                                     name = "InvalidStateForConfirmationError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/conflict",
+                                      "type": "https://api.styleradar.com/errors/domain-conflict",
                                       "title": "Conflicto de dominio",
                                       "status": 409,
                                       "detail": "La solicitud con ID: 1 se encuentra en estado APPROVED y no en IN_PICKUP para confirmar la entrega física.",
@@ -1169,7 +1169,7 @@ public class DonationRequestController {
                                     name = "ConfirmationServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al confirmar la entrega física de la donación.",
@@ -1239,7 +1239,7 @@ public class DonationRequestController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -1260,7 +1260,7 @@ public class DonationRequestController {
                                     name = "NotDonorOwnerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "El usuario autenticado (ID: 102) no coincide con el donante consultado (ID: 101).",
@@ -1281,7 +1281,7 @@ public class DonationRequestController {
                                     name = "DonorHistoryServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al consultar el historial del donante.",
@@ -1350,7 +1350,7 @@ public class DonationRequestController {
                                     name = "UnauthorizedError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/unauthorized",
+                                      "type": "https://api.styleradar.com/errors/unauthorized",
                                       "title": "No autenticado",
                                       "status": 401,
                                       "detail": "Token Bearer JWT ausente o inválido.",
@@ -1371,7 +1371,7 @@ public class DonationRequestController {
                                     name = "NotAuthenticatedFoundationError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/forbidden",
+                                      "type": "https://api.styleradar.com/errors/forbidden",
                                       "title": "Acceso denegado",
                                       "status": 403,
                                       "detail": "La fundación autenticada (ID: 502) no coincide con el foundationId consultado (ID: 501).",
@@ -1392,7 +1392,7 @@ public class DonationRequestController {
                                     name = "FoundationInboxServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al consultar la bandeja de la fundación.",
