@@ -14,13 +14,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
 import edu.dosw.styleradar.donaciones.domain.model.DonationRequest;
 import edu.dosw.styleradar.donaciones.domain.port.out.FoundationCatalogPort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class ResourceOwnershipValidatorTest {
@@ -289,5 +292,36 @@ class ResourceOwnershipValidatorTest {
         DonationRequest reqForbidden = DonationRequest.builder().id(11L).donorId(101L).foundationId(99L).build();
         assertThatThrownBy(() -> representativeValidator.validateDonationRequestAccess(reqForbidden))
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("validateDonationRequestAccess debe retornar de inmediato para el donante propietario y denegar con 403 al donante ajeno sin consultar ms-tiendas aunque esté indisponible")
+    void shouldBypassTiendasForOwnerDonorAndForeignDonorEvenWhenTiendasUnavailable() {
+        FoundationCatalogPort foundationCatalogPort = mock(FoundationCatalogPort.class);
+        when(foundationCatalogPort.isFoundationRepresentative(any(), any()))
+                .thenThrow(new ExternalServiceUnavailableException("ms-tiendas indisponible"));
+        ResourceOwnershipValidator representativeValidator = new ResourceOwnershipValidator(foundationCatalogPort);
+
+        DonationRequest request = DonationRequest.builder().id(10L).donorId(101L).foundationId(3L).build();
+
+        // Donante propietario (USER): retorna sin consultar ms-tiendas
+        Authentication ownerDonorAuth = new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(101L, "donor@styleradar.com", "pass", "Donor", Role.USER),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        assertThatCode(() -> representativeValidator.validateDonationRequestAccess(ownerDonorAuth, request))
+                .doesNotThrowAnyException();
+
+        // Donante ajeno (USER): lanza AccessDeniedException sin consultar ms-tiendas
+        Authentication foreignDonorAuth = new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(202L, "foreign@styleradar.com", "pass", "Foreign", Role.USER),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        assertThatThrownBy(() -> representativeValidator.validateDonationRequestAccess(foreignDonorAuth, request))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verifyNoInteractions(foundationCatalogPort);
     }
 }

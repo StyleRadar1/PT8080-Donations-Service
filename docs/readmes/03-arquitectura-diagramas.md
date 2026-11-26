@@ -24,7 +24,7 @@ Diseñado siguiendo el formato y paleta visual oficial de **StyleRadar** (`#4811
    - `DonationRequestController`: Reclamo de vitrina, radicación (con `DeliveryProposalDTO` y `donorId` resuelto desde JWT) y coordinación logística de donaciones.
    - `PhotoUploadController`: Endpoint de subida binaria `multipart/form-data` para fotografías de prendas.
    - `MapperIn` (`PublicationRestMapper` & `DonationRestMapper`): Conversión MapStruct entre DTOs REST y comandos de entrada.
-   - `JwtAuthenticationFilter & SecurityConfig` + `GlobalExceptionHandler`: Filtro JWT, control RBAC (`ResourceOwnershipValidator`) y manejo centralizado de errores RFC 7807 (`ProblemDetail`).
+   - `JwtAuthenticationFilter & SecurityConfig` + `CorrelationIdFilter` + `GlobalExceptionHandler`: Filtro JWT, propagación/generación de `X-Correlation-Id` y `X-Request-Id` en MDC, control RBAC (`ResourceOwnershipValidator`) y manejo centralizado de errores RFC 7807 (`ProblemDetail` con mensajes sanitizados y `correlationId`).
 2. **Casos de Uso & Dominio (`application & domain`):**
    - Puertos de Entrada (`«port in»`): `CreatePublicationUseCase`, `ManagePublicationUseCase`, `GetPublicationsUseCase`, `ClaimDonationUseCase`, `CreateDonationRequestUseCase`, `DecideDonationRequestUseCase`, `ScheduleDonationPickupUseCase`, `ConfirmDonationReceiptUseCase`, `UploadGarmentPhotoUseCase`.
    - Servicios de Aplicación: `PublicationCommandService`, `PublicationQueryService`, `DonationRequestService`, `GarmentPhotoService`.
@@ -110,7 +110,7 @@ src/main/java/edu/dosw/styleradar/donaciones/
 └── infrastructure/                              <-- CAPA DE INFRAESTRUCTURA (Tecnologías y Frameworks)
     ├── adapter/
     │   ├── in/
-    │   │   ├── rest/                            <-- SecondHandPublicationController, DonationRequestController, PhotoUploadController, AuthController, HealthController
+    │   │   ├── rest/                            <-- SecondHandPublicationController, DonationRequestController, PhotoUploadController, AuthController, HealthController + filter.CorrelationIdFilter
     │   │   └── messaging/                       <-- NotificationConsumerSimulator (Consumidor de prueba E2E)
     │   └── out/
     │       ├── external/                        <-- TiendasFoundationCatalogAdapter + TiendasFoundationResponseDTO

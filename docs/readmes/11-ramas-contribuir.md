@@ -22,8 +22,8 @@ main                                    <-- Producción (Azure PROD · Cierre de
 
 - [x] La rama parte de la versión más reciente de `develop`.
 - [x] El código compila limpiamente sin advertencias críticas con `mvn clean compile`.
-- [x] Todas las pruebas automatizadas resultan aprobadas (`mvn -B clean verify "-Dapi.version=1.44"` con **309 pruebas aprobadas en entorno local** de 310 en Surefire —0 fallos, 0 errores, 1 clase condicional PostgreSQL omitida sin Docker—; último baseline en `develop` `952da52`: **282** en CI con Docker, [Run CI `develop` (#45529263718)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45529263718)).
-- [x] La cobertura en JaCoCo supera el `85.00%` obligatorio de líneas (alcanzado en entorno local: **97.36% líneas / 97.33% instrucciones / 87.26% ramas / 95.30% métodos**, detallado en [`09-pruebas-cobertura.md`](./09-pruebas-cobertura.md)).
+- [x] Todas las pruebas automatizadas resultan aprobadas (`mvn -B clean verify` con **329 pruebas aprobadas en entorno local** de 330 en Surefire —0 fallos, 0 errores, 1 clase condicional PostgreSQL omitida sin Docker—; último pipeline CI en PR #22 `d37c712`: **329 pruebas aprobadas** con Docker, [Run CI PR #22 (#45718968903)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45718968903); último `develop` `cee0037`: [Run CI `develop` (#45548074249)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45548074249)).
+- [x] La cobertura en JaCoCo supera el `85.00%` obligatorio de líneas (alcanzado en entorno local: **96.59% líneas / 96.45% instrucciones / 83.90% ramas / 95.61% métodos**, detallado en [`09-pruebas-cobertura.md`](./09-pruebas-cobertura.md)).
 - [x] Diagramas de arquitectura actualizados en [`docs/diagramas/drawio`](../diagramas/drawio) y [`docs/diagramas/png`](../diagramas/png).
 - [x] Evidencias de pruebas, cobertura JaCoCo, SonarQube, Swagger y despliegue almacenadas en [`docs/evidencias/`](../evidencias/).
 - [x] Colección Postman y pruebas automatizadas de todos los endpoints disponibles en [`docs/postman/`](../postman/).

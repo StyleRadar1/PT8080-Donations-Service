@@ -48,6 +48,24 @@ public class DonationRequestPersistenceAdapter implements DonationRequestReposit
 
     @Override
     @Transactional(readOnly = true)
+    public List<DonationRequest> findAll() {
+        return donationRequestRepository.findAllByOrderByRequestedAtDesc()
+                .stream()
+                .map(donationRequestMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DonationRequest> findByStatus(DonationRequestStatus status) {
+        return donationRequestRepository.findByStatusOrderByRequestedAtDesc(status)
+                .stream()
+                .map(donationRequestMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<DonationRequest> findByDonorId(Long donorId) {
         return donationRequestRepository.findByDonorIdOrderByRequestedAtDesc(donorId)
                 .stream()

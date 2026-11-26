@@ -8,8 +8,9 @@ El ciclo de integración y despliegue continuo está automatizado en **GitHub Ac
 
 | Pipeline | Rama / Entorno | Trigger | Quality Gate Requerido | Ejecución y Estado |
 | :--- | :---: | :---: | :--- | :---: |
-| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR hacia `develop` | **309 pruebas aprobadas en local** *(310 en Surefire; `develop` `952da52` en CI con Docker: 282)* + JaCoCo Líneas `≥ 85%` (`97.36%` en local) + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45529263718) |
-| **CI - Main** | `main`<br>*(Producción)* | Push / PR (`develop → main`) | **309 pruebas aprobadas en local** *(baseline `main` en CI con Docker: 277)* + JaCoCo Líneas `≥ 85%` (`97.36%` en local) + Docker Build | [![CI Main](https://img.shields.io/badge/main-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
+| **CI - PR #22 (`fix/auditoria-integral`)** | `fix/auditoria-integral` → `develop` | Push / PR #22 (`d37c712`) | **329 pruebas aprobadas en CI con Docker** (en local: **329 aprobadas** de 330 en Surefire, `96.59%` Líneas JaCoCo `≥ 85%`) | [![CI PR #22](https://img.shields.io/badge/PR_%2322-329_aprobadas-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45718968903) |
+| **CI - Develop** | `develop`<br>*(Staging QA)* | Push / PR hacia `develop` | **329 pruebas aprobadas en local** *(330 en Surefire; último `develop` `cee0037` aprobado en CI)* + JaCoCo Líneas `≥ 85%` (`96.59%` en local) + Docker Build | [![CI Develop](https://img.shields.io/badge/develop-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45548074249) |
+| **CI - Main** | `main`<br>*(Producción)* | Push / PR (`develop → main`) | **329 pruebas aprobadas en local** *(baseline `main` en CI con Docker: 277)* + JaCoCo Líneas `≥ 85%` (`96.59%` en local) + Docker Build | [![CI Main](https://img.shields.io/badge/main-aprobado-16A34A?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
 | **CD - Despliegue QA** | Azure QA (`rg-styleradar`) | Push / Merge a `develop` | Deploy Web App + Smoke Test `/api/v1/health` | [![Deploy QA](https://img.shields.io/badge/Deploy_QA-Azure_Active-5600EF?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/health) |
 | **CD - Despliegue PROD** | Azure PROD (`rg-styleradar`) | Push / Merge `develop → main` (CMV) | Aprobación CMV + Smoke Test `/api/v1/health` | [![Deploy PROD](https://img.shields.io/badge/Deploy_PROD-Azure_Active-16A34A?style=flat-square&logo=microsoftazure&logoColor=white)](https://styleradar-donaciones-prod-jmunar.azurewebsites.net/api/v1/health) |
 
@@ -18,7 +19,7 @@ El ciclo de integración y despliegue continuo está automatizado en **GitHub Ac
 ```mermaid
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
-    B --> C["309 Pruebas Aprobadas (Local) & JaCoCo<br>(97.36% Líneas ≥ 85%)"]
+    B --> C["329 Pruebas Aprobadas (Local y CI PR #22) & JaCoCo<br>(96.59% Líneas ≥ 85%)"]
     C --> D["Empaquetado JAR &<br>Docker OCI Image"]
     D -->|Rama develop| E["Deploy Automático QA<br>(Smoke Test /api/v1/health)"]
     D -->|Cierre develop → main + CMV| F["Deploy Producción PROD<br>(Smoke Test /api/v1/health)"]

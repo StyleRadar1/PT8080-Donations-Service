@@ -184,4 +184,18 @@ class DonationRequestPersistenceAdapterTest {
                 .extracting(DonationRequest::getStatus)
                 .containsExactlyInAnyOrder(DonationRequestStatus.PENDING, DonationRequestStatus.IN_PICKUP);
     }
+
+    @Test
+    @DisplayName("Debe listar todas las solicitudes o filtrarlas por estado para consultas administrativas")
+    void shouldFindAllAndByStatusOrderedByRequestedAtDesc() {
+        adapter.save(buildSampleRequest(testPublicationId1, 101L, 501L, DonationRequestStatus.PENDING));
+        adapter.save(buildSampleRequest(testPublicationId2, 102L, 502L, DonationRequestStatus.APPROVED));
+        adapter.save(buildSampleRequest(testPublicationId3, 103L, 501L, DonationRequestStatus.REJECTED));
+
+        assertThat(adapter.findAll()).hasSize(3);
+        assertThat(adapter.findByStatus(DonationRequestStatus.APPROVED))
+                .hasSize(1)
+                .extracting(DonationRequest::getStatus)
+                .containsExactly(DonationRequestStatus.APPROVED);
+    }
 }

@@ -39,8 +39,8 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 | `JWT_SECRET_BASE64` | Clave Base64 HMAC-SHA256 compartida con `ms-auth` (≥ 256 bits) | Clave local dev/test | Sí |
 | `TIENDAS_SERVICE_URL` | URL base de `ms-tiendas` para fundaciones (`SR-RF-45`) | `http://localhost:8140` (`qa`/`prod` Azure) | Sí |
 | `TIENDAS_FOUNDATIONS_PATH` | Ruta del listado público de fundaciones en `ms-tiendas` | `/api/v1/foundations` | Opcional |
-| `TIENDAS_FOUNDATION_BY_ID_PATH` | Ruta interna de detalle por ID (si está vacía, resuelve desde el listado general) | `/api/v1/internal/foundations/{id}` | Opcional |
-| `TIENDAS_FOUNDATION_BY_REPRESENTATIVE_PATH` | Ruta interna de consulta por `representativeId` (si está vacía, resuelve desde el listado general) | `/api/v1/internal/foundations?representativeId={representativeId}` | Opcional |
+| `TIENDAS_FOUNDATION_BY_ID_PATH` | Ruta interna de detalle por ID (si falla o falta secreto, solo usa listado público para validar existencia/actividad, nunca para autorización) | `/api/v1/internal/foundations/{id}` | Opcional |
+| `TIENDAS_FOUNDATION_BY_REPRESENTATIVE_PATH` | Ruta interna autenticada por `representativeId` (en fallback usa exclusivamente `/api/v1/foundations/representative` con Bearer entrante; nunca listado público) | `/api/v1/internal/foundations?representativeId={representativeId}` | Opcional |
 | `TIENDAS_INTERNAL_USERNAME` | Usuario HTTP Basic para endpoints internos de `ms-tiendas` | `ms-donaciones` | Sí (QA/PROD) |
 | `TIENDAS_INTERNAL_PASSWORD` | Contraseña HTTP Basic para endpoints internos de `ms-tiendas` | Vacío *(secreto en Azure)* | Sí (QA/PROD) |
 | `TIENDAS_VALIDATION_ENABLED` | Activa/desactiva validación remota de fundaciones en `ms-tiendas` | `true` (`false` en test) | Opcional |

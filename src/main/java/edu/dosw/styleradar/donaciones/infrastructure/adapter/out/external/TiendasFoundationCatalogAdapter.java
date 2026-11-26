@@ -10,6 +10,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -25,16 +27,16 @@ import edu.dosw.styleradar.donaciones.infrastructure.config.TiendasProperties;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * Adaptador HTTP hacia ms-tiendas para listar fundaciones aliadas activas
- * y verificar su existencia/estado antes de aceptar donaciones (SR-RF-44).
- * Propaga el token Bearer JWT de la petición entrante (si existe) y adjunta
- * la cabecera de servicio configurable esperada por ms-tiendas.
+ * Adaptador HTTP hacia ms-tiendas para listar fundaciones aliadas activas (catálogo público)
+ * y verificar autorización/propiedad mediante endpoints autenticados que exponen {@code representativeId}.
+ * Separa estrictamente las consultas de catálogo público de la verificación RBAC de propiedad.
  */
 @Component
 public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
 
     private static final Logger log = LoggerFactory.getLogger(TiendasFoundationCatalogAdapter.class);
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String REPRESENTATIVE_FALLBACK_PATH = "/api/v1/foundations/representative";
 
     private final RestClient tiendasRestClient;
     private final TiendasProperties tiendasProperties;
@@ -74,57 +76,147 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         }
     }
 
+    /**
+     * Consulta una fundación para visualización o validación de existencia/estado activo.
+     * Solo ante indisponibilidad del endpoint interno puede degradar al listado público de catálogo
+     * (el cual no expone {@code representativeId}).
+     */
     @Override
     public Optional<FoundationSummary> findFoundationById(Long foundationId) {
         if (foundationId == null || !tiendasProperties.isValidationEnabled()) {
             return Optional.empty();
         }
 
-        // Si no hay endpoint por ID configurado, consultamos la lista general y filtramos en memoria.
         if (!hasText(tiendasProperties.getFoundationByIdPath())) {
-            return fetchAllFoundations().stream()
-                    .filter(foundation -> foundationId.equals(foundation.id()))
-                    .findFirst();
+            return findFoundationByIdFromPublicCatalog(foundationId);
         }
 
-        return fetchSingleFoundation(
-                tiendasProperties.getFoundationByIdPath(),
-                foundationId,
-                "la fundación ID: " + foundationId,
-                "No fue posible validar la fundación con ms-tiendas. Intente nuevamente más tarde.",
-                "Fundación ID: {} no encontrada en ms-tiendas"
-        );
+        if (!hasInternalCredentials()) {
+            log.warn("Credenciales internas de ms-tiendas no configuradas; usando catálogo público de solo lectura para consultar existencia de fundación ID: {}",
+                    foundationId);
+            return findFoundationByIdFromPublicCatalog(foundationId);
+        }
+
+        try {
+            return fetchSingleFoundationInternal(
+                    tiendasProperties.getFoundationByIdPath(),
+                    foundationId,
+                    "Fundación ID: {} no encontrada en ms-tiendas"
+            );
+        } catch (HttpClientErrorException ex) {
+            if (shouldFallbackFromInternal(ex)) {
+                log.warn("Error {} en endpoint interno de ms-tiendas para consulta pública de fundación ID: {}. "
+                        + "Usando catálogo público (sin representativeId).",
+                        ex.getStatusCode().value(), foundationId);
+                return findFoundationByIdFromPublicCatalog(foundationId);
+            }
+            throw handleTiendasFailure(
+                    "la fundación ID: " + foundationId,
+                    "No fue posible validar la fundación con ms-tiendas. Intente nuevamente más tarde.",
+                    ex);
+        } catch (RestClientException ex) {
+            if (isServerOrConnectivityFailure(ex)) {
+                log.warn("Fallo en endpoint interno de ms-tiendas para fundación ID: {}: {}. Usando catálogo público (sin representativeId).",
+                        foundationId, ex.getMessage());
+                return findFoundationByIdFromPublicCatalog(foundationId);
+            }
+            throw handleTiendasFailure(
+                    "la fundación ID: " + foundationId,
+                    "No fue posible validar la fundación con ms-tiendas. Intente nuevamente más tarde.",
+                    ex);
+        }
     }
 
+    /**
+     * Resuelve la fundación de un representante utilizando exclusivamente endpoints autenticados
+     * que garantizan la presencia de {@code representativeId}. Nunca consulta el listado público.
+     */
     @Override
     public Optional<FoundationSummary> findFoundationByRepresentativeId(Long representativeId) {
         if (representativeId == null || !tiendasProperties.isValidationEnabled()) {
             return Optional.empty();
         }
 
-        // Si no hay endpoint interno por representante configurado, consultamos la lista general y filtramos en memoria.
         if (!hasText(tiendasProperties.getFoundationByRepresentativePath())) {
-            return fetchAllFoundations().stream()
-                    .filter(foundation -> representativeId.equals(foundation.representanteId()))
-                    .findFirst();
+            return fetchRepresentativeFoundationWithIncomingBearer(representativeId);
         }
 
-        return fetchSingleFoundation(
-                tiendasProperties.getFoundationByRepresentativePath(),
-                representativeId,
-                "la fundación del representante ID: " + representativeId,
-                "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.",
-                "No se encontró fundación asociada al representante ID: {} en ms-tiendas"
-        );
+        if (!hasInternalCredentials()) {
+            return fetchRepresentativeFoundationWithIncomingBearer(representativeId);
+        }
+
+        try {
+            return fetchSingleFoundationInternal(
+                    tiendasProperties.getFoundationByRepresentativePath(),
+                    representativeId,
+                    "No se encontró fundación asociada al representante ID: {} en ms-tiendas"
+            );
+        } catch (HttpClientErrorException ex) {
+            if (shouldFallbackFromInternal(ex)) {
+                log.warn("Acceso rechazado o error {} en endpoint interno de representante {} en ms-tiendas. "
+                        + "Intentando verificación autenticada en {}.",
+                        ex.getStatusCode().value(), representativeId, REPRESENTATIVE_FALLBACK_PATH);
+                return fetchRepresentativeFoundationWithIncomingBearer(representativeId);
+            }
+            throw handleTiendasFailure(
+                    "la fundación del representante ID: " + representativeId,
+                    "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.",
+                    ex);
+        } catch (RestClientException ex) {
+            if (isServerOrConnectivityFailure(ex)) {
+                log.warn("Fallo en endpoint interno de representante {} en ms-tiendas: {}. "
+                        + "Intentando verificación autenticada en {}.",
+                        representativeId, ex.getMessage(), REPRESENTATIVE_FALLBACK_PATH);
+                return fetchRepresentativeFoundationWithIncomingBearer(representativeId);
+            }
+            throw handleTiendasFailure(
+                    "la fundación del representante ID: " + representativeId,
+                    "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.",
+                    ex);
+        }
     }
 
-    private Optional<FoundationSummary> fetchSingleFoundation(
+    private Optional<FoundationSummary> findFoundationByIdFromPublicCatalog(Long foundationId) {
+        return fetchAllFoundations().stream()
+                .filter(foundation -> foundationId.equals(foundation.id()))
+                .findFirst();
+    }
+
+    private Optional<FoundationSummary> fetchRepresentativeFoundationWithIncomingBearer(Long representativeId) {
+        Optional<String> incomingBearer = extractIncomingBearerHeader();
+        if (incomingBearer.isEmpty()) {
+            log.error("Sin credenciales internas ni token Bearer entrante para verificar representante ID: {} en ms-tiendas.",
+                    representativeId);
+            throw new ExternalServiceUnavailableException(
+                    "No fue posible verificar la representación de la fundación en ms-tiendas. Intente nuevamente más tarde.");
+        }
+        try {
+            TiendasFoundationResponseDTO response = tiendasRestClient.get()
+                    .uri(REPRESENTATIVE_FALLBACK_PATH)
+                    .header(HttpHeaders.AUTHORIZATION, incomingBearer.get())
+                    .retrieve()
+                    .body(TiendasFoundationResponseDTO.class);
+
+            return Optional.ofNullable(response)
+                    .map(this::toDomain)
+                    .filter(foundation -> foundation.representanteId() != null
+                            && representativeId.equals(foundation.representanteId()));
+        } catch (HttpClientErrorException.NotFound ex) {
+            log.warn("No se encontró fundación asociada al representante ID: {} en ms-tiendas (consulta autenticada)", representativeId);
+            return Optional.empty();
+        } catch (RestClientException ex) {
+            throw handleTiendasFailure(
+                    "la fundación del representante ID: " + representativeId,
+                    "No fue posible consultar la fundación del representante en ms-tiendas. Intente nuevamente más tarde.",
+                    ex);
+        }
+    }
+
+    private Optional<FoundationSummary> fetchSingleFoundationInternal(
             String pathTemplate,
             Long identifier,
-            String target,
-            String publicMessage,
             String notFoundLogMessage) {
-        ensureInternalCredentialsConfigured(target);
+        ensureInternalCredentialsConfigured("el endpoint interno de ms-tiendas");
         try {
             TiendasFoundationResponseDTO response = tiendasRestClient.get()
                     .uri(pathTemplate, identifier)
@@ -136,19 +228,31 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         } catch (HttpClientErrorException.NotFound ex) {
             log.warn(notFoundLogMessage, identifier);
             return Optional.empty();
-        } catch (RestClientException ex) {
-            throw handleTiendasFailure(target, publicMessage, ex);
         }
     }
 
     private void ensureInternalCredentialsConfigured(String target) {
-        if (!hasText(tiendasProperties.getInternalUsername()) || !hasText(tiendasProperties.getInternalPassword())) {
-            log.error("Credenciales Basic internas de ms-tiendas no configuradas para consultar {} "
+        if (!hasInternalCredentials()) {
+            log.error("Credenciales Basic internas de ms-tiendas no configuradas para {} "
                             + "(styleradar.tiendas.internal-username / internal-password). Se cancela la llamada saliente.",
                     target);
             throw new ExternalServiceUnavailableException(
                     "La integración interna con ms-tiendas no se encuentra configurada correctamente. Intente nuevamente más tarde.");
         }
+    }
+
+    private boolean hasInternalCredentials() {
+        return hasText(tiendasProperties.getInternalUsername()) && hasText(tiendasProperties.getInternalPassword());
+    }
+
+    private static boolean shouldFallbackFromInternal(HttpClientErrorException ex) {
+        return ex.getStatusCode() == HttpStatus.UNAUTHORIZED
+                || ex.getStatusCode() == HttpStatus.FORBIDDEN
+                || ex.getStatusCode().is5xxServerError();
+    }
+
+    private static boolean isServerOrConnectivityFailure(RestClientException ex) {
+        return ex instanceof HttpServerErrorException || ex instanceof ResourceAccessException;
     }
 
     private ExternalServiceUnavailableException handleTiendasFailure(
@@ -239,14 +343,84 @@ public class TiendasFoundationCatalogAdapter implements FoundationCatalogPort {
         }
     }
 
+    /**
+     * Verifica la propiedad de una fundación exclusivamente contra fuentes autenticadas que expongan
+     * {@code representativeId}, sin usar nunca el catálogo público {@code /api/v1/foundations}.
+     */
     @Override
     public boolean isFoundationRepresentative(Long userId, Long foundationId) {
         if (userId == null || foundationId == null || !tiendasProperties.isValidationEnabled()) {
             return false;
         }
-        return findFoundationById(foundationId)
-                .map(foundation -> foundation.representanteId() != null && foundation.representanteId().equals(userId))
-                .orElse(false);
+
+        Optional<FoundationSummary> internalFoundation = tryFetchInternalFoundationForAuthorization(foundationId);
+        if (internalFoundation.isPresent()) {
+            FoundationSummary foundation = internalFoundation.get();
+            return foundation.representanteId() != null && foundation.representanteId().equals(userId);
+        }
+
+        return false;
+    }
+
+    private Optional<FoundationSummary> tryFetchInternalFoundationForAuthorization(Long foundationId) {
+        if (hasText(tiendasProperties.getFoundationByIdPath()) && hasInternalCredentials()) {
+            try {
+                Optional<FoundationSummary> direct = fetchSingleFoundationInternal(
+                        tiendasProperties.getFoundationByIdPath(),
+                        foundationId,
+                        "Fundación ID: {} no encontrada en ms-tiendas durante verificación de propiedad"
+                );
+                if (direct.isPresent() && direct.get().representanteId() != null) {
+                    return direct;
+                }
+                if (direct.isEmpty()) {
+                    return Optional.empty();
+                }
+            } catch (RestClientException ex) {
+                if (!(ex instanceof HttpClientErrorException httpEx && shouldFallbackFromInternal(httpEx))
+                        && !isServerOrConnectivityFailure(ex)) {
+                    throw handleTiendasFailure(
+                            "la autorización sobre la fundación ID: " + foundationId,
+                            "No fue posible verificar la propiedad de la fundación en ms-tiendas. Intente nuevamente más tarde.",
+                            ex);
+                }
+                log.warn("No se pudo verificar propiedad vía endpoint interno para fundación ID: {}; intentando vía representante autenticado.",
+                        foundationId);
+            }
+        }
+
+        if (extractIncomingBearerHeader().isPresent()) {
+            return fetchRepresentativeFoundationViaIncomingBearerForFoundation(foundationId);
+        }
+
+        throw new ExternalServiceUnavailableException(
+                "No fue posible verificar la propiedad de la fundación en ms-tiendas mediante un canal autenticado.");
+    }
+
+    private Optional<FoundationSummary> fetchRepresentativeFoundationViaIncomingBearerForFoundation(Long foundationId) {
+        Optional<String> incomingBearer = extractIncomingBearerHeader();
+        if (incomingBearer.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            TiendasFoundationResponseDTO response = tiendasRestClient.get()
+                    .uri(REPRESENTATIVE_FALLBACK_PATH)
+                    .header(HttpHeaders.AUTHORIZATION, incomingBearer.get())
+                    .retrieve()
+                    .body(TiendasFoundationResponseDTO.class);
+
+            return Optional.ofNullable(response)
+                    .map(this::toDomain)
+                    .filter(foundation -> foundationId.equals(foundation.id())
+                            && foundation.representanteId() != null);
+        } catch (HttpClientErrorException.NotFound ex) {
+            return Optional.empty();
+        } catch (RestClientException ex) {
+            throw handleTiendasFailure(
+                    "la autorización sobre la fundación ID: " + foundationId,
+                    "No fue posible verificar la propiedad de la fundación en ms-tiendas. Intente nuevamente más tarde.",
+                    ex);
+        }
     }
 
     private FoundationSummary toDomain(TiendasFoundationResponseDTO dto) {

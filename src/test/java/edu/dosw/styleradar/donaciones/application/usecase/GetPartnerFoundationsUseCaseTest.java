@@ -140,10 +140,11 @@ class GetPartnerFoundationsUseCaseTest {
         assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(55L))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        // Respuesta sin representanteId explícito (p. ej. mock minimal) pero activa es aceptada
+        // Respuesta sin representanteId explícito debe fallar por falta de asociación verificable
         FoundationSummary activeWithoutRepField = foundation(6L, "Mínima", List.of("SUPERIOR"), true);
         when(foundationCatalogPort.findFoundationByRepresentativeId(66L)).thenReturn(Optional.of(activeWithoutRepField));
-        assertThat(useCase.getFoundationByRepresentativeId(66L).id()).isEqualTo(6L);
+        assertThatThrownBy(() -> useCase.getFoundationByRepresentativeId(66L))
+                .isInstanceOf(ResourceNotFoundException.class);
 
         FoundationSummary withoutRep = new FoundationSummary(
                 88L, null, "Suba", "Desc", "Dir", "Tel",

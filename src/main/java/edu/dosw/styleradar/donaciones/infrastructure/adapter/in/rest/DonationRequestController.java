@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -517,6 +519,85 @@ public class DonationRequestController {
         DonationRequest request = createDonationRequestUseCase.create(command);
         DonationRequestResponseDTO response = donationRequestRestMapper.toResponse(request);
         return ResponseEntity.created(URI.create("/api/v1/donations/" + request.getId())).body(response);
+    }
+
+    @Operation(
+            summary = "List donations for authenticated actor",
+            description = "Lists donation requests according to the authenticated actor's role: ADMIN receives all platform donation requests, FOUNDATION resolves its allied foundation by representative ID and returns its inbox, and USER/STORE returns their donor history.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Authenticated actor's donation requests",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = DonationRequestResponseDTO.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthenticated",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Foundation not found for FOUNDATION representative",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "ms-tiendas temporarily unavailable while resolving FOUNDATION actor",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'STORE', 'FOUNDATION', 'ADMIN')")
+    public ResponseEntity<List<DonationRequestResponseDTO>> listAuthenticatedActorDonations(
+            @Parameter(description = "Optional status filter", example = "PENDING")
+            @RequestParam(required = false) DonationRequestStatus status) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long authenticatedUserId = resourceOwnershipValidator.extractAuthenticatedUserId();
+        if (authenticatedUserId == null) {
+            throw new InvalidDonationRequestException(
+                    "El identificador del usuario autenticado no está disponible en el token de sesión JWT");
+        }
+
+        List<DonationRequest> results;
+        if (hasRole(authentication, "ROLE_ADMIN")) {
+            results = createDonationRequestUseCase.getAll(status);
+        } else if (isFoundationCaller(authentication)) {
+            FoundationSummary foundation = getPartnerFoundationsUseCase.getFoundationByRepresentativeId(authenticatedUserId);
+            results = createDonationRequestUseCase.getByFoundationId(foundation.id(), status);
+        } else {
+            List<DonationRequest> donorDonations = createDonationRequestUseCase.getByDonorId(authenticatedUserId);
+            results = (status == null)
+                    ? donorDonations
+                    : donorDonations.stream().filter(d -> status == d.getStatus()).toList();
+        }
+        return ResponseEntity.ok(donationRequestRestMapper.toResponseList(results));
+    }
+
+    private boolean isFoundationCaller(Authentication authentication) {
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        boolean hasFoundation = hasRole(authentication, "ROLE_FOUNDATION");
+        boolean hasDonorOrAdmin = hasRole(authentication, "ROLE_USER")
+                || hasRole(authentication, "ROLE_STORE")
+                || hasRole(authentication, "ROLE_ADMIN");
+        return hasFoundation && !hasDonorOrAdmin;
+    }
+
+    private static boolean hasRole(Authentication authentication, String prefixedRole) {
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        String unprefixed = prefixedRole.startsWith("ROLE_")
+                ? prefixedRole.substring("ROLE_".length())
+                : prefixedRole;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> prefixedRole.equals(a.getAuthority()) || unprefixed.equals(a.getAuthority()));
     }
 
     @Operation(

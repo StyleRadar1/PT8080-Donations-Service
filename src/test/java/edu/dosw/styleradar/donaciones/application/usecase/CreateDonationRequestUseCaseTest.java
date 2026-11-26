@@ -194,4 +194,16 @@ class CreateDonationRequestUseCaseTest {
         assertThrows(ExternalServiceUnavailableException.class, () -> createDonationRequestUseCase.create(command));
         verify(donationRequestRepositoryPort, never()).save(any());
     }
+
+    @Test
+    @DisplayName("Debe listar todas las solicitudes o filtrarlas por estado desde getAll")
+    void shouldGetAllWithOptionalStatusFilter() {
+        DonationRequest pending = DonationRequest.builder().id(1L).status(DonationRequestStatus.PENDING).build();
+        DonationRequest approved = DonationRequest.builder().id(2L).status(DonationRequestStatus.APPROVED).build();
+        when(donationRequestRepositoryPort.findAll()).thenReturn(List.of(pending, approved));
+        when(donationRequestRepositoryPort.findByStatus(DonationRequestStatus.APPROVED)).thenReturn(List.of(approved));
+
+        assertEquals(2, createDonationRequestUseCase.getAll(null).size());
+        assertEquals(List.of(approved), createDonationRequestUseCase.getAll(DonationRequestStatus.APPROVED));
+    }
 }
