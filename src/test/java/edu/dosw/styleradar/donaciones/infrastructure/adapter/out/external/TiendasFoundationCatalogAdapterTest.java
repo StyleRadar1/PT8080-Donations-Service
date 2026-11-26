@@ -53,6 +53,7 @@ class TiendasFoundationCatalogAdapterTest {
         properties.setBaseUrl(BASE_URL);
         properties.setFoundationsPath("/api/v1/admin/foundations");
         properties.setFoundationByIdPath("/api/v1/admin/foundations/{id}");
+        properties.setRepresentativeFallbackPath("/api/v1/foundations/representative");
         properties.setInternalUsername("ms-donaciones");
         properties.setInternalPassword("test-internal-secret");
         properties.setValidationEnabled(true);
