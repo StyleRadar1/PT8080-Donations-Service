@@ -4,17 +4,18 @@
 
 El proyecto exige una cobertura mínima de **líneas del `85.00%`** y de **ramas del `80.00%`** verificadas automáticamente mediante **JaCoCo** durante la fase `verify` (`./mvnw -B clean verify "-Dapi.version=1.44"`).
 
-## Resumen de Métricas de Pruebas y Cobertura
+## Resumen de Métricas de Pruebas y Cobertura (Local vs. CI)
 
-| Métrica | Valor Alcanzado | Entorno y Condición | Umbral Exigido | Respaldo / Enlace de Ejecución |
+| Métrica | Valor Alcanzado | Origen / Entorno | Umbral Exigido | Respaldo / Enlace de Ejecución |
 | :--- | :---: | :--- | :---: | :--- |
-| **Pruebas Automatizadas (Suite Completa con Docker/Testcontainers)** | **339 pruebas aprobadas** *(0 fallos, 0 errores, 0 omitidas en Surefire)* | **Local con Docker** (`./mvnw -B clean verify`, incluye PostgreSQL 16 en Testcontainers) | Suite completa sin fallos | [`339_test_run.png`](../evidencias/339_test_run.png) · [`docs/evidencias/`](../evidencias/) |
-| **Pruebas Automatizadas (CI `develop` / `main`)** | **`develop` (`a96994a`) aprobado y desplegado en QA** · `main` (**277**) | **CI GitHub Actions** (`ubuntu-latest` con Docker Engine activo) | `≥ 85.00%` líneas / `≥ 80.00%` ramas + 0 fallos | [Run CI/CD QA `develop` (#45756632270)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45756632270) · [Run CD PROD `main` (#45525360439)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
-| **Cobertura de Líneas (JaCoCo `LINE`)** | **97.47%** (`2769 / 2841`) | **Local con Docker** (`./mvnw -B clean verify`, 95 clases analizadas) | `≥ 85.00%` *(gate obligatorio)* | `target/site/jacoco/jacoco.xml` · [`jacoco-final.png`](../evidencias/jacoco-final.png) |
-| **Cobertura de Instrucciones (JaCoCo `INSTRUCTION`)** | **97.50%** (`12171 / 12483`) | **Local con Docker** (`./mvnw -B clean verify`, 95 clases analizadas) | Referencia (`≥ 85.00%`) | `target/site/jacoco/jacoco.xml` |
-| **Cobertura de Ramas (JaCoCo `BRANCH`)** | **88.09%** (`917 / 1041`) | **Local con Docker** (`./mvnw -B clean verify`, 95 clases analizadas) | `≥ 80.00%` *(gate obligatorio)* | `target/site/jacoco/jacoco.xml` · [`jacoco-final.png`](../evidencias/jacoco-final.png) |
-| **Cobertura de Métodos (JaCoCo `METHOD`)** | **95.84%** (`461 / 481`) | **Local con Docker** (`./mvnw -B clean verify`, 95 clases analizadas) | Referencia | `target/site/jacoco/jacoco.xml` |
-| **Auditoría SonarQube** | **Quality Gate Passed (Rating A)** | **Análisis estático local / SonarQube** (`0` Security, `0` Reliability, `0` Maintainability, `0` Hotspots, `93.3%` coverage, `0.2%` duplications) | Quality Gate Aprobado | [`sonarqube-final.png`](../evidencias/sonarqube-final.png) |
+| **Suite en GitHub Actions CI (`ci.yml` · PR #25)** | **339 pruebas aprobadas** *(0 fallos, 0 errores, 0 omitidas)* | **Verificado en CI** (`ubuntu-latest` + Docker, commit `ea87a33`) | `≥ 85.00%` líneas / `≥ 80.00%` ramas + Docker | [Run CI #42 (`45763503959`)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45763503959) · [Run CD QA #47 (`45756632270`)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45756632270) |
+| **Suite en CD PROD (`main`)** | **277 pruebas aprobadas** *(baseline productivo previo)* | **Verificado en CI `main`** (`ubuntu-latest` + Docker) | `≥ 85.00%` + despliegue PROD | [Run CD PROD `main` (#45525360439)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439) |
+| **Suite Completa Local (`./mvnw -B clean verify`)** | **339 pruebas aprobadas** *(0 fallos, 0 errores, 0 omitidas)* | **Medición Local** con Docker Testcontainers (PostgreSQL 16) | Suite completa sin fallos | [`339_test_run.png`](../evidencias/339_test_run.png) · [`docs/evidencias/`](../evidencias/) |
+| **Cobertura de Líneas (JaCoCo `LINE`)** | **97.47%** (`2769 / 2841`) | **Medición Local** (`target/site/jacoco/jacoco.xml`, 95 clases; gate `>= 85%` también validado en CI) | `≥ 85.00%` *(gate obligatorio)* | [`jacoco-final.png`](../evidencias/jacoco-final.png) · [Run CI #42 (`45763503959`)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45763503959) |
+| **Cobertura de Instrucciones (JaCoCo `INSTRUCTION`)** | **97.50%** (`12171 / 12483`) | **Medición Local** (`target/site/jacoco/jacoco.xml`, 95 clases) | Referencia (`≥ 85.00%`) | `target/site/jacoco/jacoco.xml` |
+| **Cobertura de Ramas (JaCoCo `BRANCH`)** | **88.09%** (`917 / 1041`) | **Medición Local** (`target/site/jacoco/jacoco.xml`, 95 clases; gate `>= 80%` también validado en CI) | `≥ 80.00%` *(gate obligatorio)* | [`jacoco-final.png`](../evidencias/jacoco-final.png) · [Run CI #42 (`45763503959`)](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45763503959) |
+| **Cobertura de Métodos (JaCoCo `METHOD`)** | **95.84%** (`461 / 481`) | **Medición Local** (`target/site/jacoco/jacoco.xml`, 95 clases) | Referencia | `target/site/jacoco/jacoco.xml` |
+| **Auditoría SonarQube / SonarCloud** | **Local: Quality Gate Passed (Rating A)** · **CI: obligatorio vía `SONAR_TOKEN`** | **Local:** `0` Issues (`0` Sec / `0` Rel / `0` Maint / `0` Hotspots, `93.3%` cov, `0.2%` dup).<br>**CI:** Ejecución obligatoria en ramas oficiales y PRs internos (falla si falta `SONAR_TOKEN`). | Quality Gate Aprobado | [`sonarqube-final.png`](../evidencias/sonarqube-final.png) |
 
 ---
 

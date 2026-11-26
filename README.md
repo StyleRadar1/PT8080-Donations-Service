@@ -30,11 +30,12 @@
     <a href="docs/secciones/03-endpoints-y-enlace-a-swagger.md"><img src="https://img.shields.io/badge/DEV_LOCAL-Active-16A34A?style=for-the-badge&logo=docker&logoColor=white" alt="DEV Local Active" /></a>
     <a href="docs/secciones/03-endpoints-y-enlace-a-swagger.md"><img src="https://img.shields.io/badge/QA_CLOUD-Active-5600EF?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="QA Cloud Active" /></a>
     <a href="docs/secciones/03-endpoints-y-enlace-a-swagger.md"><img src="https://img.shields.io/badge/PROD_CLOUD-Active-16A34A?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="PROD Cloud Active" /></a>
-    <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI_PR-ci.yml-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Pipeline" /></a>
-    <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45756632270"><img src="https://img.shields.io/badge/CI_DEVELOP-aprobado-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Develop Status" /></a>
-    <a href="docs/secciones/08-pruebas-y-cobertura.md"><img src="https://img.shields.io/badge/Pruebas-339_aprobadas_(0_fallos)-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Pruebas Aprobadas" /></a>
-    <a href="docs/secciones/08-pruebas-y-cobertura.md"><img src="https://img.shields.io/badge/JaCoCo_L%C3%ADneas-97.47%25_%7C_Ramas_88.09%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Cobertura JaCoCo" /></a>
-    <a href="docs/evidencias/sonarqube-final.png"><img src="https://img.shields.io/badge/SonarQube-Passed_(0_Issues_%C2%B7_A)-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="SonarQube Passed" /></a>
+    <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45763503959"><img src="https://img.shields.io/badge/CI_PR_%2325_(%2342)-339_Tests_Passed-16A34A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI PR #25" /></a>
+    <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45756632270"><img src="https://img.shields.io/badge/CD_QA_DEVELOP_(%2347)-aprobado-5600EF?style=for-the-badge&logo=githubactions&logoColor=white" alt="CD QA Develop Status" /></a>
+    <a href="https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45525360439"><img src="https://img.shields.io/badge/CD_PROD_MAIN-277_Baseline_Passed-12063A?style=for-the-badge&logo=githubactions&logoColor=white" alt="CD PROD Main Status" /></a>
+    <a href="docs/secciones/08-pruebas-y-cobertura.md"><img src="https://img.shields.io/badge/CI_Pruebas-339_aprobadas_(0_fallos)-16A34A?style=for-the-badge&logo=junit5&logoColor=white" alt="Pruebas Aprobadas en CI" /></a>
+    <a href="docs/secciones/08-pruebas-y-cobertura.md"><img src="https://img.shields.io/badge/JaCoCo_Local-97.47%25_L%C3%ADneas_%7C_88.09%25_Ramas-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Cobertura JaCoCo Local" /></a>
+    <a href="docs/evidencias/sonarqube-final.png"><img src="https://img.shields.io/badge/Sonar_Local-Passed_(0_Issues_%C2%B7_CI_Obligatorio)-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="SonarQube Status" /></a>
   </p>
 
   <h3>Tecnologías y Dependencias Principales</h3>

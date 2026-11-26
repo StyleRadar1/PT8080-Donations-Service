@@ -83,17 +83,14 @@ azure:
     container-name: ${AZURE_STORAGE_CONTAINER_NAME:donaciones-fotos}
     blob-endpoint: ${AZURE_STORAGE_BLOB_ENDPOINT:https://srdonacionesjmunar.blob.core.windows.net}
 
-# Documentación OpenAPI en Producción
+# Documentación OpenAPI / Swagger deshabilitada en Producción (OWASP A05 · homologado con Probador Virtual y API Gateway)
 springdoc:
   api-docs:
     path: /api/v1/v3/api-docs
-    enabled: true
+    enabled: false
   swagger-ui:
     path: /api/v1/swagger-ui.html
-    enabled: true
-    tryItOutEnabled: false
-    operationsSorter: method
-    tagsSorter: alpha
+    enabled: false
 
 # Health Check y Métricas de Producción
 management:

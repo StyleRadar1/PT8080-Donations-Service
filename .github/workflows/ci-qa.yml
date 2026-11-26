@@ -51,7 +51,6 @@ jobs:
         run: ./mvnw -B verify -Dapi.version=1.44
 
       - name: 6. SonarQube / SonarCloud Quality Gate Analysis
-        if: env.SONAR_TOKEN != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -59,11 +58,13 @@ jobs:
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION || vars.SONAR_ORGANIZATION }}
           SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY || vars.SONAR_PROJECT_KEY }}
         run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "❌ ERROR: SONAR_TOKEN no está configurado en GitHub Repository Secrets (obligatorio en rama develop)."
+            exit 1
+          fi
           SONAR_ARGS="-Dsonar.qualitygate.wait=true"
           if [ -n "$SONAR_HOST_URL" ]; then
             SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=$SONAR_HOST_URL"
-          elif [ -n "$SONAR_ORGANIZATION" ]; then
-            SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=https://sonarcloud.io"
           fi
           if [ -n "$SONAR_ORGANIZATION" ]; then
             SONAR_ARGS="$SONAR_ARGS -Dsonar.organization=$SONAR_ORGANIZATION"
@@ -102,7 +103,7 @@ jobs:
   deploy-qa:
     name: Deploy to QA Environment (Azure Cloud Staging)
     needs: build-and-test
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     environment:
       name: qa
       url: ${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa-jmunar.azurewebsites.net' }}

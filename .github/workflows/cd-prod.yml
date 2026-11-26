@@ -52,7 +52,6 @@ jobs:
         run: ./mvnw -B verify -Dapi.version=1.44
 
       - name: 6. SonarQube / SonarCloud Quality Gate Analysis
-        if: env.SONAR_TOKEN != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -60,11 +59,13 @@ jobs:
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION || vars.SONAR_ORGANIZATION }}
           SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY || vars.SONAR_PROJECT_KEY }}
         run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "❌ ERROR: SONAR_TOKEN no está configurado en GitHub Repository Secrets (obligatorio en rama productiva main/master)."
+            exit 1
+          fi
           SONAR_ARGS="-Dsonar.qualitygate.wait=true"
           if [ -n "$SONAR_HOST_URL" ]; then
             SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=$SONAR_HOST_URL"
-          elif [ -n "$SONAR_ORGANIZATION" ]; then
-            SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=https://sonarcloud.io"
           fi
           if [ -n "$SONAR_ORGANIZATION" ]; then
             SONAR_ARGS="$SONAR_ARGS -Dsonar.organization=$SONAR_ORGANIZATION"
@@ -151,7 +152,7 @@ jobs:
           fi
           echo "✅ Webhook de despliegue PROD ejecutado exitosamente (HTTP $HTTP_CODE)."
 
-      - name: 6. PROD Smoke Test, Health Check, Swagger OpenAPI & Deployment Verification
+      - name: 6. PROD Smoke Test, Health Check & Swagger Restriction Verification
         run: |
           PROD_BASE_URL="${{ vars.PROD_APP_URL || 'https://styleradar-donaciones-prod-jmunar.azurewebsites.net' }}"
           PROD_HEALTH_URL="$PROD_BASE_URL/api/v1/health"
@@ -161,8 +162,7 @@ jobs:
           echo "======================================================================"
           echo " Iniciando Smoke Test en PROD:"
           echo "   Health Check : $PROD_HEALTH_URL"
-          echo "   OpenAPI JSON : $PROD_SWAGGER_DOCS_URL"
-          echo "   Swagger UI   : $PROD_SWAGGER_UI_URL"
+          echo "   Swagger Off  : $PROD_SWAGGER_DOCS_URL & $PROD_SWAGGER_UI_URL (esperado != 200)"
           echo "   Commit SHA   : $EXPECTED_COMMIT_SHA"
           echo "======================================================================"
 
@@ -187,15 +187,15 @@ jobs:
                 elif [ "$COMMIT_SHA_FIELD" != "$EXPECTED_COMMIT_SHA" ] && [[ "$EXPECTED_COMMIT_SHA" != "$COMMIT_SHA_FIELD"* ]]; then
                   echo "⏳ El commitSha reportado ($COMMIT_SHA_FIELD) aún no coincide con el nuevo commit ($EXPECTED_COMMIT_SHA). Esperando propagación del artefacto..."
                 else
-                  SWAGGER_DOCS_STATUS=$(curl -s -o /tmp/prod-openapi.json -w "%{http_code}" "$PROD_SWAGGER_DOCS_URL" || true)
+                  SWAGGER_DOCS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_SWAGGER_DOCS_URL" || true)
                   SWAGGER_UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_SWAGGER_UI_URL" || true)
-                  echo "Swagger OpenAPI JSON HTTP -> $SWAGGER_DOCS_STATUS | Swagger UI HTTP -> $SWAGGER_UI_STATUS"
-                  if [ "$SWAGGER_DOCS_STATUS" = "200" ] && grep -q '"openapi"' /tmp/prod-openapi.json && [ "$SWAGGER_UI_STATUS" = "200" ]; then
-                    echo "✅ Commit SHA desplegado ($COMMIT_SHA_FIELD) y Swagger/OpenAPI en PROD verificados exitosamente."
+                  echo "PROD Swagger OpenAPI HTTP -> $SWAGGER_DOCS_STATUS | PROD Swagger UI HTTP -> $SWAGGER_UI_STATUS"
+                  if [ "$SWAGGER_DOCS_STATUS" != "200" ] && [ "$SWAGGER_UI_STATUS" != "200" ]; then
+                    echo "✅ Commit SHA desplegado ($COMMIT_SHA_FIELD) y restricción de Swagger en PROD verificados exitosamente."
                     SUCCESS=true
                     break
                   fi
-                  echo "⏳ Swagger/OpenAPI aún no responde HTTP 200 completo. Reintentando..."
+                  echo "❌ ADVERTENCIA: Swagger sigue expuesto en PROD (HTTP 200) durante propagación..."
                 fi
               fi
             fi
@@ -203,7 +203,7 @@ jobs:
           done
 
           if [ "$SUCCESS" = false ]; then
-            echo "❌ ERROR CRÍTICO: El Smoke Test de PROD no confirmó UP + commit $EXPECTED_COMMIT_SHA + Swagger HTTP 200 tras 30 intentos (300s)."
+            echo "❌ ERROR CRÍTICO: El Smoke Test de PROD no confirmó UP + commit $EXPECTED_COMMIT_SHA + Swagger deshabilitado tras 30 intentos (300s)."
             exit 1
           fi
           echo "✅ Despliegue en PROD completado y verificado con éxito."

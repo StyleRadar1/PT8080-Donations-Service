@@ -10,10 +10,10 @@ El microservicio `PT8080-Donations-Service` (`ms-segunda-vida-donaciones`) imple
 
 ### Puntos de Control y Cumplimiento Implementados
 
-1. **Autenticación Bearer JWT y Perfiles Endurecidos (`A02`, `A07`):**
+1. **Autenticación Bearer JWT y Perfiles Endurecidos (`A02`, `A05`, `A07`):**
    * Validación criptográfica `HS256` (`>= 256 bits`) en `JwtTokenProvider` y `JwtAuthenticationFilter` con política `SessionCreationPolicy.STATELESS`.
    * Soporte para claims oficiales de `ms-auth` (`sub`, `roles`, `role`) y bloqueo automático del arranque en `qa`/`prod` si la clave secreta JWT está ausente o es insegura.
-   * Los endpoints auxiliares de demostración (`/api/v1/auth/**`) permanecen deshabilitados en `qa` y `prod`.
+   * Los endpoints auxiliares de demostración (`/api/v1/auth/**`) permanecen deshabilitados en `qa`/`prod` y **Swagger/OpenAPI (`springdoc.api-docs.enabled=false`, `springdoc.swagger-ui.enabled=false`) se deshabilita en `prod`**, homologado con `PT8080-VirtualTryOn-Service` y `PT8080-ApiGateway-Service`.
 
 2. **Autorización RBAC y Prevención de IDOR / BOLA (`A01`):**
    * Control granular en `SecurityConfig` (`@EnableMethodSecurity`) diferenciando los roles `USER`, `STORE`, `FOUNDATION` y `ADMIN`.
