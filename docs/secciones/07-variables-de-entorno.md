@@ -1,6 +1,6 @@
-[← Anterior: 7. Ejecución Local y con Docker](./07-ejecucion-local-docker.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 9. Pruebas y Cobertura →](./09-pruebas-cobertura.md)
+[← Anterior: 7. Ejecución Local y con Docker](./06-como-ejecutar-local-y-docker.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 8. Pruebas y Cobertura →](./08-pruebas-y-cobertura.md)
 
-# 8. Variables de Entorno
+# 7. Variables de Entorno
 
 Todas las configuraciones se gestionan de forma desacoplada conforme a los principios de **Twelve-Factor App**:
 
@@ -52,4 +52,4 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 
 ---
 
-[← Anterior: 7. Ejecución Local y con Docker](./07-ejecucion-local-docker.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 9. Pruebas y Cobertura →](./09-pruebas-cobertura.md)
+[← Anterior: 7. Ejecución Local y con Docker](./06-como-ejecutar-local-y-docker.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 8. Pruebas y Cobertura →](./08-pruebas-y-cobertura.md)

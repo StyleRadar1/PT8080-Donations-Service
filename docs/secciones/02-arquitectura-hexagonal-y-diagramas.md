@@ -1,12 +1,44 @@
-[← Anterior: 2. Equipo y Responsables](./02-equipo-responsables.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 4. Endpoints y Swagger →](./04-endpoints-swagger.md)
+[← Anterior: 1. Nombre del Servicio y Bounded Context](./01-nombre-del-servicio-y-bounded-context.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 3. Endpoints y Swagger →](./03-endpoints-y-enlace-a-swagger.md)
 
-# 3. Arquitectura Hexagonal con sus Diagramas
+# 2. Arquitectura Hexagonal con sus Diagramas
 
 El microservicio implementa **Arquitectura Hexagonal Estricta (Puertos y Adaptadores)** combinada con principios tácticos de **Domain-Driven Design (DDD)**. El núcleo de dominio es 100% puro en Java 21, desacoplado de frameworks web, motores de persistencia o brokers de mensajería. Todos los casos de uso cumplen la convención oficial: **Interfaz de Puerto de Entrada (`domain.port.in.*UseCase`) + Implementación de Aplicación (`application.usecase.*UseCaseImpl`)**.
 
 ---
 
-## 3.1 Diagrama de Componentes Hexagonal (`ms-segunda-vida-donaciones`)
+
+## 2.1 Diagrama de Componentes General (Ecosistema StyleRadar)
+
+Vista perimetral del ecosistema de 13 microservicios de StyleRadar, situando a `ms-Donations` (`:8520`) conectado al **API Gateway** (`:8080`), su esquema dedicado PostgreSQL (`donations_db`), mensajería asíncrona **RabbitMQ** (`styleradar.exchange`) y almacenamiento binario en **Azure Blob Storage**.
+
+<div align="center">
+  <img src="../diagramas/png/Diagrama_Componentes_General.png" alt="Diagrama de Componentes General del Ecosistema StyleRadar" width="100%" />
+</div>
+
+---
+
+## 2.2 Diagrama de Despliegue (Infraestructura Cloud Azure)
+
+Distribución física y lógica de contenedores, bases de datos PostgreSQL aisladas, caché distribuida Redis, broker AMQP y servicios cloud externos en **Microsoft Azure** para los entornos de ejecución.
+
+<div align="center">
+  <img src="../diagramas/png/Diagrama_Despliegue.png" alt="Diagrama de Despliegue del Ecosistema StyleRadar" width="100%" />
+</div>
+
+---
+
+## 2.3 Diagrama de Secuencia de Flujos Críticos (Sprint 4)
+
+Flujos principales de solicitud y entrega confirmada con **Outbox Transaccional** (`SR-RF-45`, `SR-RF-47`, `SR-RF-49`), reclamo concurrente en Vitrina Abierta con `@Version` (`SR-RF-111`) + venta C2C (`SR-RF-38`), y manejo normalizado de excepciones bajo **RFC 7807 / Fichas CADche v8** (`https://api.styleradar.com/errors/{code}`).
+
+<div align="center">
+  <img src="../diagramas/png/Diagrama_Secuencia_Sprint4.png" alt="Diagrama de Secuencia Donaciones y Segunda Vida Sprint 4" width="100%" />
+</div>
+
+* **Editable Draw.io:** [`Diagrama_Secuencia_Sprint4.drawio`](../diagramas/drawio/Diagrama_Secuencia_Sprint4.drawio)
+
+---
+## 2.4 Diagrama de Componentes Hexagonal (`ms-segunda-vida-donaciones`)
 
 Diseñado siguiendo el formato y paleta visual oficial de **StyleRadar** (`#48119A`, `#E5CCFF`), notación **Lollipop (`-(o-`)** para interfaces provistas/requeridas, contenedores UML `«module»` diferenciados por rol y bus asíncrono RabbitMQ:
 
@@ -42,7 +74,7 @@ Diseñado siguiendo el formato y paleta visual oficial de **StyleRadar** (`#4811
 
 ---
 
-## 3.2 Diagrama de Clases del Dominio y Puertos
+## 2.5 Diagrama de Clases del Dominio y Puertos
 
 Diseñado en inglés técnico alineado con el código fuente en Java 21 (Sprint 4), incorporando `DeliveryMode`, `claim(...)`, `revertToAvailableDonation()`, las 9 categorías de `GarmentType`, las 18 tallas de `Size`, `Style` y las 20 localidades de `LocalidadBogota`:
 
@@ -75,7 +107,7 @@ Diseñado en inglés técnico alineado con el código fuente en Java 21 (Sprint 
 
 ---
 
-## 3.3 Diagrama Entidad-Relación de Base de Datos (PostgreSQL 16)
+## 2.6 Diagrama Entidad-Relación de Base de Datos (PostgreSQL 16)
 
 Refleja el esquema físico consolidado de las migraciones Flyway `V2__align_domain_and_tables.sql`, `V3__unify_vitrina_bogota.sql`, `V4__add_delivery_mode_to_donations.sql` y `V5__migrate_garment_type_and_size_enums.sql`:
 
@@ -94,7 +126,7 @@ Refleja el esquema físico consolidado de las migraciones Flyway `V2__align_doma
 
 ---
 
-## 3.4 Estructura Oficial de Paquetes en `src/main/java/`
+## 2.7 Estructura Oficial de Paquetes en `src/main/java/`
 
 ```text
 src/main/java/edu/dosw/styleradar/donaciones/
@@ -125,4 +157,4 @@ src/main/java/edu/dosw/styleradar/donaciones/
 
 ---
 
-[← Anterior: 2. Equipo y Responsables](./02-equipo-responsables.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 4. Endpoints y Swagger →](./04-endpoints-swagger.md)
+[← Anterior: 1. Nombre del Servicio y Bounded Context](./01-nombre-del-servicio-y-bounded-context.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 3. Endpoints y Swagger →](./03-endpoints-y-enlace-a-swagger.md)

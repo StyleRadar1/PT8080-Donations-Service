@@ -1,10 +1,10 @@
-[← Anterior: 3. Arquitectura y Diagramas](./03-arquitectura-diagramas.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 5. Eventos RabbitMQ →](./05-eventos-rabbitmq.md)
+[← Anterior: 2. Arquitectura y Diagramas](./02-arquitectura-hexagonal-y-diagramas.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 4. Eventos RabbitMQ →](./04-eventos-que-publica-y-consume.md)
 
-# 4. Endpoints y Enlace a Swagger
+# 3. Endpoints y Enlace a Swagger
 
 El microservicio se encuentra desplegado y activo en **Microsoft Azure** dentro del Resource Group dedicado **`rg-styleradar`** (`Canada Central` / `East US 2`).
 
-## 4.1 Matriz Oficial de Enlaces por Entorno (PROD, QA, LOCAL)
+## 3.1 Matriz Oficial de Enlaces por Entorno (PROD, QA, LOCAL)
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check (`/api/v1/health`) |
 | :--- | :---: | :--- | :--- | :--- | :--- |
@@ -15,9 +15,9 @@ El microservicio se encuentra desplegado y activo en **Microsoft Azure** dentro 
 * **Especificación OpenAPI (JSON Contrato):** [`/api/v1/v3/api-docs`](https://styleradar-donaciones-qa-jmunar.azurewebsites.net/api/v1/v3/api-docs)
 * **Colección Postman & Newman (Suite completa de todos los endpoints y códigos HTTP):** [`docs/postman/`](../postman/) (`StyleRadar-Donations-Service.postman_collection.json`, entornos `Local`/`QA` y simulador `mock-tiendas.js`)
 
-## 4.2 Tabla Canónica de Endpoints REST Expuestos
+## 3.2 Tabla Canónica de Endpoints REST Expuestos
 
-Todos los endpoints responden bajo el estándar **RFC 7807 (`application/problem+json`)** incluyendo `code`, lista estructurada `errors[]` (`field`, `message`) y `timestamp`, con esquemas y ejemplos detallados en Swagger UI:
+Todos los endpoints responden bajo el estándar **RFC 7807 (`application/problem+json`)** y fichas **CADche v8** (`type: https://api.styleradar.com/errors/{code}`) incluyendo `code`, lista estructurada `errors[]` (`field`, `message`) y `timestamp`, con esquemas y ejemplos detallados en Swagger UI:
 
 | Tag Swagger | Método | Endpoint Canónico | RF Asociado | Descripción | Rol Requerido | Códigos HTTP |
 | :--- | :---: | :--- | :---: | :--- | :--- | :---: |
@@ -47,7 +47,7 @@ Todos los endpoints responden bajo el estándar **RFC 7807 (`application/problem
 | **Charitable Donations** | `PATCH` | `/api/v1/donations/{id}/pickup` | `SR-RF-45` / `SR-RF-111` | Transición técnica logística auxiliar para agendar franja horaria futura (`America/Bogota`) y punto de entrega tras aprobación o reclamo (`APPROVED` → `IN_PICKUP`) | Donante, Fundación / Representante, `ADMIN` | `200`, `400`, `401`, `403`, `404`, `409`, `500` |
 | **Charitable Donations** | `PATCH` | `/api/v1/donations/{id}/confirmation` | `SR-RF-49` | Confirmar recepción física (`DELIVERED`), marcar prenda `DONATED` y emitir comprobante `SR-DON-XXXX` | Fundación receptora / Representante, `ADMIN` | `200`, `400`, `401`, `403`, `404`, `409`, `500` |
 
-## 4.3 Seguridad RBAC, Integración `ms-tiendas` y Trazabilidad (`BUG-003` / `BUG-021` / `BUG-031`)
+## 3.3 Seguridad RBAC, Integración `ms-tiendas` y Trazabilidad (`BUG-003` / `BUG-021` / `BUG-031`)
 
 * **Separación estricta entre catálogo público y autorización RBAC (`ms-tiendas`):**
   * El catálogo público `/api/v1/foundations` (`FundacionPublicaResponseDTO` en `ms-tiendas`) **no incluye `representativeId`**; por ello `TiendasFoundationCatalogAdapter` únicamente lo utiliza como respaldo de lectura pública para validar si una fundación existe y está activa (`findFoundationById`).
@@ -59,4 +59,4 @@ Todos los endpoints responden bajo el estándar **RFC 7807 (`application/problem
 
 ---
 
-[← Anterior: 3. Arquitectura y Diagramas](./03-arquitectura-diagramas.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 5. Eventos RabbitMQ →](./05-eventos-rabbitmq.md)
+[← Anterior: 2. Arquitectura y Diagramas](./02-arquitectura-hexagonal-y-diagramas.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 4. Eventos RabbitMQ →](./04-eventos-que-publica-y-consume.md)

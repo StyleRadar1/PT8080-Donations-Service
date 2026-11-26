@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net" modified="2026-11-26T05:30:00.000Z" agent="Antigravity" version="24.7.17">
+  <diagram name="Secuencia Donaciones y Segunda Vida" id="donaciones-seq-s4">
+    <mxGraphModel dx="1434" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1280" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;STYLERADAR — DIAGRAMA DE SECUENCIA DE FLUJOS CRÍTICOS: DONACIONES Y SEGUNDA VIDA (PT8080)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;color:#4B5563&quot;&gt;Flujo 1: Donación Completa + Outbox (:8520) | Flujo 2: Reclamo Vitrina Abierta (@Version) &amp;amp; Venta C2C | Flujo 3: Excepciones RFC 7807 / fichas v8&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Poppins;fontSize=18;fontColor=#48119A;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="2120" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="p_client" value="HTTP Client" style="shape=umlLifeline;participant=umlActor;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;strokeColor=#12063A;fontColor=#12063A;fillColor=#F3EEFF;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="90" y="100" width="40" height="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="p_ctrl" value="«component»&lt;br&gt;&lt;b&gt;Controllers REST&lt;/b&gt;&lt;br&gt;Donations &amp;amp; Publications" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;rounded=1;strokeColor=#12063A;fontColor=#12063A;fillColor=#FFFFFF;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="300" y="100" width="230" height="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="p_svc" value="«component»&lt;br&gt;&lt;b&gt;UseCase Services&lt;/b&gt;&lt;br&gt;Donación, Venta &amp;amp; Outbox" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;rounded=1;strokeColor=#12063A;fontColor=#12063A;fillColor=#FFFFFF;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="630" y="100" width="230" height="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="p_tiendas" value="«component»&lt;br&gt;&lt;b&gt;TiendasCatalogAdapter&lt;/b&gt;&lt;br&gt;Integración ms-tiendas :8140" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;rounded=1;strokeColor=#12063A;fontColor=#12063A;fillColor=#FFFFFF;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="970" y="100" width="230" height="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="p_jpa" value="«component»&lt;br&gt;&lt;b&gt;PersistenceAdapter&lt;/b&gt;&lt;br&gt;PostgreSQL JPA + @Version" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;rounded=1;strokeColor=#12063A;fontColor=#12063A;fillColor=#FFFFFF;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="100" width="230" height="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="p_err" value="«component»&lt;br&gt;&lt;b&gt;GlobalExceptionHandler&lt;/b&gt;&lt;br&gt;RFC 7807 + fichas v8" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;rounded=1;strokeColor=#12063A;fontColor=#12063A;fillColor=#FFFFFF;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1630" y="100" width="230" height="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="p_db" value="&lt;b&gt;donations_db &amp;amp; Broker&lt;/b&gt;&lt;br&gt;PG 16 + RabbitMQ Outbox" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;rounded=1;strokeColor=#12063A;fontColor=#12063A;fillColor=#F3EEFF;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1945" y="100" width="210" height="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_frame" value="Escenario 1: Solicitud, Decisión, Cita y Entrega Confirmada — Outbox (SR-RF-45 / SR-RF-47 / SR-RF-49)" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;dashed=1;strokeColor=#5600EF;fillColor=none;width=560;height=28;fontStyle=1;fontColor=#12063A;" vertex="1" parent="1">
+          <mxGeometry x="30" y="210" width="2140" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_frame" value="Escenario 2: Reclamo Concurrente en Vitrina Abierta (@Version) &amp; Venta C2C (SR-RF-111 / SR-RF-38)" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;dashed=1;strokeColor=#5600EF;fillColor=none;width=560;height=28;fontStyle=1;fontColor=#12063A;" vertex="1" parent="1">
+          <mxGeometry x="30" y="610" width="2140" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_frame" value="Escenario 3: Excepciones de Dominio, RBAC y Resiliencia (RFC 7807 / Fichas CADche v8)" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;dashed=1;strokeColor=#5600EF;fillColor=none;width=520;height=28;fontStyle=1;fontColor=#12063A;" vertex="1" parent="1">
+          <mxGeometry x="30" y="845" width="2140" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="footer_note" value="&lt;b&gt;Alineación Estricta con el Código Fuente de PT8080-Donations-Service (Puerto 8520):&lt;/b&gt;&lt;br&gt;• Controladores REST bajo /api/v1/second-hand/** y /api/v1/donations/** protegidos por JwtAuthenticationFilter, SecurityConfig (@EnableMethodSecurity) y CorrelationIdFilter.&lt;br&gt;• Outbox Transaccional (eventos_outbox_donacion) garantiza entrega at-least-once con publisher confirms; errores homologados con type https://api.styleradar.com/errors/{code}." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=12;strokeColor=#D1C4AE;fillColor=#E8DCCB;align=left;verticalAlign=middle;spacing=10;fontColor=#1F2937;" vertex="1" parent="1">
+          <mxGeometry x="24" y="1190" width="2152" height="74" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

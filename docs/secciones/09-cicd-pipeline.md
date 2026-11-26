@@ -1,6 +1,6 @@
-[← Anterior: 9. Pruebas y Cobertura](./09-pruebas-cobertura.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 11. Ramas y Cómo Contribuir →](./11-ramas-contribuir.md)
+[← Anterior: 8. Pruebas y Cobertura](./08-pruebas-y-cobertura.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 10. Ramas y Cómo Contribuir →](./10-ramas-y-como-contribuir.md)
 
-# 10. CI/CD con el Badge del Pipeline
+# 9. CI/CD con el Badge del Pipeline
 
 El ciclo de integración y despliegue continuo está automatizado en **GitHub Actions** siguiendo el flujo **`develop → main`** mediante dos workflows (`.github/workflows/ci-qa.yml` para QA en `develop` y `.github/workflows/cd-prod.yml` para Producción en `main`).
 
@@ -31,6 +31,22 @@ flowchart LR
     class C,E,F pass;
 ```
 
+
+### Pipelines Homologados y Compuertas Automáticas
+
+| Workflow | Trigger | Validaciones Automatizadas |
+| :--- | :--- | :--- |
+| **CI PR (`ci.yml`)** | `push` y `pull_request` hacia `main`, `master`, `develop` | `./mvnw -B clean verify`, JaCoCo (`LINE >= 85%` y `BRANCH >= 80%`), Quality Gate SonarQube/SonarCloud (`-Dsonar.qualitygate.wait=true`) y validación de build Docker. |
+| **CD QA (`ci-qa.yml`)** | `push` a `develop` / `workflow_dispatch` | Verificación Maven Wrapper, Quality Gate Sonar, empaquetado JAR, despliegue a Azure QA y Smoke Test en vivo validando `status=UP`, `commitSha`, `/api/v1/v3/api-docs` (`200`) y `/api/v1/swagger-ui/index.html` (`200`). |
+| **CD PROD (`cd-prod.yml`)** | `push` a `main`/`master` / `workflow_dispatch` | Verificación Maven Wrapper, Quality Gate Sonar, aprobación productiva, despliegue Azure PROD y Smoke Test validando `status=UP`, `commitSha`, `/api/v1/v3/api-docs` (`200`) y `/api/v1/swagger-ui/index.html` (`200`). |
+
+### Evidencia del Pipeline en GitHub Actions
+
+<div align="center">
+  <img src="../evidencias/pipeline-ci-cd.png" alt="Evidencia del Pipeline CI/CD en GitHub Actions" width="100%" />
+  <p><sub><b>Figura 9.1:</b> Ejecución exitosa en GitHub Actions del pipeline CI/CD sobre <code>develop</code> (<code>6m 39s</code>, Build + Tests + Cobertura + Despliegue verificado en Azure QA).</sub></p>
+</div>
+
 ---
 
-[← Anterior: 9. Pruebas y Cobertura](./09-pruebas-cobertura.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 11. Ramas y Cómo Contribuir →](./11-ramas-contribuir.md)
+[← Anterior: 8. Pruebas y Cobertura](./08-pruebas-y-cobertura.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 10. Ramas y Cómo Contribuir →](./10-ramas-y-como-contribuir.md)

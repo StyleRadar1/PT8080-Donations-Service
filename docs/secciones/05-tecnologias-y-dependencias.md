@@ -1,6 +1,6 @@
-[← Anterior: 5. Eventos RabbitMQ](./05-eventos-rabbitmq.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 7. Ejecución Local y con Docker →](./07-ejecucion-local-docker.md)
+[← Anterior: 4. Eventos RabbitMQ](./04-eventos-que-publica-y-consume.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 7. Ejecución Local y con Docker →](./06-como-ejecutar-local-y-docker.md)
 
-# 6. Tecnologías y Dependencias
+# 5. Tecnologías y Dependencias
 
 El stack tecnológico de `PT8080-Donations-Service` cumple con el estándar unificado de DOSW 2026:
 
@@ -15,9 +15,9 @@ El stack tecnológico de `PT8080-Donations-Service` cumple con el estándar unif
 | **Broker de Mensajería** | RabbitMQ (Spring AMQP) | `3.12` | Topic Exchanges durables sobre AMQPS TLS `5671` con *Publisher Confirms*, Outbox transaccional y certificados en `certs/`. |
 | **Mapeo y Boilerplate** | MapStruct + Lombok | `1.5.5` / `1.18.38` | Reducción de código repetitivo compatible con JDK 21. |
 | **Documentación API** | SpringDoc OpenAPI | `2.5.0` | Especificación OpenAPI 3.0 en inglés técnico, esquemas RFC 7807 y ejemplos interactivos. |
-| **Testing Automatizado** | JUnit 5 + Mockito + H2 + Testcontainers | `5.10.3` | **339 pruebas aprobadas** *(0 fallos, 0 errores, 0 omitidas con Docker/Testcontainers PostgreSQL activo)*; último `develop` aprobado y desplegado en QA ([Run #45728635298](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45728635298)). Ver [detalle y enlaces](./09-pruebas-cobertura.md). |
+| **Testing Automatizado** | JUnit 5 + Mockito + H2 + Testcontainers | `5.10.3` | **339 pruebas aprobadas** *(0 fallos, 0 errores, 0 omitidas con Docker/Testcontainers PostgreSQL activo)*; último `develop` aprobado y desplegado en QA ([Run #45728635298](https://github.com/StyleRadar1/PT8080-Donations-Service/actions/runs/45728635298)). Ver [detalle y enlaces](./08-pruebas-y-cobertura.md). |
 | **Métricas de Cobertura** | JaCoCo Maven Plugin | `0.8.12` | Verificación estricta de cobertura mínima (`≥ 85%` de líneas en `verify`), alcanzando: **97.50% líneas (`2770/2841`)**, **97.52% instrucciones (`12167/12477`)**, **88.24% ramas (`915/1037`)** y **95.83% métodos (`460/480`)**. |
 
 ---
 
-[← Anterior: 5. Eventos RabbitMQ](./05-eventos-rabbitmq.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 7. Ejecución Local y con Docker →](./07-ejecucion-local-docker.md)
+[← Anterior: 4. Eventos RabbitMQ](./04-eventos-que-publica-y-consume.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 7. Ejecución Local y con Docker →](./06-como-ejecutar-local-y-docker.md)
