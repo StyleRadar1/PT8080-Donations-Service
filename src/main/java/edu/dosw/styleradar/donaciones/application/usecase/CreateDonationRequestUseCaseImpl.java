@@ -54,7 +54,8 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
             throw new InvalidPublicationException("La publicación no pertenece al usuario donante");
         }
 
-        if (publication.getStatus() != PublicationStatus.IN_DONATION) {
+        boolean disponibleParaDonacion = publication.getStatus() == PublicationStatus.AVAILABLE && publication.isEsDonacion();
+        if (publication.getStatus() != PublicationStatus.IN_DONATION && !disponibleParaDonacion) {
             throw new InvalidDonationRequestException(
                     "La prenda debe estar marcada para donación antes de enviar la solicitud. Estado actual: "
                             + publication.getStatus());
@@ -71,6 +72,11 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
         if (representanteId == null) {
             log.warn("No se obtuvo representanteId/fundacionUsuarioId para la fundación ID: {}. "
                     + "ms-notificaciones requiere este campo para enrutar la campana.", command.foundationId());
+        }
+
+        if (disponibleParaDonacion) {
+            publication.markForDonation();
+            publicationRepositoryPort.save(publication);
         }
 
         DonationRequest request = DonationRequest.builder()
