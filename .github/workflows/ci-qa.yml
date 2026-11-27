@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - develop
-  pull_request:
-    branches:
-      - develop
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,6 +22,8 @@ jobs:
     steps:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 2. Set up JDK 21 (Eclipse Temurin)
         uses: actions/setup-java@v4
@@ -32,8 +32,11 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: 2.1 Grant execute permission for Maven Wrapper
+        run: chmod +x mvnw
+
       - name: 3. Clean & Compile
-        run: mvn -B clean compile
+        run: ./mvnw -B clean compile
 
       - name: 4. Verify Docker Daemon & Socket Permissions
         run: |
@@ -41,20 +44,38 @@ jobs:
           sudo systemctl start docker || true
           sudo chmod 666 /var/run/docker.sock || true
 
-      - name: 5. Unit & Integration Tests with JaCoCo Report
+      - name: 5. Unit & Integration Tests with JaCoCo Report & Quality Gate (>= 85% Line / >= 80% Branch)
         env:
           DOCKER_HOST: unix:///var/run/docker.sock
           DOCKER_API_VERSION: "1.44"
-        run: mvn -B test jacoco:report -Dapi.version=1.44
+        run: ./mvnw -B verify -Dapi.version=1.44
 
-      - name: 6. Verify Quality Gate & JaCoCo Coverage (Threshold >= 85%)
+      - name: 6. SonarQube / SonarCloud Quality Gate Analysis
         env:
-          DOCKER_HOST: unix:///var/run/docker.sock
-          DOCKER_API_VERSION: "1.44"
-        run: mvn -B verify -Dapi.version=1.44
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION || vars.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY || vars.SONAR_PROJECT_KEY }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "❌ ERROR: SONAR_TOKEN no está configurado en GitHub Repository Secrets (obligatorio en rama develop)."
+            exit 1
+          fi
+          SONAR_ARGS="-Dsonar.qualitygate.wait=true"
+          if [ -n "$SONAR_HOST_URL" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=$SONAR_HOST_URL"
+          fi
+          if [ -n "$SONAR_ORGANIZATION" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.organization=$SONAR_ORGANIZATION"
+          fi
+          if [ -n "$SONAR_PROJECT_KEY" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.projectKey=$SONAR_PROJECT_KEY"
+          fi
+          ./mvnw -B sonar:sonar $SONAR_ARGS
 
       - name: 7. Package Application JAR
-        run: mvn -B package -DskipTests -Dbuild.commit.sha=${{ github.sha }}
+        run: ./mvnw -B package -DskipTests -Dbuild.commit.sha=${{ github.sha }}
 
       - name: 8. Build Docker OCI Image
         run: |
@@ -82,7 +103,7 @@ jobs:
   deploy-qa:
     name: Deploy to QA Environment (Azure Cloud Staging)
     needs: build-and-test
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     environment:
       name: qa
       url: ${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa-jmunar.azurewebsites.net' }}
@@ -129,26 +150,32 @@ jobs:
           fi
           echo "✅ Webhook de despliegue QA ejecutado exitosamente (HTTP $HTTP_CODE)."
 
-      - name: 6. QA Smoke Test, Health Check & Deployment Verification
+      - name: 6. QA Smoke Test, Health Check, Swagger OpenAPI & Deployment Verification
         run: |
-          QA_HEALTH_URL="${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa-jmunar.azurewebsites.net' }}/api/v1/health"
+          QA_BASE_URL="${{ vars.QA_APP_URL || 'https://styleradar-donaciones-qa-jmunar.azurewebsites.net' }}"
+          QA_HEALTH_URL="$QA_BASE_URL/api/v1/health"
+          QA_SWAGGER_DOCS_URL="$QA_BASE_URL/api/v1/v3/api-docs"
+          QA_SWAGGER_UI_URL="$QA_BASE_URL/api/v1/swagger-ui/index.html"
           EXPECTED_COMMIT_SHA="${{ github.sha }}"
           echo "======================================================================"
-          echo " Iniciando Smoke Test contra endpoint de salud de QA: $QA_HEALTH_URL"
-          echo " Commit SHA esperado a verificar: $EXPECTED_COMMIT_SHA"
+          echo " Iniciando Smoke Test en QA:"
+          echo "   Health Check : $QA_HEALTH_URL"
+          echo "   OpenAPI JSON : $QA_SWAGGER_DOCS_URL"
+          echo "   Swagger UI   : $QA_SWAGGER_UI_URL"
+          echo "   Commit SHA   : $EXPECTED_COMMIT_SHA"
           echo "======================================================================"
 
           SUCCESS=false
-          for i in {1..20}; do
-            echo "Intento $i de 20..."
+          for i in {1..30}; do
+            echo "Intento $i de 30..."
             RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$QA_HEALTH_URL" || true)
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
             BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
 
-            echo "HTTP Status -> $HTTP_STATUS"
-            echo "Response Body -> $BODY"
+            echo "Health HTTP Status -> $HTTP_STATUS"
+            echo "Health Response Body -> $BODY"
 
-            if [ "$HTTP_STATUS" -eq 200 ]; then
+            if [ "$HTTP_STATUS" = "200" ]; then
               STATUS_FIELD=$(echo "$BODY" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || true)
               COMMIT_SHA_FIELD=$(echo "$BODY" | grep -o '"commitSha":"[^"]*"' | cut -d'"' -f4 || true)
 
@@ -159,9 +186,15 @@ jobs:
                 elif [ "$COMMIT_SHA_FIELD" != "$EXPECTED_COMMIT_SHA" ] && [[ "$EXPECTED_COMMIT_SHA" != "$COMMIT_SHA_FIELD"* ]]; then
                   echo "⏳ El commitSha reportado ($COMMIT_SHA_FIELD) aún no coincide con el nuevo commit ($EXPECTED_COMMIT_SHA). Esperando propagación del artefacto..."
                 else
-                  echo "✅ Commit SHA desplegado en QA verificado exitosamente: $COMMIT_SHA_FIELD"
-                  SUCCESS=true
-                  break
+                  SWAGGER_DOCS_STATUS=$(curl -s -o /tmp/qa-openapi.json -w "%{http_code}" "$QA_SWAGGER_DOCS_URL" || true)
+                  SWAGGER_UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$QA_SWAGGER_UI_URL" || true)
+                  echo "Swagger OpenAPI JSON HTTP -> $SWAGGER_DOCS_STATUS | Swagger UI HTTP -> $SWAGGER_UI_STATUS"
+                  if [ "$SWAGGER_DOCS_STATUS" = "200" ] && grep -q '"openapi"' /tmp/qa-openapi.json && [ "$SWAGGER_UI_STATUS" = "200" ]; then
+                    echo "✅ Commit SHA desplegado ($COMMIT_SHA_FIELD) y Swagger/OpenAPI en QA verificados exitosamente."
+                    SUCCESS=true
+                    break
+                  fi
+                  echo "⏳ Swagger/OpenAPI aún no responde HTTP 200 completo. Reintentando..."
                 fi
               fi
             fi
@@ -169,8 +202,7 @@ jobs:
           done
 
           if [ "$SUCCESS" = false ]; then
-            echo "❌ ERROR CRÍTICO: El health check de QA no confirmó el despliegue del commit $EXPECTED_COMMIT_SHA con status UP tras 20 intentos (200s)."
-            echo "El nuevo artefacto no se desplegó correctamente en: $QA_HEALTH_URL"
+            echo "❌ ERROR CRÍTICO: El Smoke Test de QA no confirmó UP + commit $EXPECTED_COMMIT_SHA + Swagger HTTP 200 tras 30 intentos (300s)."
             exit 1
           fi
           echo "✅ Despliegue en QA completado y verificado con éxito."

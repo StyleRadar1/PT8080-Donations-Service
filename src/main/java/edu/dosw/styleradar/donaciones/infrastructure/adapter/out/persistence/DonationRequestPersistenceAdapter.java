@@ -48,6 +48,24 @@ public class DonationRequestPersistenceAdapter implements DonationRequestReposit
 
     @Override
     @Transactional(readOnly = true)
+    public List<DonationRequest> findAll() {
+        return donationRequestRepository.findAllByOrderByRequestedAtDesc()
+                .stream()
+                .map(donationRequestMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DonationRequest> findByStatus(DonationRequestStatus status) {
+        return donationRequestRepository.findByStatusOrderByRequestedAtDesc(status)
+                .stream()
+                .map(donationRequestMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<DonationRequest> findByDonorId(Long donorId) {
         return donationRequestRepository.findByDonorIdOrderByRequestedAtDesc(donorId)
                 .stream()
@@ -68,6 +86,16 @@ public class DonationRequestPersistenceAdapter implements DonationRequestReposit
     @Transactional(readOnly = true)
     public List<DonationRequest> findByFoundationIdAndStatus(Long foundationId, DonationRequestStatus status) {
         return donationRequestRepository.findByFoundationIdAndStatusOrderByRequestedAtDesc(foundationId, status)
+                .stream()
+                .map(donationRequestMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DonationRequest> findActiveByFoundationId(Long foundationId) {
+        return donationRequestRepository.findByFoundationIdAndStatusIn(
+                        foundationId, DonationRequestStatus.ACTIVE_STATUSES)
                 .stream()
                 .map(donationRequestMapper::toDomain)
                 .toList();

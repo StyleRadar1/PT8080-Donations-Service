@@ -1,12 +1,20 @@
 package edu.dosw.styleradar.donaciones.infrastructure.config;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
@@ -85,5 +93,44 @@ public class OpenApiConfig {
                                 .name("Squad StyleRadar - DOSW 2026")
                                 .email("soporte@styleradar.escuelaing.edu.co"))
                         .license(new License().name("Apache 2.0")));
+    }
+
+    /**
+     * Depura etiquetas huérfanas (p. ej. 'Demo Authentication & Users' cuando AuthController no se carga en QA)
+     * y elimina definiciones duplicadas para mantener limpia la UI de Swagger.
+     */
+    @Bean
+    public OpenApiCustomizer removeEmptyAndDuplicateTagsCustomizer() {
+        return openApi -> {
+            if (openApi.getTags() == null) {
+                return;
+            }
+            Set<String> usedTags = collectUsedTags(openApi);
+            Map<String, Tag> deduplicated = new LinkedHashMap<>();
+            for (Tag tag : openApi.getTags()) {
+                if (tag != null && tag.getName() != null && usedTags.contains(tag.getName())) {
+                    deduplicated.putIfAbsent(tag.getName(), tag);
+                }
+            }
+            openApi.setTags(new ArrayList<>(deduplicated.values()));
+        };
+    }
+
+    private static Set<String> collectUsedTags(OpenAPI openApi) {
+        Set<String> usedTags = new LinkedHashSet<>();
+        if (openApi.getPaths() == null) {
+            return usedTags;
+        }
+        for (PathItem pathItem : openApi.getPaths().values()) {
+            if (pathItem == null) {
+                continue;
+            }
+            for (Operation operation : pathItem.readOperations()) {
+                if (operation != null && operation.getTags() != null) {
+                    usedTags.addAll(operation.getTags());
+                }
+            }
+        }
+        return usedTags;
     }
 }

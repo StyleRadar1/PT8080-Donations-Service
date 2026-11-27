@@ -30,13 +30,15 @@
         <springdoc-openapi.version>2.5.0</springdoc-openapi.version>
         <jacoco.version>0.8.12</jacoco.version>
         <jacoco.min.line.coverage>0.85</jacoco.min.line.coverage>
+        <jacoco.min.branch.coverage>0.80</jacoco.min.branch.coverage>
         <byte-buddy.version>1.15.11</byte-buddy.version>
         <testcontainers.version>1.20.4</testcontainers.version>
         <build.commit.sha>local-dev</build.commit.sha>
 
-        <!-- SonarQube Quality Gate Properties -->
-        <sonar.host.url>http://localhost:9000</sonar.host.url>
-        <sonar.projectKey>styleradar_ms-segunda-vida-donaciones</sonar.projectKey>
+        <!-- SonarQube / SonarCloud Quality Gate Properties -->
+        <sonar.organization>styleradar1</sonar.organization>
+        <sonar.projectKey>StyleRadar1_PT8080-Donations-Service</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.projectName>StyleRadar - Donations Service</sonar.projectName>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
@@ -291,6 +293,11 @@
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.min.line.coverage}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.min.branch.coverage}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

@@ -21,6 +21,11 @@ public interface FoundationCatalogPort {
     Optional<FoundationSummary> findFoundationById(Long foundationId);
 
     /**
+     * Consulta la información de una fundación asociada al identificador de su representante en ms-tiendas.
+     */
+    Optional<FoundationSummary> findFoundationByRepresentativeId(Long representativeId);
+
+    /**
      * Valida que la fundación exista y se encuentre activa antes de registrar o reclamar una donación.
      */
     void validateActiveFoundation(Long foundationId);

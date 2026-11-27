@@ -63,11 +63,14 @@ app:
       donations: ${RABBITMQ_EXCHANGE:styleradar.exchange}
     routing-keys:
       donation-status-updated: ${RABBITMQ_ROUTING_KEY_DONACION:styleradar.donaciones.estado.cambiado}
+      donation-completed: ${RABBITMQ_ROUTING_KEY_DONACION_COMPLETADA:styleradar.donaciones.completada}
       second-hand-sold: ${RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA:segunda-mano.prenda.vendida}
       notifications-second-hand-sold: ${RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA:styleradar.segundavida.prenda.vendida}
       donation-request-created: ${RABBITMQ_ROUTING_KEY_DONACION_CREATED:styleradar.donaciones.solicitud.creada}
+      foundation-deleted: ${RABBITMQ_ROUTING_KEY_FOUNDATION_DELETED:foundation.deleted}
     queues:
       dlq: ${RABBITMQ_DLQ:styleradar.donaciones.dlq}
+      foundation-deleted: ${RABBITMQ_FOUNDATION_DELETED_QUEUE:styleradar.donaciones.foundation-deleted.q}
       notifications-donation-created: ${RABBITMQ_NOTIFICATIONS_QUEUE:q.notificaciones.donacion-solicitud-creada}
       simulator-queue: ${RABBITMQ_SIMULATOR_QUEUE:q.donaciones.simulador-notificaciones}
     simulator:
@@ -115,6 +118,10 @@ styleradar:
   tiendas:
     base-url: ${TIENDAS_SERVICE_URL:https://styleradar-tiendas-qa.azurewebsites.net}
     foundations-path: ${TIENDAS_FOUNDATIONS_PATH:/api/v1/foundations}
-    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:}
+    foundation-by-id-path: ${TIENDAS_FOUNDATION_BY_ID_PATH:/api/v1/internal/foundations/{id}}
+    foundation-by-representative-path: ${TIENDAS_FOUNDATION_BY_REPRESENTATIVE_PATH:/api/v1/internal/foundations?representativeId={representativeId}}
+    representative-fallback-path: ${TIENDAS_REPRESENTATIVE_FALLBACK_PATH:/api/v1/foundations/representative}
+    internal-username: ${TIENDAS_INTERNAL_USERNAME:ms-donaciones}
+    internal-password: ${TIENDAS_INTERNAL_PASSWORD:}
     validation-enabled: ${TIENDAS_VALIDATION_ENABLED:true}
     forward-bearer-token: ${TIENDAS_FORWARD_BEARER_TOKEN:false}

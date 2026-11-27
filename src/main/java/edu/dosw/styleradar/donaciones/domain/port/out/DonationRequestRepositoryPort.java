@@ -15,11 +15,17 @@ public interface DonationRequestRepositoryPort {
 
     Optional<DonationRequest> findById(Long id);
 
+    List<DonationRequest> findAll();
+
+    List<DonationRequest> findByStatus(DonationRequestStatus status);
+
     List<DonationRequest> findByDonorId(Long donorId);
 
     List<DonationRequest> findByFoundationId(Long foundationId);
 
     List<DonationRequest> findByFoundationIdAndStatus(Long foundationId, DonationRequestStatus status);
+
+    List<DonationRequest> findActiveByFoundationId(Long foundationId);
 
     boolean existsActiveRequestForPublication(Long publicationId);
 }

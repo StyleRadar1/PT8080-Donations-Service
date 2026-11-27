@@ -22,20 +22,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUseCase {
 
+    private static final String CATEGORY_SUPERIOR = "SUPERIOR";
+    private static final String CATEGORY_INFERIOR = "INFERIOR";
+    private static final String CATEGORY_CALZADO = "CALZADO";
+    private static final String CATEGORY_ACCESORIOS = "ACCESORIOS";
+    private static final String CATEGORY_VESTIDOS = "VESTIDOS";
+
     private static final Map<String, String> GROUP_ALIASES = Map.ofEntries(
-            Map.entry("SUPERIOR", "SUPERIOR"),
-            Map.entry("UPPER", "SUPERIOR"),
-            Map.entry("TOP", "SUPERIOR"),
-            Map.entry("FULL_BODY", "SUPERIOR"),
-            Map.entry("INFERIOR", "INFERIOR"),
-            Map.entry("LOWER", "INFERIOR"),
-            Map.entry("BOTTOM", "INFERIOR"),
-            Map.entry("CALZADO", "CALZADO"),
-            Map.entry("FOOTWEAR", "CALZADO"),
-            Map.entry("ACCESORIOS", "ACCESORIOS"),
-            Map.entry("ACCESORIO", "ACCESORIOS"),
-            Map.entry("ACCESSORY", "ACCESORIOS"),
-            Map.entry("ACCESSORIES", "ACCESORIOS")
+            Map.entry(CATEGORY_SUPERIOR, CATEGORY_SUPERIOR),
+            Map.entry("UPPER", CATEGORY_SUPERIOR),
+            Map.entry("TOP", CATEGORY_SUPERIOR),
+            Map.entry("FULL_BODY", CATEGORY_SUPERIOR),
+            Map.entry(CATEGORY_INFERIOR, CATEGORY_INFERIOR),
+            Map.entry("LOWER", CATEGORY_INFERIOR),
+            Map.entry("BOTTOM", CATEGORY_INFERIOR),
+            Map.entry(CATEGORY_CALZADO, CATEGORY_CALZADO),
+            Map.entry("FOOTWEAR", CATEGORY_CALZADO),
+            Map.entry(CATEGORY_ACCESORIOS, CATEGORY_ACCESORIOS),
+            Map.entry("ACCESORIO", CATEGORY_ACCESORIOS),
+            Map.entry("ACCESSORY", CATEGORY_ACCESORIOS),
+            Map.entry("ACCESSORIES", CATEGORY_ACCESORIOS)
     );
 
     private static final Map<String, String> SPECIFIC_ALIASES = Map.ofEntries(
@@ -45,39 +51,39 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
             Map.entry("CHAQUETA", "CHAQUETAS"),
             Map.entry("PANTALON", "PANTALONES"),
             Map.entry("FALDA", "FALDAS"),
-            Map.entry("VESTIDO", "VESTIDOS"),
-            Map.entry("DRESS", "VESTIDOS")
+            Map.entry("VESTIDO", CATEGORY_VESTIDOS),
+            Map.entry("DRESS", CATEGORY_VESTIDOS)
     );
 
     private static final Map<String, String> CATEGORY_ALIASES = Map.ofEntries(
-            Map.entry("UPPER", "SUPERIOR"),
-            Map.entry("TOP", "SUPERIOR"),
-            Map.entry("SUPERIOR", "SUPERIOR"),
-            Map.entry("CAMISAS", "SUPERIOR"),
-            Map.entry("CAMISA", "SUPERIOR"),
-            Map.entry("CAMISETAS", "SUPERIOR"),
-            Map.entry("CAMISETA", "SUPERIOR"),
-            Map.entry("SUETERES", "SUPERIOR"),
-            Map.entry("SUETER", "SUPERIOR"),
-            Map.entry("CHAQUETAS", "SUPERIOR"),
-            Map.entry("CHAQUETA", "SUPERIOR"),
-            Map.entry("VESTIDOS", "SUPERIOR"),
-            Map.entry("VESTIDO", "SUPERIOR"),
-            Map.entry("DRESS", "SUPERIOR"),
-            Map.entry("FULL_BODY", "SUPERIOR"),
-            Map.entry("LOWER", "INFERIOR"),
-            Map.entry("BOTTOM", "INFERIOR"),
-            Map.entry("INFERIOR", "INFERIOR"),
-            Map.entry("PANTALONES", "INFERIOR"),
-            Map.entry("PANTALON", "INFERIOR"),
-            Map.entry("FALDAS", "INFERIOR"),
-            Map.entry("FALDA", "INFERIOR"),
-            Map.entry("FOOTWEAR", "CALZADO"),
-            Map.entry("CALZADO", "CALZADO"),
-            Map.entry("ACCESSORY", "ACCESORIOS"),
-            Map.entry("ACCESSORIES", "ACCESORIOS"),
-            Map.entry("ACCESORIOS", "ACCESORIOS"),
-            Map.entry("ACCESORIO", "ACCESORIOS")
+            Map.entry("UPPER", CATEGORY_SUPERIOR),
+            Map.entry("TOP", CATEGORY_SUPERIOR),
+            Map.entry(CATEGORY_SUPERIOR, CATEGORY_SUPERIOR),
+            Map.entry("CAMISAS", CATEGORY_SUPERIOR),
+            Map.entry("CAMISA", CATEGORY_SUPERIOR),
+            Map.entry("CAMISETAS", CATEGORY_SUPERIOR),
+            Map.entry("CAMISETA", CATEGORY_SUPERIOR),
+            Map.entry("SUETERES", CATEGORY_SUPERIOR),
+            Map.entry("SUETER", CATEGORY_SUPERIOR),
+            Map.entry("CHAQUETAS", CATEGORY_SUPERIOR),
+            Map.entry("CHAQUETA", CATEGORY_SUPERIOR),
+            Map.entry(CATEGORY_VESTIDOS, CATEGORY_SUPERIOR),
+            Map.entry("VESTIDO", CATEGORY_SUPERIOR),
+            Map.entry("DRESS", CATEGORY_SUPERIOR),
+            Map.entry("FULL_BODY", CATEGORY_SUPERIOR),
+            Map.entry("LOWER", CATEGORY_INFERIOR),
+            Map.entry("BOTTOM", CATEGORY_INFERIOR),
+            Map.entry(CATEGORY_INFERIOR, CATEGORY_INFERIOR),
+            Map.entry("PANTALONES", CATEGORY_INFERIOR),
+            Map.entry("PANTALON", CATEGORY_INFERIOR),
+            Map.entry("FALDAS", CATEGORY_INFERIOR),
+            Map.entry("FALDA", CATEGORY_INFERIOR),
+            Map.entry("FOOTWEAR", CATEGORY_CALZADO),
+            Map.entry(CATEGORY_CALZADO, CATEGORY_CALZADO),
+            Map.entry("ACCESSORY", CATEGORY_ACCESORIOS),
+            Map.entry("ACCESSORIES", CATEGORY_ACCESORIOS),
+            Map.entry(CATEGORY_ACCESORIOS, CATEGORY_ACCESORIOS),
+            Map.entry("ACCESORIO", CATEGORY_ACCESORIOS)
     );
 
     private final FoundationCatalogPort foundationCatalogPort;
@@ -122,12 +128,17 @@ public class GetPartnerFoundationsUseCaseImpl implements GetPartnerFoundationsUs
             throw new InvalidDonationRequestException("El ID del representante de la fundación es obligatorio");
         }
 
-        return foundationCatalogPort.findAllActiveFoundations().stream()
+        FoundationSummary foundation = foundationCatalogPort.findFoundationByRepresentativeId(representativeUserId)
                 .filter(FoundationSummary::activa)
-                .filter(foundation -> representativeUserId.equals(foundation.representanteId()))
-                .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId));
+
+        if (foundation.representanteId() == null || !representativeUserId.equals(foundation.representanteId())) {
+            throw new ResourceNotFoundException(
+                    "No se encontró una fundación aliada activa asociada al usuario ID: " + representativeUserId);
+        }
+
+        return foundation;
     }
 
     private String normalizeText(String rawCategory) {

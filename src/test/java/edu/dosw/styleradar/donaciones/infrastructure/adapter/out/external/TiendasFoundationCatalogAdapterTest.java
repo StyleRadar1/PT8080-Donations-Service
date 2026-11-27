@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailabl
 import edu.dosw.styleradar.donaciones.domain.exception.InvalidDonationRequestException;
 import edu.dosw.styleradar.donaciones.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.donaciones.domain.model.FoundationSummary;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.in.rest.filter.CorrelationIdFilter;
 import edu.dosw.styleradar.donaciones.infrastructure.config.TiendasClientConfig;
 import edu.dosw.styleradar.donaciones.infrastructure.config.TiendasProperties;
 
@@ -51,6 +53,9 @@ class TiendasFoundationCatalogAdapterTest {
         properties.setBaseUrl(BASE_URL);
         properties.setFoundationsPath("/api/v1/admin/foundations");
         properties.setFoundationByIdPath("/api/v1/admin/foundations/{id}");
+        properties.setRepresentativeFallbackPath("/api/v1/foundations/representative");
+        properties.setInternalUsername("ms-donaciones");
+        properties.setInternalPassword("test-internal-secret");
         properties.setValidationEnabled(true);
         properties.setConnectTimeoutMs(1000);
         properties.setReadTimeoutMs(1000);
@@ -120,9 +125,12 @@ class TiendasFoundationCatalogAdapterTest {
                 }
                 """;
 
+        String expectedBasicAuth = "Basic " + java.util.Base64.getEncoder()
+                .encodeToString("ms-donaciones:test-internal-secret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
         mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
-                .andExpect(header("X-User-Roles", "ROLE_ADMIN_STYLERADAR"))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, expectedBasicAuth))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
         assertThatCode(() -> adapter.validateActiveFoundation(3L)).doesNotThrowAnyException();
@@ -165,6 +173,9 @@ class TiendasFoundationCatalogAdapterTest {
     @DisplayName("Debe lanzar ExternalServiceUnavailableException cuando ms-tiendas falla con error 500")
     void shouldThrowExternalServiceUnavailableOnServerError() {
         mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withServerError());
 
@@ -257,14 +268,6 @@ class TiendasFoundationCatalogAdapterTest {
                   }
                 ]
                 """;
-        String byIdJson = """
-                {
-                  "id": 3,
-                  "nombre": "Fundación Abrigo Solidario",
-                  "activa": true,
-                  "representanteId": 24
-                }
-                """;
 
         // 1. Por defecto (forwardBearerToken=false, serviceBearerToken vacío): nunca propaga el token del donante
         mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
@@ -276,18 +279,18 @@ class TiendasFoundationCatalogAdapterTest {
         assertThat(adapter.findAllActiveFoundations()).hasSize(1);
         mockServer.verify();
 
-        // 2. Con serviceBearerToken configurado: tiene precedencia sobre cualquier token del donante
+        // 2. Con serviceBearerToken configurado: tiene precedencia sobre cualquier token del donante en listado
         mockServer.reset();
         properties.setForwardBearerToken(true);
         properties.setServiceBearerToken("svc-admin-jwt-999");
 
-        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer svc-admin-jwt-999"))
                 .andExpect(header("X-User-Roles", "ROLE_ADMIN_STYLERADAR"))
-                .andRespond(withSuccess(byIdJson, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(listJson, MediaType.APPLICATION_JSON));
 
-        assertThat(adapter.findFoundationById(3L)).isPresent();
+        assertThat(adapter.findAllActiveFoundations()).hasSize(1);
         mockServer.verify();
 
         // 3. Con forwardBearerToken=true explícito y sin serviceBearerToken: reenvía el token entrante
@@ -334,6 +337,9 @@ class TiendasFoundationCatalogAdapterTest {
         mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
 
         assertThatThrownBy(() -> adapter.findFoundationById(3L))
                 .isInstanceOf(ExternalServiceUnavailableException.class);
@@ -341,7 +347,7 @@ class TiendasFoundationCatalogAdapterTest {
     }
 
     @Test
-    @DisplayName("Debe deserializar el contrato en inglés de ms-tiendas QA y resolver por ID usando /api/v1/foundations cuando foundationByIdPath está vacío")
+    @DisplayName("Debe deserializar FundacionPublicaResponseDTO de ms-tiendas (sin representativeId) y resolver catálogo público por ID")
     void shouldDeserializeEnglishPayloadAndLookupByIdViaFoundationsList() {
         properties.setFoundationsPath("/api/v1/foundations");
         properties.setFoundationByIdPath("");
@@ -358,7 +364,6 @@ class TiendasFoundationCatalogAdapterTest {
                     "address": "Calle 85 # 15-32, Bogotá",
                     "phone": "+57 601 742 8899",
                     "acceptedCategories": ["FOOTWEAR", "TOP", "BOTTOM"],
-                    "representativeId": 901,
                     "supportedCauses": "Moda circular",
                     "openingHours": "08:00-17:00",
                     "donationPolicies": "Ropa limpia",
@@ -378,7 +383,7 @@ class TiendasFoundationCatalogAdapterTest {
         assertThat(found.get().nombre()).isEqualTo("Fundación Pruebas QA");
         assertThat(found.get().barrio()).isEqualTo("Chapinero");
         assertThat(found.get().activa()).isTrue();
-        assertThat(found.get().representanteId()).isEqualTo(901L);
+        assertThat(found.get().representanteId()).isNull();
         assertThat(found.get().categoriasAceptadas()).containsExactly("FOOTWEAR", "TOP", "BOTTOM");
 
         mockServer.reset();
@@ -387,6 +392,450 @@ class TiendasFoundationCatalogAdapterTest {
                 .andRespond(withSuccess(englishListJson, MediaType.APPLICATION_JSON));
 
         assertThat(adapter.findFoundationById(999L)).isEmpty();
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("Debe consultar /api/v1/internal/foundations/{id} y ?representativeId= usando Basic Auth sin filtrar JWT del donante")
+    void shouldUseInternalEndpointsWithBasicAuthForByIdAndByRepresentative() {
+        MockHttpServletRequest donorRequest = new MockHttpServletRequest();
+        donorRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer donor-user-jwt");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(donorRequest));
+
+        properties.setFoundationsPath("/api/v1/foundations");
+        properties.setFoundationByIdPath("/api/v1/internal/foundations/{id}");
+        properties.setFoundationByRepresentativePath("/api/v1/internal/foundations?representativeId={representativeId}");
+        properties.setInternalUsername("ms-donaciones");
+        properties.setInternalPassword("super-secret-qa");
+        properties.setForwardBearerToken(true);
+
+        String expectedBasicAuth = "Basic " + java.util.Base64.getEncoder()
+                .encodeToString("ms-donaciones:super-secret-qa".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        String internalJson = """
+                {
+                  "id": 7,
+                  "name": "Fundación Interna QA",
+                  "neighborhood": "Teusaquillo",
+                  "acceptedCategories": ["SUPERIOR"],
+                  "active": true,
+                  "representativeId": 42
+                }
+                """;
+
+        // 1. Listado público sigue usando /api/v1/foundations sin Basic Auth
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer donor-user-jwt"))
+                .andRespond(withSuccess("[" + internalJson + "]", MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.findAllActiveFoundations()).hasSize(1);
+        mockServer.verify();
+
+        // 2. Consulta por ID usa /api/v1/internal/foundations/{id} con Basic Auth
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/7"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, expectedBasicAuth))
+                .andRespond(withSuccess(internalJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byId = adapter.findFoundationById(7L);
+        mockServer.verify();
+        assertThat(byId).isPresent();
+        assertThat(byId.get().representanteId()).isEqualTo(42L);
+        assertThat(byId.get().activa()).isTrue();
+
+        // 3. Consulta por representativeId usa /api/v1/internal/foundations?representativeId={id} con Basic Auth
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=42"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, expectedBasicAuth))
+                .andRespond(withSuccess(internalJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byRep = adapter.findFoundationByRepresentativeId(42L);
+        mockServer.verify();
+        assertThat(byRep).isPresent();
+        assertThat(byRep.get().id()).isEqualTo(7L);
+        assertThat(byRep.get().representanteId()).isEqualTo(42L);
+
+        // 4. 404 en ?representativeId= retorna Optional.empty()
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=999"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, expectedBasicAuth))
+                .andRespond(withResourceNotFound());
+
+        assertThat(adapter.findFoundationByRepresentativeId(999L)).isEmpty();
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("Debe exigir canal autenticado en findFoundationByRepresentativeId sin recurrir al catálogo público")
+    void shouldHandleEdgeCasesAndFallbackInFindFoundationByRepresentativeId() {
+        assertThat(adapter.findFoundationByRepresentativeId(null)).isEmpty();
+
+        // Sin path interno ni Bearer entrante -> falla con 503 (nunca consulta /api/v1/foundations público)
+        properties.setFoundationByRepresentativePath("");
+        assertThatThrownBy(() -> adapter.findFoundationByRepresentativeId(24L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+
+        // Sin path interno pero con Bearer entrante -> verifica vía /api/v1/foundations/representative
+        MockHttpServletRequest repRequest = new MockHttpServletRequest();
+        repRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer rep-jwt");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(repRequest));
+        String repJson = """
+                {
+                  "id": 3,
+                  "name": "Fundación Autenticada",
+                  "active": true,
+                  "representativeId": 24
+                }
+                """;
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer rep-jwt"))
+                .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> authenticatedResult = adapter.findFoundationByRepresentativeId(24L);
+        mockServer.verify();
+        assertThat(authenticatedResult).isPresent();
+        assertThat(authenticatedResult.get().id()).isEqualTo(3L);
+        RequestContextHolder.resetRequestAttributes();
+
+        // Error 401 en endpoint interno sin Bearer entrante -> lanza 503
+        properties.setFoundationByRepresentativePath("/api/v1/internal/foundations?representativeId={representativeId}");
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=24"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+
+        assertThatThrownBy(() -> adapter.findFoundationByRepresentativeId(24L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+        mockServer.verify();
+
+        properties.setValidationEnabled(false);
+        assertThat(adapter.findFoundationByRepresentativeId(24L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Debe separar fallback público de consultas por ID de la autorización estricta de representante")
+    void shouldFallbackGracefullyWhenInternalPasswordBlankOrInternalCallFails() {
+        MockHttpServletRequest incomingRequest = new MockHttpServletRequest();
+        incomingRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(incomingRequest));
+
+        properties.setFoundationsPath("/api/v1/foundations");
+        properties.setFoundationByIdPath("/api/v1/internal/foundations/{id}");
+        properties.setFoundationByRepresentativePath("/api/v1/internal/foundations?representativeId={representativeId}");
+        properties.setForwardBearerToken(true);
+        properties.setInternalUsername("ms-donaciones");
+        properties.setInternalPassword("");
+
+        // Contrato real de FundacionPublicaResponseDTO en ms-tiendas: sin representativeId
+        String publicListJson = """
+                [
+                  {"id": 3, "name": "Fundación Pública", "active": true}
+                ]
+                """;
+        String repJson = """
+                {"id": 3, "name": "Fundación Fallback Rep", "active": true, "representativeId": 24}
+                """;
+
+        // 1. Consulta pública findFoundationById cae a /api/v1/foundations (representanteId null)
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt"))
+                .andRespond(withSuccess(publicListJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byIdNoPass = adapter.findFoundationById(3L);
+        mockServer.verify();
+        assertThat(byIdNoPass).isPresent();
+        assertThat(byIdNoPass.get())
+                .returns("Fundación Pública", FoundationSummary::nombre)
+                .returns(null, FoundationSummary::representanteId);
+
+        // 2. Sin internal-password, la autorización usa /api/v1/foundations/representative con el JWT entrante
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt"))
+                .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
+        assertThat(adapter.isFoundationRepresentative(24L, 3L)).isTrue();
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
+        assertThat(adapter.isFoundationRepresentative(999L, 3L)).isFalse();
+        mockServer.verify();
+
+        // 3. Sin internal-password: findFoundationByRepresentativeId usa /api/v1/foundations/representative con Bearer
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt"))
+                .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byRepNoPass = adapter.findFoundationByRepresentativeId(24L);
+        mockServer.verify();
+        assertThat(byRepNoPass).isPresent();
+        assertThat(byRepNoPass.get().id()).isEqualTo(3L);
+    }
+
+    @Test
+    @DisplayName("Debe aplicar fallback autenticado o catálogo público cuando los endpoints internos responden 401/500")
+    void shouldHandleInternalFailuresAndRepresentativeFallbackErrors() {
+        MockHttpServletRequest incomingRequest = new MockHttpServletRequest();
+        incomingRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(incomingRequest));
+
+        properties.setFoundationsPath("/api/v1/foundations");
+        properties.setFoundationByIdPath("/api/v1/internal/foundations/{id}");
+        properties.setFoundationByRepresentativePath("/api/v1/internal/foundations?representativeId={representativeId}");
+        properties.setForwardBearerToken(true);
+        properties.setInternalUsername("ms-donaciones");
+        properties.setInternalPassword("wrong-password");
+
+        String publicListJson = """
+                [
+                  {"id": 3, "name": "Fundación Pública", "active": true}
+                ]
+                """;
+        String repJson = """
+                {"id": 3, "name": "Fundación Fallback Rep", "active": true, "representativeId": 24}
+                """;
+
+        // 1. Con internal-password pero 401 en interno: findFoundationByRepresentativeId usa /api/v1/foundations/representative
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=24"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer incoming-user-jwt"))
+                .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
+
+        assertThat(adapter.findFoundationByRepresentativeId(24L)).isPresent();
+        mockServer.verify();
+
+        // 2. Con internal-password pero 500 en interno: findFoundationById usa catálogo público /api/v1/foundations
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(publicListJson, MediaType.APPLICATION_JSON));
+
+        Optional<FoundationSummary> byIdAfter500 = adapter.findFoundationById(3L);
+        mockServer.verify();
+        assertThat(byIdAfter500).isPresent();
+        assertThat(byIdAfter500.get().representanteId()).isNull();
+
+        // 3. Fallback representative con 404 retorna empty y con 500 lanza 503
+        mockServer.reset();
+        properties.setInternalPassword("");
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withResourceNotFound());
+        assertThat(adapter.findFoundationByRepresentativeId(24L)).isEmpty();
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
+        assertThatThrownBy(() -> adapter.findFoundationByRepresentativeId(24L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("Debe cancelar con 503 cuando no hay canal autenticado ni representativeId para autorizar propiedad")
+    void shouldFailAuthorizationWhenNeitherInternalNorBearerProvidesRepresentativeId() {
+        RequestContextHolder.resetRequestAttributes();
+        properties.setFoundationByIdPath("/api/v1/internal/foundations/{id}");
+        properties.setInternalPassword("");
+
+        assertThatThrownBy(() -> adapter.isFoundationRepresentative(24L, 3L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+
+        // Si el endpoint interno devuelve null en representativeId y no hay Bearer entrante -> lanza 503
+        properties.setInternalPassword("test-internal-secret");
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"id\": 3, \"name\": \"Sin Rep\", \"active\": true}", MediaType.APPLICATION_JSON));
+
+        assertThatThrownBy(() -> adapter.isFoundationRepresentative(24L, 3L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("BUG-031: TiendasClientConfig debe propagar X-Correlation-Id y X-Request-Id desde MDC hacia ms-tiendas")
+    void shouldPropagateCorrelationAndRequestIdsFromMdcToOutboundHttpCalls() {
+        RestClient beanClient = new TiendasClientConfig().tiendasRestClient(RestClient.builder(), properties);
+        assertThat(beanClient).isNotNull();
+
+        RestClient.Builder configuredBuilder = RestClient.builder()
+                .baseUrl(BASE_URL)
+                .requestInterceptor(TiendasClientConfig.correlationIdPropagationInterceptor());
+        MockRestServiceServer clientServer = MockRestServiceServer.bindTo(configuredBuilder).build();
+        TiendasFoundationCatalogAdapter adapterWithInterceptor =
+                new TiendasFoundationCatalogAdapter(configuredBuilder.build(), properties);
+
+        try {
+            MDC.put(CorrelationIdFilter.CORRELATION_ID_MDC_KEY, "corr-e2e-999");
+            MDC.put(CorrelationIdFilter.REQUEST_ID_MDC_KEY, "req-e2e-111");
+
+            clientServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
+                    .andExpect(method(HttpMethod.GET))
+                    .andExpect(header(CorrelationIdFilter.CORRELATION_ID_HEADER, "corr-e2e-999"))
+                    .andExpect(header(CorrelationIdFilter.REQUEST_ID_HEADER, "req-e2e-111"))
+                    .andRespond(withSuccess("{\"id\": 3, \"name\": \"Fundación Trazada\", \"active\": true}", MediaType.APPLICATION_JSON));
+
+            Optional<FoundationSummary> result = adapterWithInterceptor.findFoundationById(3L);
+            clientServer.verify();
+            assertThat(result).isPresent();
+
+            // Sin valores en MDC no agrega cabeceras vacías
+            MDC.clear();
+            clientServer.reset();
+            clientServer.expect(requestTo(BASE_URL + "/api/v1/admin/foundations/3"))
+                    .andExpect(method(HttpMethod.GET))
+                    .andExpect(headerDoesNotExist(CorrelationIdFilter.CORRELATION_ID_HEADER))
+                    .andExpect(headerDoesNotExist(CorrelationIdFilter.REQUEST_ID_HEADER))
+                    .andRespond(withSuccess("{\"id\": 3, \"name\": \"Fundación Sin MDC\", \"active\": true}", MediaType.APPLICATION_JSON));
+
+            assertThat(adapterWithInterceptor.findFoundationById(3L)).isPresent();
+            clientServer.verify();
+        } finally {
+            MDC.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("Debe cubrir ramas de errores HTTP 400/403/404/500 y validación de representante en adaptador de ms-tiendas")
+    void shouldCoverHttpErrorAndRepresentativeAuthorizationBranches() {
+        MockHttpServletRequest incomingRequest = new MockHttpServletRequest();
+        incomingRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer rep-branch-jwt");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(incomingRequest));
+
+        properties.setFoundationsPath("/api/v1/foundations");
+        properties.setFoundationByIdPath("/api/v1/internal/foundations/{id}");
+        properties.setFoundationByRepresentativePath("/api/v1/internal/foundations?representativeId={representativeId}");
+        properties.setInternalUsername("ms-donaciones");
+        properties.setInternalPassword("secret-pass");
+
+        String repJson = "{\"id\": 3, \"name\": \"Fundación Rep\", \"active\": true, \"representativeId\": 24}";
+        String mismatchRepJson = "{\"id\": 3, \"name\": \"Fundación Otra\", \"active\": true, \"representativeId\": 999}";
+
+        // findFoundationById: 400 Bad Request no activa fallback y lanza 503
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.BAD_REQUEST));
+        assertThatThrownBy(() -> adapter.findFoundationById(3L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+        mockServer.verify();
+
+        // findFoundationByRepresentativeId: 400 lanza 503 directo; 500 hace fallback a representative con Bearer
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=24"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.BAD_REQUEST));
+        assertThatThrownBy(() -> adapter.findFoundationByRepresentativeId(24L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations?representativeId=24"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(mismatchRepJson, MediaType.APPLICATION_JSON));
+        assertThat(adapter.findFoundationByRepresentativeId(24L)).isEmpty();
+        mockServer.verify();
+
+        // isFoundationRepresentative: parámetros nulos y validationEnabled=false
+        assertThat(adapter.isFoundationRepresentative(null, 3L)).isFalse();
+        assertThat(adapter.isFoundationRepresentative(24L, null)).isFalse();
+
+        // isFoundationRepresentative: 404 interno -> false; 401 interno -> fallback representative -> true; 400 interno -> 503
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withResourceNotFound());
+        assertThat(adapter.isFoundationRepresentative(24L, 3L)).isFalse();
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(repJson, MediaType.APPLICATION_JSON));
+        assertThat(adapter.isFoundationRepresentative(24L, 3L)).isTrue();
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/internal/foundations/3"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.BAD_REQUEST));
+        assertThatThrownBy(() -> adapter.isFoundationRepresentative(24L, 3L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("Debe cubrir fallback representative 404/500 en isFoundationRepresentative y cabeceras Bearer inválidas")
+    void shouldCoverRepresentativeFallbackErrorsAndInvalidBearerBranches() {
+        MockHttpServletRequest incomingRequest = new MockHttpServletRequest();
+        incomingRequest.addHeader(HttpHeaders.AUTHORIZATION, "Bearer rep-jwt");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(incomingRequest));
+
+        properties.setFoundationsPath("/api/v1/foundations");
+        properties.setFoundationByIdPath("/api/v1/internal/foundations/{id}");
+        properties.setInternalPassword("");
+
+        // Fallback representative 404 -> false; 500 -> 503
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withResourceNotFound());
+        assertThat(adapter.isFoundationRepresentative(24L, 3L)).isFalse();
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations/representative"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
+        assertThatThrownBy(() -> adapter.isFoundationRepresentative(24L, 3L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+        mockServer.verify();
+
+        // Cabeceras Authorization no Bearer o Bearer vacío se ignoran
+        MockHttpServletRequest basicReq = new MockHttpServletRequest();
+        basicReq.addHeader(HttpHeaders.AUTHORIZATION, "Basic dXNlcjpwYXNz");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(basicReq));
+        assertThatThrownBy(() -> adapter.isFoundationRepresentative(24L, 3L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+
+        MockHttpServletRequest emptyBearerReq = new MockHttpServletRequest();
+        emptyBearerReq.addHeader(HttpHeaders.AUTHORIZATION, "Bearer   ");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(emptyBearerReq));
+        assertThatThrownBy(() -> adapter.isFoundationRepresentative(24L, 3L))
+                .isInstanceOf(ExternalServiceUnavailableException.class);
+
+        // serviceBearerToken que ya incluye prefijo "Bearer " no duplica el prefijo
+        properties.setServiceBearerToken("Bearer svc-prefixed-token");
+        properties.setForwardBearerToken(false);
+        mockServer.reset();
+        mockServer.expect(requestTo(BASE_URL + "/api/v1/foundations"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer svc-prefixed-token"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+        assertThat(adapter.findAllActiveFoundations()).isEmpty();
         mockServer.verify();
     }
 }

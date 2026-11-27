@@ -106,6 +106,15 @@ public class CreateDonationRequestUseCaseImpl implements CreateDonationRequestUs
     }
 
     @Override
+    public List<DonationRequest> getAll(DonationRequestStatus status) {
+        log.info("Consultando solicitudes globales de donación con filtro de estado: {}", status);
+        if (status == null) {
+            return donationRequestRepositoryPort.findAll();
+        }
+        return donationRequestRepositoryPort.findByStatus(status);
+    }
+
+    @Override
     public List<DonationRequest> getByDonorId(Long donorId) {
         log.info("Consultando historial de donaciones del donante ID: {}", donorId);
         return donationRequestRepositoryPort.findByDonorId(donorId);

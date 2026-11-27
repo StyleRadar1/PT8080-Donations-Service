@@ -1,6 +1,6 @@
-[← Anterior: 7. Ejecución Local y con Docker](./07-ejecucion-local-docker.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 9. Pruebas y Cobertura →](./09-pruebas-cobertura.md)
+[← Anterior: 7. Ejecución Local y con Docker](./06-como-ejecutar-local-y-docker.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 8. Pruebas y Cobertura →](./08-pruebas-y-cobertura.md)
 
-# 8. Variables de Entorno
+# 7. Variables de Entorno
 
 Todas las configuraciones se gestionan de forma desacoplada conforme a los principios de **Twelve-Factor App**:
 
@@ -34,10 +34,15 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 | `RABBITMQ_ROUTING_KEY_DONACION` | Routing key de cambio de estado hacia `ms-notificaciones` | `styleradar.donaciones.estado.cambiado` | Sí |
 | `RABBITMQ_ROUTING_KEY_SEGUNDA_VIDA` | Routing key de venta hacia `ms-chat` | `segunda-mano.prenda.vendida` | Sí |
 | `RABBITMQ_ROUTING_KEY_NOTIFICACIONES_SEGUNDA_VIDA` | Routing key de venta hacia `ms-notificaciones` | `styleradar.segundavida.prenda.vendida` | Sí |
+| `RABBITMQ_ROUTING_KEY_FOUNDATION_DELETED` | Routing key de fundación eliminada desde `ms-tiendas` | `foundation.deleted` | Opcional |
+| `RABBITMQ_FOUNDATION_DELETED_QUEUE` | Cola durable de consumo para `foundation.deleted` | `styleradar.donaciones.foundation-deleted.q` | Opcional |
 | `JWT_SECRET_BASE64` | Clave Base64 HMAC-SHA256 compartida con `ms-auth` (≥ 256 bits) | Clave local dev/test | Sí |
 | `TIENDAS_SERVICE_URL` | URL base de `ms-tiendas` para fundaciones (`SR-RF-45`) | `http://localhost:8140` (`qa`/`prod` Azure) | Sí |
-| `TIENDAS_FOUNDATIONS_PATH` | Ruta del listado de fundaciones en `ms-tiendas` | `/api/v1/admin/foundations` (`/api/v1/foundations` en `qa`/`prod`) | Opcional |
-| `TIENDAS_FOUNDATION_BY_ID_PATH` | Ruta de detalle por ID (si está vacía, resuelve desde el listado general) | `/api/v1/admin/foundations/{id}` *(vacío en `qa`/`prod`)* | Opcional |
+| `TIENDAS_FOUNDATIONS_PATH` | Ruta del listado público de fundaciones en `ms-tiendas` | `/api/v1/foundations` | Opcional |
+| `TIENDAS_FOUNDATION_BY_ID_PATH` | Ruta interna de detalle por ID (si falla o falta secreto, solo usa listado público para validar existencia/actividad, nunca para autorización) | `/api/v1/internal/foundations/{id}` | Opcional |
+| `TIENDAS_FOUNDATION_BY_REPRESENTATIVE_PATH` | Ruta interna autenticada por `representativeId` (en fallback usa exclusivamente `/api/v1/foundations/representative` con Bearer entrante; nunca listado público) | `/api/v1/internal/foundations?representativeId={representativeId}` | Opcional |
+| `TIENDAS_INTERNAL_USERNAME` | Usuario HTTP Basic para endpoints internos de `ms-tiendas` | `ms-donaciones` | Sí (QA/PROD) |
+| `TIENDAS_INTERNAL_PASSWORD` | Contraseña HTTP Basic para endpoints internos de `ms-tiendas` | Vacío *(secreto en Azure)* | Sí (QA/PROD) |
 | `TIENDAS_VALIDATION_ENABLED` | Activa/desactiva validación remota de fundaciones en `ms-tiendas` | `true` (`false` en test) | Opcional |
 | `TIENDAS_SERVICE_TOKEN` | Token Bearer de servicio/admin para consultar endpoints protegidos de `ms-tiendas` | Vacío *(configurable)* | Opcional |
 | `TIENDAS_FORWARD_BEARER_TOKEN` | Reenvía el token `Authorization: Bearer` del usuario entrante | `false` (`false` en `qa`/`prod`) | Opcional |
@@ -47,4 +52,4 @@ Todas las configuraciones se gestionan de forma desacoplada conforme a los princ
 
 ---
 
-[← Anterior: 7. Ejecución Local y con Docker](./07-ejecucion-local-docker.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 9. Pruebas y Cobertura →](./09-pruebas-cobertura.md)
+[← Anterior: 7. Ejecución Local y con Docker](./06-como-ejecutar-local-y-docker.md) &nbsp;|&nbsp; [Índice Principal](../../README.md) &nbsp;|&nbsp; [Siguiente: 8. Pruebas y Cobertura →](./08-pruebas-y-cobertura.md)

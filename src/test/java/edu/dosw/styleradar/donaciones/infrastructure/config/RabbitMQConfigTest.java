@@ -100,6 +100,34 @@ class RabbitMQConfigTest {
     }
 
     @Test
+    @DisplayName("Debe crear cola durable styleradar.donaciones.foundation-deleted.q con DLQ y binding a foundation.deleted")
+    void shouldCreateFoundationDeletedQueueAndBinding() {
+        Queue queue = rabbitMQConfig.foundationDeletedQueue(
+                RabbitMQConfig.FOUNDATION_DELETED_QUEUE_DEFAULT,
+                RabbitMQConfig.STYLERADAR_DLX_DEFAULT,
+                RabbitMQConfig.DONACIONES_DLQ_DEFAULT);
+
+        assertThat(queue).isNotNull();
+        assertThat(queue.getName()).isEqualTo("styleradar.donaciones.foundation-deleted.q");
+        assertThat(queue.isDurable()).isTrue();
+        assertThat(queue.getArguments())
+                .containsEntry("x-dead-letter-exchange", "styleradar.dlx")
+                .containsEntry("x-dead-letter-routing-key", "styleradar.donaciones.dlq");
+
+        TopicExchange exchange = rabbitMQConfig.donationsTopicExchange("styleradar.exchange");
+        Binding binding = rabbitMQConfig.foundationDeletedBinding(
+                queue,
+                exchange,
+                RabbitMQConfig.FOUNDATION_DELETED_ROUTING_KEY_DEFAULT);
+
+        assertThat(binding).isNotNull();
+        assertThat(binding.getDestination()).isEqualTo("styleradar.donaciones.foundation-deleted.q");
+        assertThat(binding.getExchange()).isEqualTo("styleradar.exchange");
+        assertThat(binding.getRoutingKey()).isEqualTo("foundation.deleted");
+        assertThat(binding.getDestinationType()).isEqualTo(Binding.DestinationType.QUEUE);
+    }
+
+    @Test
     @DisplayName("Debe crear TopicExchange durable styleradar.exchange para ms-chat")
     void shouldCreateChatEventsTopicExchange() {
         TopicExchange exchange = rabbitMQConfig.chatEventsExchange(RabbitMQConfig.STYLERADAR_CHAT_EXCHANGE_DEFAULT);

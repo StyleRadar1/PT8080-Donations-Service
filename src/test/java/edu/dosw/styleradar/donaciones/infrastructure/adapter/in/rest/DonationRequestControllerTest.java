@@ -425,7 +425,7 @@ class DonationRequestControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.title").value("Acceso denegado"))
-                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/forbidden"));
+                .andExpect(jsonPath("$.type").value("https://api.styleradar.com/errors/forbidden"));
     }
 
     @Test
@@ -491,7 +491,7 @@ class DonationRequestControllerTest {
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value(503))
                 .andExpect(jsonPath("$.title").value("Servicio externo no disponible"))
-                .andExpect(jsonPath("$.type").value("https://styleradar.dosw.edu/errors/service-unavailable"));
+                .andExpect(jsonPath("$.type").value("https://api.styleradar.com/errors/service-unavailable"));
     }
 
     @Test
@@ -510,5 +510,80 @@ class DonationRequestControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(3L))
                 .andExpect(jsonPath("$.representanteId").value(24L));
+    }
+
+    @Test
+    @WithMockUser(roles = {"USER"})
+    @DisplayName("BUG-003: GET /api/v1/donations para donante USER retorna su historial de donaciones")
+    void shouldListAuthenticatedDonorDonations() throws Exception {
+        DonationRequest pending = buildSampleRequest(1L, DonationRequestStatus.PENDING);
+        DonationRequest approved = buildSampleRequest(2L, DonationRequestStatus.APPROVED);
+
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(101L);
+        when(createDonationRequestUseCase.getByDonorId(101L)).thenReturn(List.of(pending, approved));
+
+        mockMvc.perform(get("/api/v1/donations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(1L));
+
+        mockMvc.perform(get("/api/v1/donations").param("status", "APPROVED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].status").value("APPROVED"));
+    }
+
+    @Test
+    @WithMockUser(roles = {"FOUNDATION"})
+    @DisplayName("BUG-003: GET /api/v1/donations para FOUNDATION resuelve su fundación y retorna su bandeja")
+    void shouldListAuthenticatedFoundationDonations() throws Exception {
+        FoundationSummary foundation = new FoundationSummary(
+                501L, "Fundación Abrigo", "Chapinero", "Recolección", "Calle 85",
+                "3001234567", "f@org.co", List.of("SUPERIOR"), "Niñez", "08-17", "Limpias", true, 24L
+        );
+        DonationRequest pending = buildSampleRequest(10L, DonationRequestStatus.PENDING);
+
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(24L);
+        when(getPartnerFoundationsUseCase.getFoundationByRepresentativeId(24L)).thenReturn(foundation);
+        when(createDonationRequestUseCase.getByFoundationId(501L, DonationRequestStatus.PENDING))
+                .thenReturn(List.of(pending));
+
+        mockMvc.perform(get("/api/v1/donations").param("status", "PENDING"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(10L))
+                .andExpect(jsonPath("$[0].foundationId").value(501L));
+    }
+
+    @Test
+    @WithMockUser(roles = {"USER"})
+    @DisplayName("BUG-003: GET /api/v1/donations sin userId en token responde 400 Bad Request")
+    void shouldRejectListDonationsWhenUserIdMissing() throws Exception {
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(null);
+
+        mockMvc.perform(get("/api/v1/donations"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
+    }
+
+    @Test
+    @WithMockUser(roles = {"ADMIN"})
+    @DisplayName("BUG-003 Opción B1: GET /api/v1/donations para ADMIN retorna todas las donaciones de la plataforma")
+    void shouldListAllDonationsWhenCallerIsAdmin() throws Exception {
+        DonationRequest pending = buildSampleRequest(1L, DonationRequestStatus.PENDING);
+        DonationRequest approved = buildSampleRequest(2L, DonationRequestStatus.APPROVED);
+
+        when(resourceOwnershipValidator.extractAuthenticatedUserId()).thenReturn(1L);
+        when(createDonationRequestUseCase.getAll(null)).thenReturn(List.of(pending, approved));
+        when(createDonationRequestUseCase.getAll(DonationRequestStatus.APPROVED)).thenReturn(List.of(approved));
+
+        mockMvc.perform(get("/api/v1/donations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+
+        mockMvc.perform(get("/api/v1/donations").param("status", "APPROVED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].status").value("APPROVED"));
     }
 }

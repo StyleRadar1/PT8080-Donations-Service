@@ -10,26 +10,34 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.core.ReturnedMessage;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.core.ParameterizedTypeReference;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredEvent;
+import edu.dosw.styleradar.donaciones.domain.event.DonationDeliveredStatisticsEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestCreatedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.DonationRequestDecidedEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PickupScheduledEvent;
 import edu.dosw.styleradar.donaciones.domain.event.PublicationSoldEvent;
+import edu.dosw.styleradar.donaciones.domain.exception.ExternalServiceUnavailableException;
+import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationCompletedStatisticsIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.DonationRequestCreatedIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionEstadoCambiadoIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.adapter.out.messaging.event.SegundaVidaDonacionPrendaVendidaIntegrationEvent;
 import edu.dosw.styleradar.donaciones.infrastructure.config.RabbitMQConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -43,6 +51,7 @@ class DonationEventPublisherAdapterTest {
     private static final String CHAT_EXCHANGE = "styleradar.exchange";
     private static final String ROUTING_KEY_CREATED = "styleradar.donaciones.solicitud.creada";
     private static final String ROUTING_KEY_UPDATED = "styleradar.donaciones.estado.cambiado";
+    private static final String ROUTING_KEY_COMPLETED = "styleradar.donaciones.completada";
     private static final String ROUTING_KEY_SOLD = "segunda-mano.prenda.vendida";
     private static final String ROUTING_KEY_SOLD_NOTIFICATIONS = "styleradar.segundavida.prenda.vendida";
 
@@ -240,21 +249,84 @@ class DonationEventPublisherAdapterTest {
     }
 
     @Test
-    @DisplayName("Debe publicar evento de donación entregada con donacionId y donanteId para ms-notificaciones")
+    @DisplayName("Debe publicar evento de donación entregada únicamente hacia ms-notificaciones conservando eventId")
     void shouldPublishDonationDeliveredEvent() {
-        DonationDeliveredEvent event = new DonationDeliveredEvent(10L, 20L, 30L, 99L);
+        Instant occurredOn = Instant.parse("2026-11-24T15:00:00.123Z");
+        DonationDeliveredEvent event = new DonationDeliveredEvent(10L, 20L, 30L, 99L, occurredOn, "evt-notif-10");
 
         adapter.publishEvent(event);
 
-        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> captor =
+        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> notificationsCaptor =
                 ArgumentCaptor.forClass(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class);
-        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), captor.capture(), any(CorrelationData.class));
+        ArgumentCaptor<CorrelationData> correlationCaptor =
+                ArgumentCaptor.forClass(CorrelationData.class);
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED),
+                notificationsCaptor.capture(), correlationCaptor.capture());
+        verify(rabbitTemplate, never()).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_COMPLETED),
+                any(Object.class), any(CorrelationData.class));
 
-        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = notificationsCaptor.getValue();
+        assertThat(published.getEventId()).isEqualTo("evt-notif-10");
+        assertThat(published.getEventoId()).isEqualTo("evt-notif-10");
+        assertThat(published.getCorrelationId()).isEqualTo("evt-notif-10");
+        assertThat(correlationCaptor.getValue().getId()).isEqualTo("evt-notif-10");
         assertThat(published.getDonacionId()).isEqualTo(10L);
         assertThat(published.getDonanteId()).isEqualTo(99L);
         assertThat(published.getData().getDonacionId()).isEqualTo(10L);
         assertThat(published.getData().getDonanteId()).isEqualTo(99L);
+    }
+
+    @Test
+    @DisplayName("Debe publicar evento independiente de donación completada para ms-estadisticas conservando eventId y occurredAt")
+    void shouldPublishDonationDeliveredStatisticsEvent() throws Exception {
+        Instant occurredOn = Instant.parse("2026-11-24T15:00:00.123Z");
+        DonationDeliveredStatisticsEvent statsDomainEvent =
+                new DonationDeliveredStatisticsEvent(10L, 30L, occurredOn, "evt-stats-30");
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            cd.getFuture().complete(new CorrelationData.Confirm(true, null));
+            return null;
+        }).when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        adapter.publishEventConfirmed(statsDomainEvent);
+
+        ArgumentCaptor<DonationCompletedStatisticsIntegrationEvent> statsCaptor =
+                ArgumentCaptor.forClass(DonationCompletedStatisticsIntegrationEvent.class);
+        ArgumentCaptor<CorrelationData> statsCorrelationCaptor =
+                ArgumentCaptor.forClass(CorrelationData.class);
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_COMPLETED),
+                statsCaptor.capture(), statsCorrelationCaptor.capture());
+        verify(rabbitTemplate, never()).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED),
+                any(Object.class), any(CorrelationData.class));
+
+        DonationCompletedStatisticsIntegrationEvent statsEvent = statsCaptor.getValue();
+        assertThat(statsEvent.getEventId()).isEqualTo("evt-stats-30");
+        assertThat(statsCorrelationCaptor.getValue().getId()).isEqualTo("evt-stats-30");
+        assertThat(statsEvent.getEventType()).isEqualTo("styleradar.donaciones.completada");
+        assertThat(statsEvent.getOccurredAt()).isEqualTo("2026-11-24T15:00:00Z");
+        assertThat(statsEvent.getData()).isNotNull();
+        assertThat(statsEvent.getData().getFundacionId()).isEqualTo("30");
+        assertThat(statsEvent.getData().getCantidad()).isEqualTo(1);
+        assertThat(adapter.getDonationCompletedRoutingKey()).isEqualTo(ROUTING_KEY_COMPLETED);
+
+        JsonNode json = new ObjectMapper().readTree(new ObjectMapper().writeValueAsString(statsEvent));
+        assertThat(json.path("eventId").asText()).isEqualTo("evt-stats-30");
+        assertThat(json.path("eventType").asText()).isEqualTo("styleradar.donaciones.completada");
+        assertThat(json.path("occurredAt").asText()).isEqualTo("2026-11-24T15:00:00Z");
+        assertThat(json.path("data").path("fundacionId").asText()).isEqualTo("30");
+        assertThat(json.path("data").path("cantidad").asInt()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Debe omitir publicación a ms-estadisticas si foundationId es nulo")
+    void shouldSkipStatisticsEventWhenFoundationIdIsNull() {
+        DonationDeliveredStatisticsEvent event =
+                new DonationDeliveredStatisticsEvent(10L, null, Instant.now(), "evt-stats-null");
+
+        adapter.publishEventConfirmed(event);
+
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
     }
 
     @Test
@@ -273,5 +345,99 @@ class DonationEventPublisherAdapterTest {
         adapter.publishEvent(genericEvent);
 
         verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), eq(genericEvent), any(CorrelationData.class));
+    }
+
+    @Test
+    @DisplayName("Debe preservar el eventId explícito en payload y CorrelationData para entregas idempotentes")
+    void shouldPreserveExplicitEventIdInDonationRequestDecidedEvent() {
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.parse("2026-11-24T22:00:00Z"), "evt-fixed-123");
+
+        adapter.publishEvent(domainEvent);
+
+        ArgumentCaptor<SegundaVidaDonacionEstadoCambiadoIntegrationEvent> captor =
+                ArgumentCaptor.forClass(SegundaVidaDonacionEstadoCambiadoIntegrationEvent.class);
+        ArgumentCaptor<CorrelationData> correlationCaptor =
+                ArgumentCaptor.forClass(CorrelationData.class);
+
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), captor.capture(), correlationCaptor.capture());
+
+        SegundaVidaDonacionEstadoCambiadoIntegrationEvent published = captor.getValue();
+        assertThat(published.getEventoId()).isEqualTo("evt-fixed-123");
+        assertThat(published.getEventId()).isEqualTo("evt-fixed-123");
+        assertThat(published.getCorrelationId()).isEqualTo("evt-fixed-123");
+        assertThat(correlationCaptor.getValue().getId()).isEqualTo("evt-fixed-123");
+    }
+
+    @Test
+    @DisplayName("publishEventConfirmed debe completarse únicamente tras recibir ACK del broker sin devolución")
+    void shouldSucceedPublishEventConfirmedWhenBrokerAcks() {
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.now(), "evt-ack-1");
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            cd.getFuture().complete(new CorrelationData.Confirm(true, null));
+            return null;
+        }).when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        adapter.publishEventConfirmed(domainEvent);
+
+        verify(rabbitTemplate).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY_UPDATED), any(Object.class), any(CorrelationData.class));
+    }
+
+    @Test
+    @DisplayName("publishEventConfirmed debe lanzar ExternalServiceUnavailableException cuando el broker responde NACK")
+    void shouldThrowWhenBrokerNacksOnPublishEventConfirmed() {
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.now(), "evt-nack-1");
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            cd.getFuture().complete(new CorrelationData.Confirm(false, "channel closed"));
+            return null;
+        }).when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        assertThatThrownBy(() -> adapter.publishEventConfirmed(domainEvent))
+                .isInstanceOf(ExternalServiceUnavailableException.class)
+                .hasMessageContaining("NACK");
+    }
+
+    @Test
+    @DisplayName("publishEventConfirmed debe fallar si RabbitMQ devuelve el mensaje como no enrutable")
+    void shouldThrowWhenBrokerReturnsUnroutableMessageOnPublishEventConfirmed() {
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.now(), "evt-return-1");
+
+        doAnswer(invocation -> {
+            CorrelationData cd = invocation.getArgument(3);
+            cd.setReturned(new ReturnedMessage(
+                    new Message(new byte[0], new MessageProperties()),
+                    312,
+                    "NO_ROUTE",
+                    EXCHANGE,
+                    ROUTING_KEY_UPDATED));
+            cd.getFuture().complete(new CorrelationData.Confirm(true, null));
+            return null;
+        }).when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        assertThatThrownBy(() -> adapter.publishEventConfirmed(domainEvent))
+                .isInstanceOf(ExternalServiceUnavailableException.class)
+                .hasMessageContaining("devuelto por RabbitMQ");
+    }
+
+    @Test
+    @DisplayName("publishEventConfirmed debe fallar por timeout cuando no llega confirmación del broker y omitir nulos")
+    void shouldThrowWhenBrokerConfirmTimesOutAndIgnoreNull() {
+        adapter.publishEventConfirmed(null);
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), any(Object.class), any(CorrelationData.class));
+
+        adapter.setConfirmTimeoutMs(25L);
+        DonationRequestDecidedEvent domainEvent = new DonationRequestDecidedEvent(
+                10L, 20L, 30L, false, "Fundación eliminada", Instant.now(), "evt-timeout-1");
+
+        assertThatThrownBy(() -> adapter.publishEventConfirmed(domainEvent))
+                .isInstanceOf(ExternalServiceUnavailableException.class)
+                .hasMessageContaining("confirmación");
     }
 }

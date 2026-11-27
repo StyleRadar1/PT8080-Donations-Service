@@ -81,12 +81,16 @@ public class ResourceOwnershipValidator {
         }
 
         Long authenticatedUserId = extractAuthenticatedUserId(authentication);
-        boolean isOwnerDonor = authenticatedUserId != null && authenticatedUserId.equals(request.getDonorId());
-        boolean isTargetFoundation = authenticatedUserId != null
+        if (authenticatedUserId != null && authenticatedUserId.equals(request.getDonorId())) {
+            return;
+        }
+
+        boolean isTargetFoundation = isFoundation(authentication)
+                && authenticatedUserId != null
                 && foundationCatalogPort != null
                 && foundationCatalogPort.isFoundationRepresentative(authenticatedUserId, request.getFoundationId());
 
-        if (!isOwnerDonor && !isTargetFoundation) {
+        if (!isTargetFoundation) {
             throw new AccessDeniedException(
                     "Acceso denegado: No tiene autorización para consultar la solicitud de donación ID: " + request.getId()
             );
@@ -98,11 +102,19 @@ public class ResourceOwnershipValidator {
     }
 
     public boolean isAdmin(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        return hasAuthority(authentication, "ROLE_ADMIN", "ADMIN");
+    }
+
+    private boolean isFoundation(Authentication authentication) {
+        return hasAuthority(authentication, "ROLE_FOUNDATION", "FOUNDATION");
+    }
+
+    private boolean hasAuthority(Authentication authentication, String prefixedRole, String rawRole) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getAuthorities() == null) {
             return false;
         }
         return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> prefixedRole.equals(a.getAuthority()) || rawRole.equals(a.getAuthority()));
     }
 
     public Long extractAuthenticatedUserId(Authentication authentication) {

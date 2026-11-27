@@ -18,15 +18,22 @@ final class TransactionEventHelper {
         if (event == null) {
             return;
         }
+        runAfterCommitOrImmediate(() -> publisher.publishEvent(event));
+    }
+
+    static void runAfterCommitOrImmediate(Runnable action) {
+        if (action == null) {
+            return;
+        }
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    publisher.publishEvent(event);
+                    action.run();
                 }
             });
         } else {
-            publisher.publishEvent(event);
+            action.run();
         }
     }
 }

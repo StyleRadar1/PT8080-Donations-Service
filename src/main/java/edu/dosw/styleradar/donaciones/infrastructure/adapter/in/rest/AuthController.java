@@ -84,7 +84,7 @@ public class AuthController {
                                     name = "InvalidCredentials",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "Credenciales inválidas: usuario o contraseña incorrectos",
@@ -105,7 +105,7 @@ public class AuthController {
                                     name = "AuthServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al autenticar credenciales.",
@@ -160,7 +160,7 @@ public class AuthController {
                                     name = "InvalidRole",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/bad-request",
+                                      "type": "https://api.styleradar.com/errors/bad-request",
                                       "title": "Solicitud inválida",
                                       "status": 400,
                                       "detail": "Parámetro 'role' no válido. Valores permitidos: ADMIN, USER, FOUNDATION",
@@ -181,7 +181,7 @@ public class AuthController {
                                     name = "QuickTokenServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al generar el token demo.",
@@ -252,7 +252,7 @@ public class AuthController {
                                     name = "DemoUsersServerError",
                                     value = """
                                     {
-                                      "type": "https://styleradar.dosw.edu/errors/internal-server-error",
+                                      "type": "https://api.styleradar.com/errors/internal-server-error",
                                       "title": "Error interno del servidor",
                                       "status": 500,
                                       "detail": "Error inesperado al obtener los usuarios demo.",
