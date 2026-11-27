@@ -176,7 +176,7 @@ class DonationCompleteFlowIntegrationTest {
         SecondHandPublication converted = managePublicationUseCase.markForDonation(102L, salePub.getId());
         assertThat(converted)
                 .returns(true, SecondHandPublication::isEsDonacion)
-                .returns(PublicationStatus.IN_DONATION, SecondHandPublication::getStatus);
+                .returns(PublicationStatus.AVAILABLE, SecondHandPublication::getStatus);
         assertThat(converted.getPrice()).isEqualByComparingTo(BigDecimal.ZERO);
 
         // 3. Selección de fundación y creación de solicitud con propuesta de entrega (POST /api/v1/donations)

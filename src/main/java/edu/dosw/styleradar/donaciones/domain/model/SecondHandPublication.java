@@ -189,6 +189,21 @@ public class SecondHandPublication {
     }
 
     /**
+     * Pasa una publicación disponible a la Vitrina Abierta de Donaciones ($0) manteniendo estado AVAILABLE
+     * para que aparezca en el catálogo de donaciones y pueda ser reclamada o solicitada.
+     */
+    public void publishToDonationShowcase() {
+        if (status != PublicationStatus.AVAILABLE) {
+            throw new InvalidStateTransitionException(
+                    "Solo una publicación disponible en vitrina puede destinarse a donación. Estado actual: " + status);
+        }
+
+        this.esDonacion = true;
+        this.price = BigDecimal.ZERO;
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
+    }
+
+    /**
      * Destina la prenda hacia el canal benéfico de donaciones a fundaciones aliadas con valor cero.
      */
     public void markForDonation() {

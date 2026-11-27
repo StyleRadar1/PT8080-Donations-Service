@@ -168,7 +168,9 @@ class ManagePublicationUseCaseTest {
 
         SecondHandPublication result = managePublicationUseCase.markForDonation(10L, 50L);
 
-        assertEquals(PublicationStatus.IN_DONATION, result.getStatus());
+        assertEquals(PublicationStatus.AVAILABLE, result.getStatus());
+        assertTrue(result.isEsDonacion());
+        assertEquals(BigDecimal.ZERO, result.getPrice());
         verify(publicationRepositoryPort).save(publication);
     }
 }

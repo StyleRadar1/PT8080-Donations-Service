@@ -95,12 +95,13 @@ public class ManagePublicationUseCaseImpl implements ManagePublicationUseCase {
 
     @Override
     public SecondHandPublication markForDonation(Long userId, Long publicationId) {
-        log.info("Destinando publicación ID: {} hacia canal de donación", publicationId);
+        log.info("Destinando publicación ID: {} hacia Vitrina Abierta de Donaciones ($0)", publicationId);
         SecondHandPublication publication = getAndValidateOwner(publicationId, userId);
 
-        publication.markForDonation();
+        publication.publishToDonationShowcase();
         SecondHandPublication saved = publicationRepositoryPort.save(publication);
-        log.info("Publicación ID: {} en estado IN_DONATION", saved.getId());
+        log.info("Publicación ID: {} disponible en vitrina de donaciones (esDonacion=true, status={})",
+                saved.getId(), saved.getStatus());
         return saved;
     }
 
